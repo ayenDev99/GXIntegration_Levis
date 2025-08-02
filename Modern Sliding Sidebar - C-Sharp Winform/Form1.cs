@@ -21,11 +21,13 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		static GXConfig config;
 		
 		bool sideBar_Expand = true;
-        public Form1()
+		private Guna.UI.WinForms.GunaButton _activeButton = null;
+
+		public Form1()
         {
             InitializeComponent();
 			config = GXConfig.Load("config.xml");
-			btnSync.Click += btnSync_Click;
+			//btnSync.Click += btnSync_Click;
 		}
 
         private void Form1_Load(object sender, EventArgs e)
@@ -64,8 +66,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
                 }
         }   
         
-        
-
+      
         private void Menu_Button_Click(object sender, EventArgs e)
         {
             Timer_Sidebar_Menu.Start();
@@ -81,23 +82,38 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
             
         }
 
+		// *********************************************************
+		// Sidebar Buttons
+		// *********************************************************
+		private void Home_Button_Click(object sender, EventArgs e)
+		{
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+		}
+
+		private void Configuration_Button_Click(object sender, EventArgs e)
+		{
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+		}
+		private void Inbound_Button_Click(object sender, EventArgs e)
+		{
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+		}
+
+		private void Outbound_Button_Click(object sender, EventArgs e)
+		{
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+		}
+		private void About_Button_Click(object sender, EventArgs e)
+		{
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+		}
+
+
+
+
 		private async void btnSync_Click(object sender, EventArgs e)
 		{
-
 			await RunInventorySyncAsync();
-			// This button can be used to trigger the sidebar toggle manually
-			// For example, you can call the Timer_Sidebar_Menu.Start() method here
-			//         if (Timer_Sidebar_Menu.Enabled)
-			//         {
-			//             Timer_Sidebar_Menu.Stop();
-			//         }
-			//         else
-			//         {
-			//             Timer_Sidebar_Menu.Start();
-			//}
-
-
-
 		}
 
 		private async Task RunInventorySyncAsync()
@@ -169,9 +185,9 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		}
 
 
-		// *******************************************************************************
+		// *********************************************************
 		// Helpers
-		// *******************************************************************************
+		// *********************************************************
 		private void Log(string message)
 		{
 			string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
@@ -184,6 +200,26 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			Console.WriteLine(logMessage);
 			File.AppendAllText(logFile, logMessage + Environment.NewLine);
 		}
+		private void SetActiveSidebarButton(Guna.UI.WinForms.GunaButton button)
+		{
+			// Reset previous active button
+			if (_activeButton != null)
+			{
+				_activeButton.BaseColor = Color.Transparent;
+				_activeButton.ForeColor = Color.White;
+				_activeButton.OnHoverBaseColor = Color.FromArgb(40, 40, 100);
+				_activeButton.OnHoverForeColor = Color.White;
+			}
+
+			// Set new active button
+			_activeButton = button;
+			_activeButton.BaseColor = Color.FromArgb(60, 60, 120); // Static active color
+			_activeButton.ForeColor = Color.White;
+			_activeButton.OnHoverBaseColor = _activeButton.BaseColor; // Lock hover color
+			_activeButton.OnHoverForeColor = _activeButton.ForeColor;
+		}
+
+
 
 	}
 

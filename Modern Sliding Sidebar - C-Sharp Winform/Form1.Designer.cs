@@ -32,16 +32,14 @@
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.Elipse_Form = new Guna.UI.WinForms.GunaElipse(this.components);
 			this.SideBar = new Guna.UI.WinForms.GunaPanel();
-			this.gunaPanel7 = new Guna.UI.WinForms.GunaPanel();
-			this.Help_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel6 = new Guna.UI.WinForms.GunaPanel();
 			this.About_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel5 = new Guna.UI.WinForms.GunaPanel();
-			this.Statistics_Button = new Guna.UI.WinForms.GunaButton();
+			this.Outbound_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel8 = new Guna.UI.WinForms.GunaPanel();
-			this.Customers_Button = new Guna.UI.WinForms.GunaButton();
+			this.Inbound_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel4 = new Guna.UI.WinForms.GunaPanel();
-			this.Orders_Button = new Guna.UI.WinForms.GunaButton();
+			this.Configuration_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel3 = new Guna.UI.WinForms.GunaPanel();
 			this.Home_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel2 = new Guna.UI.WinForms.GunaPanel();
@@ -52,7 +50,6 @@
 			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
 			this.btnSync = new System.Windows.Forms.Button();
 			this.SideBar.SuspendLayout();
-			this.gunaPanel7.SuspendLayout();
 			this.gunaPanel6.SuspendLayout();
 			this.gunaPanel5.SuspendLayout();
 			this.gunaPanel8.SuspendLayout();
@@ -70,7 +67,6 @@
 			// SideBar
 			// 
 			this.SideBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
-			this.SideBar.Controls.Add(this.gunaPanel7);
 			this.SideBar.Controls.Add(this.gunaPanel6);
 			this.SideBar.Controls.Add(this.gunaPanel5);
 			this.SideBar.Controls.Add(this.gunaPanel8);
@@ -85,40 +81,6 @@
 			this.SideBar.Size = new System.Drawing.Size(217, 494);
 			this.SideBar.TabIndex = 0;
 			this.SideBar.Paint += new System.Windows.Forms.PaintEventHandler(this.gunaPanel1_Paint);
-			// 
-			// gunaPanel7
-			// 
-			this.gunaPanel7.Controls.Add(this.Help_Button);
-			this.gunaPanel7.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel7.Location = new System.Drawing.Point(0, 361);
-			this.gunaPanel7.Name = "gunaPanel7";
-			this.gunaPanel7.Size = new System.Drawing.Size(217, 55);
-			this.gunaPanel7.TabIndex = 6;
-			// 
-			// Help_Button
-			// 
-			this.Help_Button.AnimationHoverSpeed = 0.07F;
-			this.Help_Button.AnimationSpeed = 0.03F;
-			this.Help_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.Help_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.Help_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.Help_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Help_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Help_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.Help_Button.ForeColor = System.Drawing.Color.White;
-			this.Help_Button.Image = ((System.Drawing.Image)(resources.GetObject("Help_Button.Image")));
-			this.Help_Button.ImageSize = new System.Drawing.Size(20, 20);
-			this.Help_Button.Location = new System.Drawing.Point(7, 8);
-			this.Help_Button.Name = "Help_Button";
-			this.Help_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.Help_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.Help_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.Help_Button.OnHoverImage = null;
-			this.Help_Button.OnPressedColor = System.Drawing.Color.White;
-			this.Help_Button.Size = new System.Drawing.Size(203, 40);
-			this.Help_Button.TabIndex = 1;
-			this.Help_Button.Text = "Help";
-			this.Help_Button.TextOffsetX = 15;
 			// 
 			// gunaPanel6
 			// 
@@ -153,108 +115,112 @@
 			this.About_Button.TabIndex = 1;
 			this.About_Button.Text = "About";
 			this.About_Button.TextOffsetX = 15;
+			this.About_Button.Click += new System.EventHandler(this.About_Button_Click);
 			// 
 			// gunaPanel5
 			// 
-			this.gunaPanel5.Controls.Add(this.Statistics_Button);
+			this.gunaPanel5.Controls.Add(this.Outbound_Button);
 			this.gunaPanel5.Dock = System.Windows.Forms.DockStyle.Top;
 			this.gunaPanel5.Location = new System.Drawing.Point(0, 251);
 			this.gunaPanel5.Name = "gunaPanel5";
 			this.gunaPanel5.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel5.TabIndex = 3;
 			// 
-			// Statistics_Button
+			// Outbound_Button
 			// 
-			this.Statistics_Button.AnimationHoverSpeed = 0.07F;
-			this.Statistics_Button.AnimationSpeed = 0.03F;
-			this.Statistics_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.Statistics_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.Statistics_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.Statistics_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Statistics_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Statistics_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.Statistics_Button.ForeColor = System.Drawing.Color.White;
-			this.Statistics_Button.Image = ((System.Drawing.Image)(resources.GetObject("Statistics_Button.Image")));
-			this.Statistics_Button.ImageSize = new System.Drawing.Size(20, 20);
-			this.Statistics_Button.Location = new System.Drawing.Point(7, 8);
-			this.Statistics_Button.Name = "Statistics_Button";
-			this.Statistics_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.Statistics_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.Statistics_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.Statistics_Button.OnHoverImage = null;
-			this.Statistics_Button.OnPressedColor = System.Drawing.Color.White;
-			this.Statistics_Button.Size = new System.Drawing.Size(203, 40);
-			this.Statistics_Button.TabIndex = 1;
-			this.Statistics_Button.Text = "Statistics";
-			this.Statistics_Button.TextOffsetX = 15;
+			this.Outbound_Button.AnimationHoverSpeed = 0.07F;
+			this.Outbound_Button.AnimationSpeed = 0.03F;
+			this.Outbound_Button.BaseColor = System.Drawing.Color.Transparent;
+			this.Outbound_Button.BorderColor = System.Drawing.Color.Transparent;
+			this.Outbound_Button.Cursor = System.Windows.Forms.Cursors.Hand;
+			this.Outbound_Button.DialogResult = System.Windows.Forms.DialogResult.None;
+			this.Outbound_Button.FocusedColor = System.Drawing.Color.Empty;
+			this.Outbound_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Outbound_Button.ForeColor = System.Drawing.Color.White;
+			this.Outbound_Button.Image = ((System.Drawing.Image)(resources.GetObject("Outbound_Button.Image")));
+			this.Outbound_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Outbound_Button.Location = new System.Drawing.Point(7, 8);
+			this.Outbound_Button.Name = "Outbound_Button";
+			this.Outbound_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
+			this.Outbound_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
+			this.Outbound_Button.OnHoverForeColor = System.Drawing.Color.Silver;
+			this.Outbound_Button.OnHoverImage = null;
+			this.Outbound_Button.OnPressedColor = System.Drawing.Color.White;
+			this.Outbound_Button.Size = new System.Drawing.Size(203, 40);
+			this.Outbound_Button.TabIndex = 1;
+			this.Outbound_Button.Text = "Outbound";
+			this.Outbound_Button.TextOffsetX = 15;
+			this.Outbound_Button.Click += new System.EventHandler(this.Outbound_Button_Click);
 			// 
 			// gunaPanel8
 			// 
-			this.gunaPanel8.Controls.Add(this.Customers_Button);
+			this.gunaPanel8.Controls.Add(this.Inbound_Button);
 			this.gunaPanel8.Dock = System.Windows.Forms.DockStyle.Top;
 			this.gunaPanel8.Location = new System.Drawing.Point(0, 196);
 			this.gunaPanel8.Name = "gunaPanel8";
 			this.gunaPanel8.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel8.TabIndex = 5;
 			// 
-			// Customers_Button
+			// Inbound_Button
 			// 
-			this.Customers_Button.AnimationHoverSpeed = 0.07F;
-			this.Customers_Button.AnimationSpeed = 0.03F;
-			this.Customers_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.Customers_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.Customers_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.Customers_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Customers_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Customers_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.Customers_Button.ForeColor = System.Drawing.Color.White;
-			this.Customers_Button.Image = ((System.Drawing.Image)(resources.GetObject("Customers_Button.Image")));
-			this.Customers_Button.ImageSize = new System.Drawing.Size(20, 20);
-			this.Customers_Button.Location = new System.Drawing.Point(7, 8);
-			this.Customers_Button.Name = "Customers_Button";
-			this.Customers_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.Customers_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.Customers_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.Customers_Button.OnHoverImage = null;
-			this.Customers_Button.OnPressedColor = System.Drawing.Color.White;
-			this.Customers_Button.Size = new System.Drawing.Size(203, 40);
-			this.Customers_Button.TabIndex = 1;
-			this.Customers_Button.Text = "Customers";
-			this.Customers_Button.TextOffsetX = 15;
+			this.Inbound_Button.AnimationHoverSpeed = 0.07F;
+			this.Inbound_Button.AnimationSpeed = 0.03F;
+			this.Inbound_Button.BaseColor = System.Drawing.Color.Transparent;
+			this.Inbound_Button.BorderColor = System.Drawing.Color.Transparent;
+			this.Inbound_Button.Cursor = System.Windows.Forms.Cursors.Hand;
+			this.Inbound_Button.DialogResult = System.Windows.Forms.DialogResult.None;
+			this.Inbound_Button.FocusedColor = System.Drawing.Color.Empty;
+			this.Inbound_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Inbound_Button.ForeColor = System.Drawing.Color.White;
+			this.Inbound_Button.Image = ((System.Drawing.Image)(resources.GetObject("Inbound_Button.Image")));
+			this.Inbound_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Inbound_Button.Location = new System.Drawing.Point(7, 8);
+			this.Inbound_Button.Name = "Inbound_Button";
+			this.Inbound_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
+			this.Inbound_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
+			this.Inbound_Button.OnHoverForeColor = System.Drawing.Color.Silver;
+			this.Inbound_Button.OnHoverImage = null;
+			this.Inbound_Button.OnPressedColor = System.Drawing.Color.White;
+			this.Inbound_Button.Size = new System.Drawing.Size(203, 40);
+			this.Inbound_Button.TabIndex = 1;
+			this.Inbound_Button.Text = "Inbound";
+			this.Inbound_Button.TextOffsetX = 15;
+			this.Inbound_Button.Click += new System.EventHandler(this.Inbound_Button_Click);
 			// 
 			// gunaPanel4
 			// 
-			this.gunaPanel4.Controls.Add(this.Orders_Button);
+			this.gunaPanel4.Controls.Add(this.Configuration_Button);
 			this.gunaPanel4.Dock = System.Windows.Forms.DockStyle.Top;
 			this.gunaPanel4.Location = new System.Drawing.Point(0, 141);
 			this.gunaPanel4.Name = "gunaPanel4";
 			this.gunaPanel4.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel4.TabIndex = 2;
 			// 
-			// Orders_Button
+			// Configuration_Button
 			// 
-			this.Orders_Button.AnimationHoverSpeed = 0.07F;
-			this.Orders_Button.AnimationSpeed = 0.03F;
-			this.Orders_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.Orders_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.Orders_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.Orders_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Orders_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Orders_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.Orders_Button.ForeColor = System.Drawing.Color.White;
-			this.Orders_Button.Image = ((System.Drawing.Image)(resources.GetObject("Orders_Button.Image")));
-			this.Orders_Button.ImageSize = new System.Drawing.Size(20, 20);
-			this.Orders_Button.Location = new System.Drawing.Point(7, 7);
-			this.Orders_Button.Name = "Orders_Button";
-			this.Orders_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.Orders_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.Orders_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.Orders_Button.OnHoverImage = null;
-			this.Orders_Button.OnPressedColor = System.Drawing.Color.White;
-			this.Orders_Button.Size = new System.Drawing.Size(203, 40);
-			this.Orders_Button.TabIndex = 1;
-			this.Orders_Button.Text = "Orders";
-			this.Orders_Button.TextOffsetX = 15;
+			this.Configuration_Button.AnimationHoverSpeed = 0.07F;
+			this.Configuration_Button.AnimationSpeed = 0.03F;
+			this.Configuration_Button.BaseColor = System.Drawing.Color.Transparent;
+			this.Configuration_Button.BorderColor = System.Drawing.Color.Transparent;
+			this.Configuration_Button.Cursor = System.Windows.Forms.Cursors.Hand;
+			this.Configuration_Button.DialogResult = System.Windows.Forms.DialogResult.None;
+			this.Configuration_Button.FocusedColor = System.Drawing.Color.Empty;
+			this.Configuration_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Configuration_Button.ForeColor = System.Drawing.Color.White;
+			this.Configuration_Button.Image = ((System.Drawing.Image)(resources.GetObject("Configuration_Button.Image")));
+			this.Configuration_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Configuration_Button.Location = new System.Drawing.Point(7, 7);
+			this.Configuration_Button.Name = "Configuration_Button";
+			this.Configuration_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
+			this.Configuration_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
+			this.Configuration_Button.OnHoverForeColor = System.Drawing.Color.Silver;
+			this.Configuration_Button.OnHoverImage = null;
+			this.Configuration_Button.OnPressedColor = System.Drawing.Color.White;
+			this.Configuration_Button.Size = new System.Drawing.Size(203, 40);
+			this.Configuration_Button.TabIndex = 1;
+			this.Configuration_Button.Text = "Configuration";
+			this.Configuration_Button.TextOffsetX = 15;
+			this.Configuration_Button.Click += new System.EventHandler(this.Configuration_Button_Click);
 			// 
 			// gunaPanel3
 			// 
@@ -289,6 +255,7 @@
 			this.Home_Button.TabIndex = 1;
 			this.Home_Button.Text = "Home";
 			this.Home_Button.TextOffsetX = 15;
+			this.Home_Button.Click += new System.EventHandler(this.Home_Button_Click);
 			// 
 			// gunaPanel2
 			// 
@@ -380,7 +347,6 @@
 			this.Text = "Form1";
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.SideBar.ResumeLayout(false);
-			this.gunaPanel7.ResumeLayout(false);
 			this.gunaPanel6.ResumeLayout(false);
 			this.gunaPanel5.ResumeLayout(false);
 			this.gunaPanel8.ResumeLayout(false);
@@ -399,16 +365,14 @@
         private Guna.UI.WinForms.GunaPanel gunaPanel3;
         private Guna.UI.WinForms.GunaPanel gunaPanel2;
         private Guna.UI.WinForms.GunaImageButton Close_Button;
-        private Guna.UI.WinForms.GunaPanel gunaPanel7;
-        private Guna.UI.WinForms.GunaButton Help_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel6;
-        private Guna.UI.WinForms.GunaButton Customers_Button;
+        private Guna.UI.WinForms.GunaButton Inbound_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel5;
-        private Guna.UI.WinForms.GunaButton Statistics_Button;
+        private Guna.UI.WinForms.GunaButton Outbound_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel8;
         private Guna.UI.WinForms.GunaButton About_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel4;
-        private Guna.UI.WinForms.GunaButton Orders_Button;
+        private Guna.UI.WinForms.GunaButton Configuration_Button;
         private Guna.UI.WinForms.GunaButton Home_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel9;
         private Guna.UI.WinForms.GunaButton Menu_Button;
