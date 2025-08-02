@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36327.8 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modern Sliding Sidebar - C-Sharp Winform", "Modern Sliding Sidebar - C-Sharp Winform\Modern Sliding Sidebar - C-Sharp Winform.csproj", "{ABD8ED90-9ACA-4FA2-BED7-A2780F07B06B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXIntegration_Levis", "Modern Sliding Sidebar - C-Sharp Winform\GXIntegration_Levis.csproj", "{ABD8ED90-9ACA-4FA2-BED7-A2780F07B06B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {73D6A87F-32AF-40ED-870A-78A0E528EB15}
 	EndGlobalSection
 EndGlobal

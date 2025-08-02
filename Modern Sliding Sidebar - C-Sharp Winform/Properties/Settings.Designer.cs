@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Modern_Sliding_Sidebar___C_Sharp_Winform.Properties {
+namespace GXIntegration_Levis.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

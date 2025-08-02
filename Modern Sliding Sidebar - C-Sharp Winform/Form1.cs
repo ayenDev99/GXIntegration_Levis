@@ -20,7 +20,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 		static GXConfig config;
 		
-
 		bool sideBar_Expand = true;
         public Form1()
         {

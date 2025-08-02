@@ -346,11 +346,11 @@
 			// 
 			this.Close_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Close_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Close_Button.Image = global::Modern_Sliding_Sidebar___C_Sharp_Winform.Properties.Resources.multiply_48px__;
+			this.Close_Button.Image = global::GXIntegration_Levis.Properties.Resources.multiply_48px__;
 			this.Close_Button.ImageSize = new System.Drawing.Size(28, 28);
 			this.Close_Button.Location = new System.Drawing.Point(760, 9);
 			this.Close_Button.Name = "Close_Button";
-			this.Close_Button.OnHoverImage = global::Modern_Sliding_Sidebar___C_Sharp_Winform.Properties.Resources.multiply_48px_____;
+			this.Close_Button.OnHoverImage = global::GXIntegration_Levis.Properties.Resources.multiply_48px_____;
 			this.Close_Button.OnHoverImageOffset = new System.Drawing.Point(0, 0);
 			this.Close_Button.Size = new System.Drawing.Size(35, 35);
 			this.Close_Button.TabIndex = 1;

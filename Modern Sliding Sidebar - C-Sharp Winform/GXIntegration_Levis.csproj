@@ -7,8 +7,8 @@
     <ProjectGuid>{ABD8ED90-9ACA-4FA2-BED7-A2780F07B06B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Modern_Sliding_Sidebar___C_Sharp_Winform</RootNamespace>
-    <AssemblyName>Modern Sliding Sidebar - C-Sharp Winform</AssemblyName>
+    <RootNamespace>GXIntegration_Levis</RootNamespace>
+    <AssemblyName>GXIntegration_Levis</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
