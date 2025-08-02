@@ -50,7 +50,7 @@
 			this.DragControl_Form = new Guna.UI.WinForms.GunaDragControl(this.components);
 			this.Timer_Sidebar_Menu = new System.Windows.Forms.Timer(this.components);
 			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
-			this.button1 = new System.Windows.Forms.Button();
+			this.btnSync = new System.Windows.Forms.Button();
 			this.SideBar.SuspendLayout();
 			this.gunaPanel7.SuspendLayout();
 			this.gunaPanel6.SuspendLayout();
@@ -356,15 +356,15 @@
 			this.Close_Button.TabIndex = 1;
 			this.Close_Button.Click += new System.EventHandler(this.Close_Button_Click);
 			// 
-			// button1
+			// btnSync
 			// 
-			this.button1.Location = new System.Drawing.Point(407, 172);
-			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(75, 23);
-			this.button1.TabIndex = 2;
-			this.button1.Text = "button1";
-			this.button1.UseVisualStyleBackColor = true;
-			this.button1.Click += new System.EventHandler(this.button1_Click);
+			this.btnSync.Location = new System.Drawing.Point(407, 172);
+			this.btnSync.Name = "btnSync";
+			this.btnSync.Size = new System.Drawing.Size(75, 23);
+			this.btnSync.TabIndex = 2;
+			this.btnSync.Text = "btnSync";
+			this.btnSync.UseVisualStyleBackColor = true;
+			this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
 			// 
 			// Form1
 			// 
@@ -372,7 +372,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(805, 494);
-			this.Controls.Add(this.button1);
+			this.Controls.Add(this.btnSync);
 			this.Controls.Add(this.Close_Button);
 			this.Controls.Add(this.SideBar);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -414,7 +414,7 @@
         private Guna.UI.WinForms.GunaButton Menu_Button;
         private Guna.UI.WinForms.GunaDragControl DragControl_Form;
         private System.Windows.Forms.Timer Timer_Sidebar_Menu;
-		private System.Windows.Forms.Button button1;
+		private System.Windows.Forms.Button btnSync;
 	}
 }
 
