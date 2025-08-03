@@ -47,7 +47,6 @@
 			this.Controls.Add(this.tabControl1);
 			this.Name = "ConfigurationPage";
 			this.Size = new System.Drawing.Size(805, 494);
-			this.Load += new System.EventHandler(this.ConfigurationPage_Load);
 			this.ResumeLayout(false);
 
 		}

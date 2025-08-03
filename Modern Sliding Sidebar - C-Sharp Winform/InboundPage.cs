@@ -46,7 +46,7 @@ namespace GXIntegration_Levis
 				string fileName = $"LS{countryCode}_AMA_PSSTKR_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Required
+				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 
 				MessageBox.Show($"✅ Inventory synced.\nSaved to: {filePath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
