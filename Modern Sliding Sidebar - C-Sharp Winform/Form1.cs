@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using GXIntegration_Levis;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using Oracle.ManagedDataAccess.Client;
 using System;
@@ -19,7 +20,8 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
     {
 
 		static GXConfig config;
-		
+		private InventoryModel _inventoryModel;
+
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
 
@@ -27,13 +29,14 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
         {
             InitializeComponent();
 			config = GXConfig.Load("config.xml");
-			//btnSync.Click += btnSync_Click;
+			_inventoryModel = new InventoryModel(config.MainDbConnection);
 		}
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
-        }
+			SetActiveSidebarButton(Home_Button);
+			LoadPage(new HomePage());
+		}
 
         private void gunaPanel1_Paint(object sender, PaintEventArgs e)
         {
@@ -88,6 +91,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		private void Home_Button_Click(object sender, EventArgs e)
 		{
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			LoadPage(new HomePage());
 		}
 
 		private void Configuration_Button_Click(object sender, EventArgs e)
@@ -106,7 +110,11 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		private void About_Button_Click(object sender, EventArgs e)
 		{
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			LoadPage(new AboutPage());
 		}
+
+
+
 
 
 
@@ -120,7 +128,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		{
 			try
 			{
-				var newItems = await GetMainData();
+				var newItems = await _inventoryModel.GetMainData();
 				string output = FormatInventory(newItems);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
@@ -145,29 +153,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			}
 		}
 
-		private async Task<List<Inventory>> GetMainData()
-		{
-			using (var connection = new OracleConnection(config.MainDbConnection))
-			{
-				await connection.OpenAsync();
-
-				string sql = @"
-				SELECT 
-					isi.sid,
-					qty.qty,
-					s.store_code,
-					isi.alu,
-					isi.upc
-				FROM rps.invn_sbs_item isi
-				LEFT JOIN rps.invn_sbs_item_qty qty ON qty.invn_sbs_item_sid = isi.sid
-				LEFT JOIN rps.store s ON s.sid = qty.store_sid
-				FETCH FIRST 1 ROWS ONLY";
-
-				var data = await connection.QueryAsync<Inventory>(sql);
-				return data.AsList();
-			}
-		}
-
 		private string FormatInventory(List<Inventory> items)
 		{
 			var sb = new StringBuilder();
@@ -175,11 +160,32 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 			foreach (var item in items)
 			{
-				sb.AppendLine($"SID: {item.Sid}" +
-					$"{d} Qty: {item.Qty}" +
-					$"{d} Store: {item.StoreCode}" +
-					$"{d} ALU: {item.Alu}" +
-					$"{d} UPC: {item.Upc}");
+				sb.AppendLine($" CURRENCY_ID: {item.AlphabeticCode}" + // CURRENCY_ID
+					$"{d} STORE_ID: " + // STORE_ID
+					$"{d} BIN_TYPE: " +	// BIN_TYPE
+					$"{d} PRODUCT_CODE: {item.Description1}" + // PRODUCT_CODE 
+					$"{d} ALU: " + // SKU 
+					$"{d} WAIST: " + // WAIST 
+					$"{d} INSEAM: " + // INSEAM 
+					$"{d}" +    // EMPTY
+					$"{d} STOCK_FETCH_DATE: " +    // STOCK_FETCH_DATE
+					$"{d} LAST_MOVEMENT_DATE: " +    // LAST_MOVEMENT_DATE
+					$"{d} QUANTITY_SIGN: " +    // QUANTITY_SIGN
+					$"{d} QUANTITY: " +    // QUANTITY
+					$"{d} PURCHASE_COST: 0 " + // PURCHASE_COST
+					$"{d} RETAIL_PRICE: " + // RETAIL_PRICE
+					$"{d} AVERAGE_COST: 0 " + // AVERAGE_COST
+					$"{d} MANUFACTURE_COST: 0 " + // MANUFACTURE_COST
+					$"{d} REGION: " + // REGION
+					$"{d} COUNTRY_CODE: " + // COUNTRY_CODE
+					$"{d} MANUFACTURE_UPC: " + // MANUFACTURE_UPC
+					$"{d} DIVISION: " + // DIVISION
+					$"{d}" +    // EMPTY
+					$"{d}" +    // EMPTY
+					$"{d}" +    // EMPTY
+					$"{d} UNITCOUNT_SIGN: " + // UNITCOUNT_SIGN
+					$"{d} UNITCOUNT: "  // UNITCOUNT
+				);	
 			}
 			return sb.ToString();
 		}
@@ -219,7 +225,12 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			_activeButton.OnHoverForeColor = _activeButton.ForeColor;
 		}
 
-
+		private void LoadPage(UserControl page)
+		{
+			MainContentPanel.Controls.Clear();
+			page.Dock = DockStyle.Fill;
+			MainContentPanel.Controls.Add(page);
+		}
 
 	}
 

@@ -1,4 +1,7 @@
-﻿namespace Modern_Sliding_Sidebar___C_Sharp_Winform
+﻿using System.Drawing;
+using System.Windows.Forms;
+
+namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 {
     partial class Form1
     {
@@ -6,12 +9,13 @@
         /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
+		private Panel MainContentPanel;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
+		/// <summary>
+		/// Clean up any resources being used.
+		/// </summary>
+		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+		protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
             {
@@ -49,6 +53,7 @@
 			this.Timer_Sidebar_Menu = new System.Windows.Forms.Timer(this.components);
 			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
 			this.btnSync = new System.Windows.Forms.Button();
+			this.MainContentPanel = new System.Windows.Forms.Panel();
 			this.SideBar.SuspendLayout();
 			this.gunaPanel6.SuspendLayout();
 			this.gunaPanel5.SuspendLayout();
@@ -57,6 +62,7 @@
 			this.gunaPanel3.SuspendLayout();
 			this.gunaPanel2.SuspendLayout();
 			this.gunaPanel9.SuspendLayout();
+			this.MainContentPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// Elipse_Form
@@ -325,7 +331,7 @@
 			// 
 			// btnSync
 			// 
-			this.btnSync.Location = new System.Drawing.Point(407, 172);
+			this.btnSync.Location = new System.Drawing.Point(457, 353);
 			this.btnSync.Name = "btnSync";
 			this.btnSync.Size = new System.Drawing.Size(75, 23);
 			this.btnSync.TabIndex = 2;
@@ -333,15 +339,25 @@
 			this.btnSync.UseVisualStyleBackColor = true;
 			this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
 			// 
+			// MainContentPanel
+			// 
+			this.MainContentPanel.BackColor = System.Drawing.Color.White;
+			this.MainContentPanel.Controls.Add(this.btnSync);
+			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
+			this.MainContentPanel.Name = "MainContentPanel";
+			this.MainContentPanel.Size = new System.Drawing.Size(805, 494);
+			this.MainContentPanel.TabIndex = 3;
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
 			this.ClientSize = new System.Drawing.Size(805, 494);
-			this.Controls.Add(this.btnSync);
 			this.Controls.Add(this.Close_Button);
 			this.Controls.Add(this.SideBar);
+			this.Controls.Add(this.MainContentPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 			this.Name = "Form1";
 			this.Text = "Form1";
@@ -354,13 +370,14 @@
 			this.gunaPanel3.ResumeLayout(false);
 			this.gunaPanel2.ResumeLayout(false);
 			this.gunaPanel9.ResumeLayout(false);
+			this.MainContentPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 
-        }
+		}
 
-        #endregion
+		#endregion
 
-        private Guna.UI.WinForms.GunaElipse Elipse_Form;
+		private Guna.UI.WinForms.GunaElipse Elipse_Form;
         private Guna.UI.WinForms.GunaPanel SideBar;
         private Guna.UI.WinForms.GunaPanel gunaPanel3;
         private Guna.UI.WinForms.GunaPanel gunaPanel2;
@@ -379,6 +396,8 @@
         private Guna.UI.WinForms.GunaDragControl DragControl_Form;
         private System.Windows.Forms.Timer Timer_Sidebar_Menu;
 		private System.Windows.Forms.Button btnSync;
+	
+
+		}
 	}
-}
 
