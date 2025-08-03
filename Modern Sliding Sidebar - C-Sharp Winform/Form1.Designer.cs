@@ -52,7 +52,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.DragControl_Form = new Guna.UI.WinForms.GunaDragControl(this.components);
 			this.Timer_Sidebar_Menu = new System.Windows.Forms.Timer(this.components);
 			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
-			this.btnSync = new System.Windows.Forms.Button();
 			this.MainContentPanel = new System.Windows.Forms.Panel();
 			this.SideBar.SuspendLayout();
 			this.gunaPanel6.SuspendLayout();
@@ -62,7 +61,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.gunaPanel3.SuspendLayout();
 			this.gunaPanel2.SuspendLayout();
 			this.gunaPanel9.SuspendLayout();
-			this.MainContentPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// Elipse_Form
@@ -320,8 +318,8 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.Close_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Close_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Close_Button.Image = global::GXIntegration_Levis.Properties.Resources.multiply_48px__;
-			this.Close_Button.ImageSize = new System.Drawing.Size(28, 28);
-			this.Close_Button.Location = new System.Drawing.Point(760, 9);
+			this.Close_Button.ImageSize = new System.Drawing.Size(18, 18);
+			this.Close_Button.Location = new System.Drawing.Point(766, 2);
 			this.Close_Button.Name = "Close_Button";
 			this.Close_Button.OnHoverImage = global::GXIntegration_Levis.Properties.Resources.multiply_48px_____;
 			this.Close_Button.OnHoverImageOffset = new System.Drawing.Point(0, 0);
@@ -329,25 +327,15 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.Close_Button.TabIndex = 1;
 			this.Close_Button.Click += new System.EventHandler(this.Close_Button_Click);
 			// 
-			// btnSync
-			// 
-			this.btnSync.Location = new System.Drawing.Point(457, 353);
-			this.btnSync.Name = "btnSync";
-			this.btnSync.Size = new System.Drawing.Size(75, 23);
-			this.btnSync.TabIndex = 2;
-			this.btnSync.Text = "btnSync";
-			this.btnSync.UseVisualStyleBackColor = true;
-			this.btnSync.Click += new System.EventHandler(this.btnSync_Click);
-			// 
 			// MainContentPanel
 			// 
 			this.MainContentPanel.BackColor = System.Drawing.Color.White;
-			this.MainContentPanel.Controls.Add(this.btnSync);
 			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
 			this.MainContentPanel.Name = "MainContentPanel";
 			this.MainContentPanel.Size = new System.Drawing.Size(805, 494);
 			this.MainContentPanel.TabIndex = 3;
+			this.MainContentPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainContentPanel_Paint);
 			// 
 			// Form1
 			// 
@@ -360,7 +348,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.Controls.Add(this.MainContentPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 			this.Name = "Form1";
-			this.Text = "Form1";
+			this.Text = "k.//";
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.SideBar.ResumeLayout(false);
 			this.gunaPanel6.ResumeLayout(false);
@@ -370,7 +358,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.gunaPanel3.ResumeLayout(false);
 			this.gunaPanel2.ResumeLayout(false);
 			this.gunaPanel9.ResumeLayout(false);
-			this.MainContentPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 		}
@@ -395,7 +382,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
         private Guna.UI.WinForms.GunaButton Menu_Button;
         private Guna.UI.WinForms.GunaDragControl DragControl_Form;
         private System.Windows.Forms.Timer Timer_Sidebar_Menu;
-		private System.Windows.Forms.Button btnSync;
 	
 
 		}

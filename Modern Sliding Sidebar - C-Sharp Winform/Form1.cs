@@ -20,7 +20,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
     {
 
 		static GXConfig config;
-		private InventoryModel _inventoryModel;
 		private ConfigurationPage _configurationPage;
 
 		bool sideBar_Expand = true;
@@ -30,7 +29,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
         {
             InitializeComponent();
 			config = GXConfig.Load("config.xml");
-			_inventoryModel = new InventoryModel(config.MainDbConnection);
 			MainContentPanel.Dock = DockStyle.Fill;
 		}
 
@@ -98,9 +96,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 		private void Configuration_Button_Click(object sender, EventArgs e)
 		{
-			//SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
-			//LoadPage(new ConfigurationPage());
-
 			if (_configurationPage == null)
 				_configurationPage = new ConfigurationPage();
 
@@ -109,7 +104,8 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		}
 		private void Inbound_Button_Click(object sender, EventArgs e)
 		{
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			LoadPage(new InboundPage());
+			SetActiveSidebarButton(Inbound_Button);
 		}
 
 		private void Outbound_Button_Click(object sender, EventArgs e)
@@ -123,98 +119,9 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		}
 
 
-
-
-
-
-
-		private async void btnSync_Click(object sender, EventArgs e)
-		{
-			await RunInventorySyncAsync();
-		}
-
-		private async Task RunInventorySyncAsync()
-		{
-			try
-			{
-				var newItems = await _inventoryModel.GetMainData();
-				string output = FormatInventory(newItems);
-
-				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-
-				Directory.CreateDirectory(outboundDir);
-
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-				string countryCode = config.CountryCode ?? "XX";
-				string fileName = $"LS{countryCode}_AMA_PSSTKR_{timestamp}.txt";
-				string filePath = Path.Combine(outboundDir, fileName);
-
-				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance); // Required
-				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-
-				MessageBox.Show($"✅ Inventory synced.\nSaved to: {filePath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-				Log($"✅ New inventory file saved to: {filePath}");
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Log($"❌ Error: {ex.Message}");
-			}
-		}
-
-		private string FormatInventory(List<Inventory> items)
-		{
-			var sb = new StringBuilder();
-			string d = config.Delimiter ?? "|";
-
-			foreach (var item in items)
-			{
-				sb.AppendLine($" CURRENCY_ID: {item.AlphabeticCode}" + // CURRENCY_ID
-					$"{d} STORE_ID: " + // STORE_ID
-					$"{d} BIN_TYPE: " +	// BIN_TYPE
-					$"{d} PRODUCT_CODE: {item.Description1}" + // PRODUCT_CODE 
-					$"{d} ALU: " + // SKU 
-					$"{d} WAIST: " + // WAIST 
-					$"{d} INSEAM: " + // INSEAM 
-					$"{d}" +    // EMPTY
-					$"{d} STOCK_FETCH_DATE: " +    // STOCK_FETCH_DATE
-					$"{d} LAST_MOVEMENT_DATE: " +    // LAST_MOVEMENT_DATE
-					$"{d} QUANTITY_SIGN: " +    // QUANTITY_SIGN
-					$"{d} QUANTITY: " +    // QUANTITY
-					$"{d} PURCHASE_COST: 0 " + // PURCHASE_COST
-					$"{d} RETAIL_PRICE: " + // RETAIL_PRICE
-					$"{d} AVERAGE_COST: 0 " + // AVERAGE_COST
-					$"{d} MANUFACTURE_COST: 0 " + // MANUFACTURE_COST
-					$"{d} REGION: " + // REGION
-					$"{d} COUNTRY_CODE: " + // COUNTRY_CODE
-					$"{d} MANUFACTURE_UPC: " + // MANUFACTURE_UPC
-					$"{d} DIVISION: " + // DIVISION
-					$"{d}" +    // EMPTY
-					$"{d}" +    // EMPTY
-					$"{d}" +    // EMPTY
-					$"{d} UNITCOUNT_SIGN: " + // UNITCOUNT_SIGN
-					$"{d} UNITCOUNT: "  // UNITCOUNT
-				);	
-			}
-			return sb.ToString();
-		}
-
-
 		// *********************************************************
 		// Helpers
 		// *********************************************************
-		private void Log(string message)
-		{
-			string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
-			Directory.CreateDirectory(logDir);
-
-			string logFile = Path.Combine(logDir, $"{DateTime.Now:yyyy-MM-dd}.log");
-			string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-			string logMessage = $"[{timestamp}] {message}";
-
-			Console.WriteLine(logMessage);
-			File.AppendAllText(logFile, logMessage + Environment.NewLine);
-		}
 		private void SetActiveSidebarButton(Guna.UI.WinForms.GunaButton button)
 		{
 			// Reset previous active button
@@ -241,6 +148,10 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			MainContentPanel.Controls.Add(page);
 		}
 
+		private void MainContentPanel_Paint(object sender, PaintEventArgs e)
+		{
+
+		}
 	}
 
 }

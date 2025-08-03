@@ -16,9 +16,9 @@ namespace GXIntegration_Levis
 		{
 			InitializeComponent();
 		}
-
-		private void button1_Click(object sender, EventArgs e)
+		private void AboutPage_Load(object sender, EventArgs e)
 		{
+
 		}
 	}
 }
