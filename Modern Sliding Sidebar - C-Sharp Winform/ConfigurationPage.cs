@@ -4,18 +4,18 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Xml;
 using System.IO;
+using Guna.UI.WinForms;
 
 namespace GXIntegration_Levis
 {
 	public partial class ConfigurationPage : UserControl
 	{
-		// Controls for database tab
-		private ComboBox cmbDbType;
-		private TextBox txtConnName, txtHost, txtPort, txtUser, txtPassword;
-		private Label lblDbStatus;
-		private Button btnEdit, btnSave;
+		// Guna UI controls for database tab
+		private GunaComboBox cmbDbType;
+		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort;
+		private GunaLabel lblDbStatus;
+		private GunaButton btnEdit, btnSave, btnTestConnection;
 		private TabPage databaseTab;
-		private Button btnTestConnection;
 
 		public ConfigurationPage()
 		{
@@ -47,33 +47,73 @@ namespace GXIntegration_Levis
 
 		private void SetupDatabaseTab(TabPage tab)
 		{
-			// Optional: Enable scrolling if contents exceed tab bounds
 			tab.AutoScroll = true;
 
 			// === Labels ===
-			tab.Controls.Add(new Label { Text = "Connection Name", Location = new Point(20, 20), Width = 120 });
-			tab.Controls.Add(new Label { Text = "Username", Location = new Point(20, 60), Width = 120 });
-			tab.Controls.Add(new Label { Text = "Password", Location = new Point(20, 100), Width = 120 });
-			tab.Controls.Add(new Label { Text = "Hostname", Location = new Point(20, 140), Width = 120 });
-			tab.Controls.Add(new Label { Text = "Port", Location = new Point(20, 180), Width = 120 });
-			tab.Controls.Add(new Label { Text = "Database Type", Location = new Point(20, 220), Width = 120 });
+			var lblDbName = new GunaLabel { Text = "Database Name", Location = new Point(20, 20), Width = 120 };
+			var lblUser = new GunaLabel { Text = "Username", Location = new Point(20, 60), Width = 120 };
+			var lblPassword = new GunaLabel { Text = "Password", Location = new Point(20, 100), Width = 120 };
+			var lblHost = new GunaLabel { Text = "Hostname", Location = new Point(20, 140), Width = 120 };
+			var lblPort = new GunaLabel { Text = "Port", Location = new Point(20, 180), Width = 120 };
+			var lblDbType = new GunaLabel { Text = "Database Type", Location = new Point(20, 220), Width = 120 };
+
+			tab.Controls.Add(lblDbName);
+			tab.Controls.Add(lblUser);
+			tab.Controls.Add(lblPassword);
+			tab.Controls.Add(lblHost);
+			tab.Controls.Add(lblPort);
+			tab.Controls.Add(lblDbType);
 
 			// === Inputs ===
-			txtConnName = new TextBox { Location = new Point(150, 20), Width = 200 };
-			txtUser = new TextBox { Location = new Point(150, 60), Width = 200 };
-			txtPassword = new TextBox { Location = new Point(150, 100), Width = 200, PasswordChar = '*' };
-			txtHost = new TextBox { Location = new Point(150, 140), Width = 200 };
-			txtPort = new TextBox { Location = new Point(150, 180), Width = 200 };
-			cmbDbType = new ComboBox
+			txtDbName = new GunaTextBox
+			{
+				Location = new Point(150, 20),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+			txtUser = new GunaTextBox
+			{
+				Location = new Point(150, 60),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+			txtPassword = new GunaTextBox
+			{
+				Location = new Point(150, 100),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
+				PasswordChar = '*'
+			};
+			txtHost = new GunaTextBox
+			{
+				Location = new Point(150, 140),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+			txtPort = new GunaTextBox
+			{
+				Location = new Point(150, 180),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+
+			cmbDbType = new GunaComboBox
 			{
 				Location = new Point(150, 220),
 				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
 				DropDownStyle = ComboBoxStyle.DropDownList
 			};
 			cmbDbType.Items.AddRange(new string[] { "Oracle", "SQLite", "MySQL", "SQL Server" });
 			cmbDbType.SelectedIndex = 0;
 
-			tab.Controls.Add(txtConnName);
+			tab.Controls.Add(txtDbName);
 			tab.Controls.Add(txtUser);
 			tab.Controls.Add(txtPassword);
 			tab.Controls.Add(txtHost);
@@ -81,9 +121,9 @@ namespace GXIntegration_Levis
 			tab.Controls.Add(cmbDbType);
 
 			// === Status label ===
-			lblDbStatus = new Label
+			lblDbStatus = new GunaLabel
 			{
-				Location = new Point(20, 270),
+				Location = new Point(20, 260),
 				Width = 500,
 				ForeColor = Color.Gray,
 				Text = "Ready"
@@ -91,35 +131,66 @@ namespace GXIntegration_Levis
 			tab.Controls.Add(lblDbStatus);
 
 			// === Buttons ===
-			btnEdit = new Button
+			btnSave = new GunaButton
+			{
+				Text = "Save",
+				Location = new Point(370, 60),
+				Size = new Size(80, 25),
+				Enabled = false
+			};
+			StyleGunaButton(
+				btnSave,
+				baseColor: Color.FromArgb(76, 175, 80),      // Green
+				hoverColor: Color.FromArgb(76, 195, 80),     // Lighter green hover
+				pressedColor: Color.FromArgb(56, 142, 60),   // Darker green pressed
+				borderColor: Color.FromArgb(76, 175, 80)
+			);
+			btnSave.Click += BtnSave_Click;
+
+
+			btnEdit = new GunaButton
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
 				Size = new Size(80, 30),
 				Enabled = false
 			};
+			StyleGunaButton(
+				btnEdit,
+				baseColor: Color.FromArgb(33, 150, 243),      // Blue
+				hoverColor: Color.FromArgb(53, 170, 243),     // Lighter blue hover
+				pressedColor: Color.FromArgb(20, 110, 200),   // Darker blue pressed
+				borderColor: Color.FromArgb(33, 150, 243)
+			);
 			btnEdit.Click += BtnEdit_Click;
 
-			btnSave = new Button
-			{
-				Text = "Save",
-				Location = new Point(370, 60),
-				Size = new Size(80, 30),
-				Enabled = false
-			};
-			btnSave.Click += BtnSave_Click;
 
-			btnTestConnection = new Button
+			btnTestConnection = new GunaButton
 			{
 				Text = "Test Connection",
-				Location = new Point(150, 310),
-				Size = new Size(150, 35)
+				Location = new Point(150, 290),
+				Size = new Size(150, 35),
+				Enabled = true
 			};
+			StyleGunaButton(
+				btnTestConnection,
+				baseColor: Color.FromArgb(138, 43, 226),      // BlueViolet (medium purple)
+				hoverColor: Color.FromArgb(100, 32, 165),     // Darker BlueViolet for hover
+				pressedColor: Color.FromArgb(75, 24, 123),    // Even darker pressed
+				borderColor: Color.FromArgb(138, 43, 226)     // Same as base for border
+			);
 			btnTestConnection.Click += BtnTestConnection_Click;
-
 			tab.Controls.Add(btnEdit);
 			tab.Controls.Add(btnSave);
 			tab.Controls.Add(btnTestConnection);
+
+			// Disable Save when user edits any input
+			txtDbName.TextChanged += DisableSaveOnEdit;
+			txtUser.TextChanged += DisableSaveOnEdit;
+			txtPassword.TextChanged += DisableSaveOnEdit;
+			txtHost.TextChanged += DisableSaveOnEdit;
+			txtPort.TextChanged += DisableSaveOnEdit;
+			cmbDbType.SelectedIndexChanged += DisableSaveOnEdit;
 		}
 
 		private void BtnEdit_Click(object sender, EventArgs e)
@@ -135,16 +206,17 @@ namespace GXIntegration_Levis
 		{
 			try
 			{
-				string connName = txtConnName.Text.Trim();
+				string connectionName = "MainDbConnection"; // fixed name
+				string dbName = txtDbName.Text.Trim();
 				string user = txtUser.Text.Trim();
 				string password = txtPassword.Text;
 				string host = txtHost.Text.Trim();
 				string port = txtPort.Text.Trim();
 				string dbType = cmbDbType.SelectedItem?.ToString() ?? "Oracle";
 
-				if (string.IsNullOrEmpty(connName))
+				if (string.IsNullOrEmpty(dbName))
 				{
-					MessageBox.Show("Connection Name cannot be empty.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+					MessageBox.Show("Database Name cannot be empty.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 					return;
 				}
 
@@ -164,7 +236,7 @@ namespace GXIntegration_Levis
 					connString = ""; // or show error
 				}
 
-				SaveToConfig(connName, connString);
+				SaveToConfig(connectionName, connString);
 
 				lblDbStatus.Text = "Connection saved successfully.";
 				lblDbStatus.ForeColor = Color.Green;
@@ -204,7 +276,7 @@ namespace GXIntegration_Levis
 					lblDbStatus.Text = "Connection test passed.";
 					lblDbStatus.ForeColor = Color.Green;
 
-					btnSave.Enabled = true; // ✅ Enable Save only after success
+					btnSave.Enabled = true; // Enable Save only after success
 				}
 			}
 			catch (Exception ex)
@@ -214,13 +286,13 @@ namespace GXIntegration_Levis
 				lblDbStatus.Text = "Connection test failed.";
 				lblDbStatus.ForeColor = Color.Red;
 
-				btnSave.Enabled = false; // ❌ Disable Save if test fails
+				btnSave.Enabled = false; // Disable Save if test fails
 			}
 		}
 
 		private void SetInputsEnabled(bool enabled)
 		{
-			txtConnName.Enabled = enabled;
+			txtDbName.Enabled = enabled;
 			txtUser.Enabled = enabled;
 			txtPassword.Enabled = enabled;
 			txtHost.Enabled = enabled;
@@ -284,9 +356,7 @@ namespace GXIntegration_Levis
 			{
 				XmlDocument doc = new XmlDocument();
 				doc.Load(filePath);
-				//XmlNode node = doc.SelectSingleNode("/Configuration/MainDbConnection");
 				XmlNode node = doc.DocumentElement.SelectSingleNode("MainDbConnection");
-
 
 				if (node == null || string.IsNullOrWhiteSpace(node.InnerText))
 				{
@@ -314,14 +384,13 @@ namespace GXIntegration_Levis
 						{
 							host = hostParts[0];
 							port = hostParts[1];
-							// service name hostParts[2] ignored here
 						}
 					}
 				}
 
 				// Fill inputs
 				cmbDbType.SelectedItem = "Oracle";
-				txtConnName.Text = "MainDbConnection";
+				txtDbName.Text = "MainDbConnection"; // fixed name shown here as DB name (or you can leave blank)
 				txtUser.Text = user;
 				txtPassword.Text = pass;
 				txtHost.Text = host;
@@ -338,7 +407,6 @@ namespace GXIntegration_Levis
 				lblDbStatus.Text = "Failed to load config.xml: " + ex.Message;
 				lblDbStatus.ForeColor = Color.Red;
 			}
-
 		}
 
 		private void DisableSaveOnEdit(object sender, EventArgs e)
@@ -346,6 +414,26 @@ namespace GXIntegration_Levis
 			btnSave.Enabled = false;
 			lblDbStatus.Text = "❗Please test connection again after editing.";
 			lblDbStatus.ForeColor = Color.DarkOrange;
+		}
+
+		private void StyleGunaButton(GunaButton button, Color baseColor, Color hoverColor, Color pressedColor, Color borderColor)
+		{
+			button.BaseColor = baseColor;
+			button.ForeColor = Color.White;
+			button.BorderColor = borderColor;
+			button.BorderSize = 1;
+			button.Radius = 1;
+			button.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+			button.TextAlign = HorizontalAlignment.Center;
+			button.Image = null;
+
+			button.OnHoverBaseColor = hoverColor;
+			button.OnHoverForeColor = Color.White;
+			button.OnHoverBorderColor = borderColor;
+			button.OnPressedColor = pressedColor;
+
+			button.MouseEnter += (s, e) => { button.Cursor = Cursors.Hand; };
+			button.MouseLeave += (s, e) => { button.Cursor = Cursors.Default; };
 		}
 
 	}
