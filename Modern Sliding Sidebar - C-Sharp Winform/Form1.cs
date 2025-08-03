@@ -21,6 +21,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 		static GXConfig config;
 		private InventoryModel _inventoryModel;
+		private ConfigurationPage _configurationPage;
 
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
@@ -30,6 +31,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
             InitializeComponent();
 			config = GXConfig.Load("config.xml");
 			_inventoryModel = new InventoryModel(config.MainDbConnection);
+			MainContentPanel.Dock = DockStyle.Fill;
 		}
 
         private void Form1_Load(object sender, EventArgs e)
@@ -96,7 +98,14 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 		private void Configuration_Button_Click(object sender, EventArgs e)
 		{
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			//SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			//LoadPage(new ConfigurationPage());
+
+			if (_configurationPage == null)
+				_configurationPage = new ConfigurationPage();
+
+			LoadPage(_configurationPage);
+			SetActiveSidebarButton(Configuration_Button);
 		}
 		private void Inbound_Button_Click(object sender, EventArgs e)
 		{

@@ -32,7 +32,8 @@ namespace GXIntegration_Levis
 			this.labelTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(120)))));
 			this.labelTitle.Location = new System.Drawing.Point(340, 116);
 			this.labelTitle.Name = "labelTitle";
-			this.labelTitle.Size = new System.Drawing.Size(372, 37);
+			//this.labelTitle.Size = new System.Drawing.Size(372, 37);
+			this.labelTitle.AutoSize = true;
 			this.labelTitle.TabIndex = 0;
 			this.labelTitle.Text = "Retail Pro Prism and S4 ERP";
 			// 

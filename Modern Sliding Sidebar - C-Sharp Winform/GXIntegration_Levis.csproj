@@ -135,6 +135,9 @@
     <EmbeddedResource Include="AboutPage.resx">
       <DependentUpon>AboutPage.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ConfigurationPage.resx">
+      <DependentUpon>ConfigurationPage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
