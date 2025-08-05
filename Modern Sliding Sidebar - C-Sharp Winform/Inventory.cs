@@ -23,5 +23,9 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		public string CountryCode { get; set; }
 		public string ManufactureUpc { get; set; }
 		public string Division { get; set; }
+		// UNITCOUNT_SIGN
+		// UNITCOUNT
+
+
 	}
 }

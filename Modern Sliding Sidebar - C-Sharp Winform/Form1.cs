@@ -148,12 +148,13 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 
 		private void Outbound_Button_Click(object sender, EventArgs e)
 		{
+			LoadPage(new OutboundPage());
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 		}
 		private void About_Button_Click(object sender, EventArgs e)
 		{
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 			LoadPage(new AboutPage());
+			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 		}
 
 

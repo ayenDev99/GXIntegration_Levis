@@ -24,7 +24,7 @@ public class InventoryModel
 
 				string sql = @"
 					SELECT 
-					C.ALPHABETIC_CODE AS CurrencyId,
+					CT.COUNTRY_CODE AS CurrencyId,
 					TO_CHAR(S.ADDRESS5) AS StoreId,
 
 					ISI.DESCRIPTION1 AS ProductCode,
@@ -36,17 +36,18 @@ public class InventoryModel
 
 					ISIQ.QTY AS Quantity,
 					ISI.COST AS RetailPrice,
-
-					SUBSTR(C.ALPHABETIC_CODE, 1, 2) AS CountryCode,
+					SUBSTR(CT.COUNTRY_CODE, 1, 2) AS CountryCode,
 					ISI.UPC AS ManufactureUpc,
-					ISI.UDF5_STRING AS Division,
+					ISI.UDF5_STRING AS Division
 
-					S.store_code AS StoreCode,
-					ISI.upc AS Upc
-				FROM rps.invn_sbs_item ISI
+
+				FROM rps.INVN_SBS_ITEM ISI
 				LEFT JOIN rps.INVN_SBS_ITEM_QTY ISIQ ON ISIQ.INVN_SBS_ITEM_SID = ISI.SID
-				LEFT JOIN rps.STORE S ON S.SID = ISIQ.store_sid
+				LEFT JOIN rps.STORE S ON S.SID = ISIQ.STORE_SID
 				LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
+				LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
+				LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
+
 				WHERE ISI.SID = 555545791000195684
 					";
 
@@ -60,7 +61,6 @@ public class InventoryModel
 			Console.WriteLine("❌ SQL Error in GetMainData(): " + ex.Message);
 			Console.WriteLine("🔍 Stack Trace: " + ex.StackTrace);
 
-			// Optionally rethrow or return empty list
 			throw; // OR return new List<Inventory>();
 		}
 	}

@@ -35,7 +35,7 @@ namespace GXIntegration_Levis
 			try
 			{
 				var newItems = await _inventoryModel.GetMainData();
-				string output = FormatInventory(newItems);
+				string output = FormatInventorySnapshot(newItems);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 
@@ -59,38 +59,38 @@ namespace GXIntegration_Levis
 			}
 		}
 
-		private string FormatInventory(List<Inventory> items)
+		private string FormatInventorySnapshot(List<Inventory> items)
 		{
 			var sb = new StringBuilder();
 			string d = config.Delimiter ?? "|";
 
 			foreach (var item in items)
 			{
-				sb.AppendLine($" CURRENCY_ID: {item.CurrencyId}" + // CURRENCY_ID
-					$"{d} STORE_ID: {item.StoreId}" + // STORE_ID
-					$"{d} BIN_TYPE: " + // BIN_TYPE
-					$"{d} PRODUCT_CODE: {item.ProductCode}" + // PRODUCT_CODE 
-					$"{d} ALU: {item.Sku}" + // SKU 
-					$"{d} WAIST: {item.Waist}" + // WAIST 
-					$"{d} INSEAM: {item.Inseam}" + // INSEAM 
-					$"{d}" +    // EMPTY
-					$"{d} STOCK_FETCH_DATE: " +    // STOCK_FETCH_DATE
-					$"{d} LAST_MOVEMENT_DATE: {item.LastMovementDate}" +    // LAST_MOVEMENT_DATE
-					$"{d} QUANTITY_SIGN: " +    // QUANTITY_SIGN
-					$"{d} QUANTITY: {item.Quantity}" +    // QUANTITY
-					$"{d} PURCHASE_COST: 0 " + // PURCHASE_COST
-					$"{d} RETAIL_PRICE: {item.RetailPrice}" + // RETAIL_PRICE
-					$"{d} AVERAGE_COST: 0 " + // AVERAGE_COST
-					$"{d} MANUFACTURE_COST: 0 " + // MANUFACTURE_COST
-					$"{d} REGION: AMA" + // REGION
-					$"{d} COUNTRY_CODE: {item.CountryCode}" + // COUNTRY_CODE
-					$"{d} MANUFACTURE_UPC: {item.ManufactureUpc}" + // MANUFACTURE_UPC
-					$"{d} DIVISION: {item.Division}" + // DIVISION
-					$"{d}" +    // EMPTY
-					$"{d}" +    // EMPTY
-					$"{d}" +    // EMPTY
-					$"{d} UNITCOUNT_SIGN: " + // UNITCOUNT_SIGN
-					$"{d} UNITCOUNT: "  // UNITCOUNT
+				sb.AppendLine($"{item.CurrencyId}" +	// CURRENCY_ID
+					$"{d}{item.StoreId}" +				// STORE_ID
+					$"{d}BIN_TYPE:" +					// BIN_TYPE
+					$"{d}{item.ProductCode}" +			// PRODUCT_CODE 
+					$"{d}{item.Sku}" +					// SKU 
+					$"{d}{item.Waist}" +				// WAIST 
+					$"{d}{item.Inseam}" +				// INSEAM 
+					$"{d}" +							// EMPTY
+					$"{d}STOCK_FETCH_DATE:" +			// STOCK_FETCH_DATE
+					$"{d}{item.LastMovementDate}" +		// LAST_MOVEMENT_DATE
+					$"{d}QUANTITY_SIGN:" +				// QUANTITY_SIGN
+					$"{d}{item.Quantity}" +				// QUANTITY
+					$"{d}0" +							// PURCHASE_COST
+					$"{d}{item.RetailPrice}" +			// RETAIL_PRICE
+					$"{d}0" +							// AVERAGE_COST
+					$"{d}0" +							// MANUFACTURE_COST
+					$"{d}AMA" +							// REGION
+					$"{d}{item.CountryCode}" +			// COUNTRY_CODE
+					$"{d}{item.ManufactureUpc}" +		// MANUFACTURE_UPC
+					$"{d}{item.Division}" +				// DIVISION
+					$"{d}" +							// EMPTY
+					$"{d}" +							// EMPTY
+					$"{d}" +							// EMPTY
+					$"{d}UNITCOUNT_SIGN:" +				// UNITCOUNT_SIGN
+					$"{d}UNITCOUNT:"					// UNITCOUNT
 				);
 			}
 			return sb.ToString();

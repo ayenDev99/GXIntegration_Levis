@@ -153,6 +153,9 @@
     <EmbeddedResource Include="InboundPage.resx">
       <DependentUpon>InboundPage.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="OutboundPage.resx">
+      <DependentUpon>OutboundPage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
