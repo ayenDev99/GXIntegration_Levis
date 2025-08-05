@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Guna.UI.WinForms;
 using GXIntegration_Levis;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using Oracle.ManagedDataAccess.Client;
@@ -9,6 +10,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,6 +20,14 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 {
 	public partial class Form1 : Form
     {
+		[DllImport("user32.dll")]
+		public static extern bool ReleaseCapture();
+
+		[DllImport("user32.dll")]
+		public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+		public const int WM_NCLBUTTONDOWN = 0xA1;
+		public const int HTCAPTION = 0x2;
 
 		static GXConfig config;
 		private ConfigurationPage _configurationPage;
@@ -28,14 +38,42 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		public Form1()
         {
             InitializeComponent();
+			
+			EnableDrag(SideBar); 
+
+
 			config = GXConfig.Load("config.xml");
 			MainContentPanel.Dock = DockStyle.Fill;
 		}
 
-        private void Form1_Load(object sender, EventArgs e)
+		private void EnableDrag(Control control)
+		{
+			control.MouseDown += (s, e) =>
+			{
+				if (e.Button == MouseButtons.Left)
+				{
+					ReleaseCapture();
+					SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+				}
+			};
+		}
+
+
+		private void Form1_MouseDown(object sender, MouseEventArgs e)
+		{
+			// Trigger dragging
+			if (e.Button == MouseButtons.Left)
+			{
+				ReleaseCapture();
+				SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+			}
+		}
+
+		private void Form1_Load(object sender, EventArgs e)
         {
 			SetActiveSidebarButton(Home_Button);
 			LoadPage(new HomePage());
+			EnableDrag(this);
 		}
 
         private void gunaPanel1_Paint(object sender, PaintEventArgs e)

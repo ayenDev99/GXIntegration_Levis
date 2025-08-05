@@ -243,6 +243,7 @@ namespace GXIntegration_Levis
 
 				SetInputsEnabled(false);
 				btnEdit.Enabled = true;
+				btnSave.Enabled = false;
 			}
 			catch (Exception ex)
 			{

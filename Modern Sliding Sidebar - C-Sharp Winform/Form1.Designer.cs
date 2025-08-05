@@ -329,6 +329,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			// 
 			// MainContentPanel
 			// 
+			this.MainContentPanel.AutoSize = true;
 			this.MainContentPanel.BackColor = System.Drawing.Color.White;
 			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
@@ -359,6 +360,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.gunaPanel2.ResumeLayout(false);
 			this.gunaPanel9.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 

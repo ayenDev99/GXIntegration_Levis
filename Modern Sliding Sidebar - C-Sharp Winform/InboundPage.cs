@@ -66,26 +66,26 @@ namespace GXIntegration_Levis
 
 			foreach (var item in items)
 			{
-				sb.AppendLine($" CURRENCY_ID: {item.AlphabeticCode}" + // CURRENCY_ID
-					$"{d} STORE_ID: " + // STORE_ID
+				sb.AppendLine($" CURRENCY_ID: {item.CurrencyId}" + // CURRENCY_ID
+					$"{d} STORE_ID: {item.StoreId}" + // STORE_ID
 					$"{d} BIN_TYPE: " + // BIN_TYPE
-					$"{d} PRODUCT_CODE: {item.Description1}" + // PRODUCT_CODE 
-					$"{d} ALU: " + // SKU 
-					$"{d} WAIST: " + // WAIST 
-					$"{d} INSEAM: " + // INSEAM 
+					$"{d} PRODUCT_CODE: {item.ProductCode}" + // PRODUCT_CODE 
+					$"{d} ALU: {item.Sku}" + // SKU 
+					$"{d} WAIST: {item.Waist}" + // WAIST 
+					$"{d} INSEAM: {item.Inseam}" + // INSEAM 
 					$"{d}" +    // EMPTY
 					$"{d} STOCK_FETCH_DATE: " +    // STOCK_FETCH_DATE
-					$"{d} LAST_MOVEMENT_DATE: " +    // LAST_MOVEMENT_DATE
+					$"{d} LAST_MOVEMENT_DATE: {item.LastMovementDate}" +    // LAST_MOVEMENT_DATE
 					$"{d} QUANTITY_SIGN: " +    // QUANTITY_SIGN
-					$"{d} QUANTITY: " +    // QUANTITY
+					$"{d} QUANTITY: {item.Quantity}" +    // QUANTITY
 					$"{d} PURCHASE_COST: 0 " + // PURCHASE_COST
-					$"{d} RETAIL_PRICE: " + // RETAIL_PRICE
+					$"{d} RETAIL_PRICE: {item.RetailPrice}" + // RETAIL_PRICE
 					$"{d} AVERAGE_COST: 0 " + // AVERAGE_COST
 					$"{d} MANUFACTURE_COST: 0 " + // MANUFACTURE_COST
-					$"{d} REGION: " + // REGION
-					$"{d} COUNTRY_CODE: " + // COUNTRY_CODE
-					$"{d} MANUFACTURE_UPC: " + // MANUFACTURE_UPC
-					$"{d} DIVISION: " + // DIVISION
+					$"{d} REGION: AMA" + // REGION
+					$"{d} COUNTRY_CODE: {item.CountryCode}" + // COUNTRY_CODE
+					$"{d} MANUFACTURE_UPC: {item.ManufactureUpc}" + // MANUFACTURE_UPC
+					$"{d} DIVISION: {item.Division}" + // DIVISION
 					$"{d}" +    // EMPTY
 					$"{d}" +    // EMPTY
 					$"{d}" +    // EMPTY

@@ -148,7 +148,7 @@
   <data name="Outbound_Button.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vwAADr8BOAVTJAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFiSURBVEhL7ZTP
+        vgAADr4B6kKxwAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFiSURBVEhL7ZTP
         KoRRGIfH7Awie7kASnbKnztQbkO5A1ZSaixsZSFFuQFlYfzZKmNPSbgAKyXK53nP93Occb5vnNEs56mn
         b77ze9/31MyZU+nRMVmWDeEWPuENjiuKIKviAZ4GLiuOIazhNYacKI4gCzd4R+NCcQzhRl4TsaSSQsi3
         87LsA9tucO/KYu6wT2UtsP493J6X2HaDN6ssYVRlHtb8cL0fmi4sgvDWqgtoqMTD2loe5cMNPttvUtVr
@@ -161,7 +161,7 @@
   <data name="Inbound_Button.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vwAADr8BOAVTJAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAG4SURBVEhLrZXL
+        vgAADr4B6kKxwAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAG4SURBVEhLrZXL
         LkNRFIarKoSKGaGMJIoILyAGoqYSihhJjIgXEAMmJiLiJQxcngUDD2DkNiSYkNT3765e9rm0leNLvuhZ
         699r67k19d+USqU0Dtjh/8LgdjzHT5y3cg2Ki3iKo1ZqGdZk8BIrfGC/tV1gFb/VgVecslZTyAaHCx2n
         K4ECVoZXeMEJF4iAXq/9jRuecUHBwb0rh3nGEYtVodaFb1jEpsOzrhzPtkWrUJsut0JcY224oDDuWtE8
@@ -175,7 +175,7 @@
   <data name="Configuration_Button.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAO
-        vwAADr8BOAVTJAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAEzSURBVEhLxZbR
+        vgAADr4B6kKxwAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAEzSURBVEhLxZbR
         TsJAEEXLK4Rv4CM1gQRfCcYvEF4sP4J+kYn6rPVcdhazZbqLaasnuclm5va2bKct1TU0TXNAbWpr/x4O
         nttS6wl6VWIL1SZmS47JgnGJPtEOLdAKdaGePPLqmKXF+GC4RX25s7gUGrryoUh/CYU50k8cCmWl94SC
         9nEoHi32B4q6WTne0NH0rkKGhcUGKGgUu6blC23Q1OzyT9HWeh7KCiPMokbenEc2J6MDvftgcVFmLVMO

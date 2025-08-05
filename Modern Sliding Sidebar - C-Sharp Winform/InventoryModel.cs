@@ -24,26 +24,31 @@ public class InventoryModel
 
 				string sql = @"
 					SELECT 
-						ISI.SID,
-						ISI.CURRENCY_SID,
+					C.ALPHABETIC_CODE AS CurrencyId,
+					TO_CHAR(S.ADDRESS5) AS StoreId,
 
-						C.ALPHABETIC_CODE,
+					ISI.DESCRIPTION1 AS ProductCode,
+					ISI.ALU AS Sku,
+					ISI.ITEM_SIZE AS Waist,
+					ISI.ATTRIBUTE AS Inseam,
 
+					ISI.LAST_RCVD_DATE AS LastMovementDate,
 
-						ISI.DESCRIPTION1,
+					ISIQ.QTY AS Quantity,
+					ISI.COST AS RetailPrice,
 
+					SUBSTR(C.ALPHABETIC_CODE, 1, 2) AS CountryCode,
+					ISI.UPC AS ManufactureUpc,
+					ISI.UDF5_STRING AS Division,
 
-
-						qty.qty,
-						s.store_code,
-						ISI.alu,
-						ISI.upc
-						
-					FROM rps.invn_sbs_item ISI
-					LEFT JOIN rps.invn_sbs_item_qty qty ON qty.invn_sbs_item_sid = ISI.SID
-					LEFT JOIN rps.store s ON s.SID = qty.store_sid
-					LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
-					FETCH FIRST 1 ROWS ONLY";
+					S.store_code AS StoreCode,
+					ISI.upc AS Upc
+				FROM rps.invn_sbs_item ISI
+				LEFT JOIN rps.INVN_SBS_ITEM_QTY ISIQ ON ISIQ.INVN_SBS_ITEM_SID = ISI.SID
+				LEFT JOIN rps.STORE S ON S.SID = ISIQ.store_sid
+				LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
+				WHERE ISI.SID = 555545791000195684
+					";
 
 				var data = await connection.QueryAsync<Inventory>(sql);
 				return data.AsList();

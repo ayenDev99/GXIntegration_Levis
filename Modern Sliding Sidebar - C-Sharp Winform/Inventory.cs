@@ -8,33 +8,20 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 {
 	public class Inventory
 	{
-		public long Sid { get; set; }
-		public int Qty { get; set; }
-		public string StoreCode { get; set; }
-		public string Alu { get; set; }
-		public string Upc { get; set; }
-
-
-		public string AlphabeticCode { get; set; }
-		// STORE_ID
+		public string CurrencyId { get; set; }
+		public string StoreId { get; set; }
 		// BIN_TYPE
-		public string Description1 { get; set; }
-		// SKU
-		// WAIST
-		// INSEAM
+		public string ProductCode { get; set; }
+		public string Sku { get; set; }
+		public string Waist { get; set; }
+		public string Inseam { get; set; }
 		// STOCK_FETCH_DATE
-		// LAST_MOVEMENT_DATE
+		public string LastMovementDate { get; set; }
 		// QUANTITY_SIGN
-		// QUANTITY
-		// PURCHASE_COST
-		// RETAIL_PRICE
-		// AVERAGE_COST
-		// MANUFACTURE_COST
-		// REGION
-		// COUNTRY_CODE
-		// MANUFACTURE_UPC
-		// DIVISION
-		// UNITCOUNT_SIGN
-		// UNITCOUNT
+		public string Quantity { get; set; }
+		public string RetailPrice { get; set; }
+		public string CountryCode { get; set; }
+		public string ManufactureUpc { get; set; }
+		public string Division { get; set; }
 	}
 }
