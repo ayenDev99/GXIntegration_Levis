@@ -47,10 +47,10 @@ public class InventoryModel
 				LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
 				LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
 				LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
-
-				WHERE ISI.SID = 555545791000195684
+				WHERE TRUNC(ISI.CREATED_DATETIME) = TO_DATE('2020-03-18', 'YYYY-MM-DD')
 					";
-
+				// TRUNC(ISI.CREATED_DATETIME) = TRUNC(SYSDATE) (ACTUAL)
+				// ISI.SID = 555545791000195684
 				var data = await connection.QueryAsync<Inventory>(sql);
 				return data.AsList();
 			}

@@ -34,21 +34,25 @@
 			// 
 			// testInventorySnapshot
 			// 
-			this.testInventorySnapshot.Location = new System.Drawing.Point(526, 329);
+			this.testInventorySnapshot.Cursor = System.Windows.Forms.Cursors.Hand;
+			this.testInventorySnapshot.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.testInventorySnapshot.Location = new System.Drawing.Point(1029, 95);
 			this.testInventorySnapshot.Name = "testInventorySnapshot";
-			this.testInventorySnapshot.Size = new System.Drawing.Size(154, 23);
+			this.testInventorySnapshot.Size = new System.Drawing.Size(65, 18);
 			this.testInventorySnapshot.TabIndex = 0;
-			this.testInventorySnapshot.Text = "Test Inventory Snapshot";
+			this.testInventorySnapshot.Text = "Download";
 			this.testInventorySnapshot.UseVisualStyleBackColor = true;
 			this.testInventorySnapshot.Click += new System.EventHandler(this.testInventorySnapshot_Click);
 			// 
 			// testInTransit
 			// 
-			this.testInTransit.Location = new System.Drawing.Point(526, 359);
+			this.testInTransit.Cursor = System.Windows.Forms.Cursors.Hand;
+			this.testInTransit.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.testInTransit.Location = new System.Drawing.Point(1029, 116);
 			this.testInTransit.Name = "testInTransit";
-			this.testInTransit.Size = new System.Drawing.Size(154, 23);
+			this.testInTransit.Size = new System.Drawing.Size(65, 18);
 			this.testInTransit.TabIndex = 1;
-			this.testInTransit.Text = "Test InTransit";
+			this.testInTransit.Text = "Download";
 			this.testInTransit.UseVisualStyleBackColor = true;
 			this.testInTransit.Click += new System.EventHandler(this.testInTransit_Click);
 			// 
@@ -59,7 +63,7 @@
 			this.Controls.Add(this.testInTransit);
 			this.Controls.Add(this.testInventorySnapshot);
 			this.Name = "OutboundPage";
-			this.Size = new System.Drawing.Size(805, 494);
+			this.Size = new System.Drawing.Size(1108, 494);
 			this.ResumeLayout(false);
 
 		}

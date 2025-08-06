@@ -319,7 +319,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.Close_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Close_Button.Image = global::GXIntegration_Levis.Properties.Resources.multiply_48px__;
 			this.Close_Button.ImageSize = new System.Drawing.Size(18, 18);
-			this.Close_Button.Location = new System.Drawing.Point(766, 2);
+			this.Close_Button.Location = new System.Drawing.Point(1000, 2);
 			this.Close_Button.Name = "Close_Button";
 			this.Close_Button.OnHoverImage = global::GXIntegration_Levis.Properties.Resources.multiply_48px_____;
 			this.Close_Button.OnHoverImageOffset = new System.Drawing.Point(0, 0);
@@ -334,7 +334,7 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
 			this.MainContentPanel.Name = "MainContentPanel";
-			this.MainContentPanel.Size = new System.Drawing.Size(805, 494);
+			this.MainContentPanel.Size = new System.Drawing.Size(1108, 494);
 			this.MainContentPanel.TabIndex = 3;
 			this.MainContentPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainContentPanel_Paint);
 			// 
@@ -343,13 +343,14 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(805, 494);
+			this.ClientSize = new System.Drawing.Size(1108, 494);
 			this.Controls.Add(this.Close_Button);
 			this.Controls.Add(this.SideBar);
 			this.Controls.Add(this.MainContentPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 			this.Name = "Form1";
 			this.Text = "k.//";
+			this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.SideBar.ResumeLayout(false);
 			this.gunaPanel6.ResumeLayout(false);
@@ -384,8 +385,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
         private Guna.UI.WinForms.GunaButton Menu_Button;
         private Guna.UI.WinForms.GunaDragControl DragControl_Form;
         private System.Windows.Forms.Timer Timer_Sidebar_Menu;
-	
-
-		}
+	}
 	}
 

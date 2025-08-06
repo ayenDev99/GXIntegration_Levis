@@ -1,4 +1,5 @@
-﻿using Modern_Sliding_Sidebar___C_Sharp_Winform;
+﻿using Guna.UI.WinForms;
+using Modern_Sliding_Sidebar___C_Sharp_Winform;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections;
@@ -9,11 +10,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using System.Text.Json;
 
 
 namespace GXIntegration_Levis
@@ -22,13 +23,64 @@ namespace GXIntegration_Levis
 	{
 		static GXConfig config;
 		private InventoryModel _inventoryModel;
-
+		private GunaDataGridView guna1DataGridView1;
 		public OutboundPage()
 		{
-			InitializeComponent();
 			config = GXConfig.Load("config.xml");
 			_inventoryModel = new InventoryModel(config.MainDbConnection);
+
+			InitializeComponent();
+			InitializeTable();
 		}
+		private void InitializeTable()
+		{
+			// Create and configure the DataGridView
+			guna1DataGridView1 = new GunaDataGridView();
+			guna1DataGridView1.Location = new Point(220, 70);
+			guna1DataGridView1.Size = new Size(800, 300);
+
+			guna1DataGridView1.ColumnCount = 4;
+			guna1DataGridView1.AllowUserToAddRows = false;
+
+			// Enable scrollbars
+			guna1DataGridView1.ScrollBars = ScrollBars.Both;
+
+			// Disable auto-sizing to allow scrolling
+			guna1DataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
+			// Set column headers
+			guna1DataGridView1.Columns[0].Name = "ID";
+			guna1DataGridView1.Columns[1].Name = "Name";
+			guna1DataGridView1.Columns[2].Name = "File Name Format";
+			guna1DataGridView1.Columns[3].Name = "File Type";
+
+			// Set column widths (sum should exceed DataGridView width to trigger horizontal scroll)
+			guna1DataGridView1.Columns[0].Width = 50;
+			guna1DataGridView1.Columns[1].Width = 200;
+			guna1DataGridView1.Columns[2].Width = 450;
+			guna1DataGridView1.Columns[3].Width = 100;
+
+			// Optional: Allow cell text to clip or wrap
+			guna1DataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
+
+			// Optional: Styling
+			guna1DataGridView1.Theme = GunaDataGridViewPresetThemes.Guna;
+			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
+			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
+			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+			guna1DataGridView1.BackgroundColor = Color.White;
+			guna1DataGridView1.BorderStyle = BorderStyle.None;
+			guna1DataGridView1.GridColor = Color.LightGray;
+
+			// EOD rows
+			guna1DataGridView1.Rows.Add("1", "Inventory Snapshot", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
+			guna1DataGridView1.Rows.Add("2", "InTransit", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
+			guna1DataGridView1.Rows.Add("3", "Price", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
+
+			// Add to form
+			this.Controls.Add(guna1DataGridView1);
+		}
+
 		private async void testInventorySnapshot_Click(object sender, EventArgs e)
 		{
 			await RunInventorySyncAsync();
@@ -139,7 +191,7 @@ namespace GXIntegration_Levis
 					$"{d}" +
 					$"{d}" +
 					$"{d}UNITCOUNT_SIGN:" +
-					$"{d}UNITCOUNT:"
+					$"{d}UNITCOUNT:{d}"
 				);
 			}
 
@@ -154,12 +206,12 @@ namespace GXIntegration_Levis
 			foreach (var item in items)
 			{
 				sb.AppendLine(
-					$"{d}{item.ProductCode}" +
+					$"{item.ProductCode}" +
 					$"{d}{item.Sku}" +
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
-					// STORE_CODE
-					$"{d}{item.Quantity}"
+					$"{d}{item.StoreId}" +
+					$"{d}{item.Quantity}{d}"
 				);
 			}
 
