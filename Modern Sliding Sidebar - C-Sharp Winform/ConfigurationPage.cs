@@ -6,6 +6,8 @@ using System.Xml;
 using System.IO;
 using Guna.UI.WinForms;
 
+
+
 namespace GXIntegration_Levis
 {
 	public partial class ConfigurationPage : UserControl
@@ -15,31 +17,22 @@ namespace GXIntegration_Levis
 		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort;
 		private GunaLabel lblDbStatus;
 		private GunaButton btnEdit, btnSave, btnTestConnection;
-		private TabPage databaseTab;
 
 		public ConfigurationPage()
 		{
 			InitializeComponent();
 
 			// Create tabs
-			databaseTab = new TabPage("Database");
-			TabPage apiTab = new TabPage("API");
+			TabPage databaseTab = new TabPage("Database");
 			TabPage sftpTab = new TabPage("SFTP");
-			TabPage timingTab = new TabPage("Timing");
 
 			// Setup database tab controls
 			SetupDatabaseTab(databaseTab);
-
-			// Add placeholders for other tabs
-			apiTab.Controls.Add(new Label() { Text = "API Connection here", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
-			sftpTab.Controls.Add(new Label() { Text = "SFTP Connection here", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
-			timingTab.Controls.Add(new Label() { Text = "Timing of Generation here", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
+			SetupSftpTab(sftpTab);
 
 			// Add tabs to TabControl
 			tabControl1.TabPages.Add(databaseTab);
-			tabControl1.TabPages.Add(apiTab);
 			tabControl1.TabPages.Add(sftpTab);
-			tabControl1.TabPages.Add(timingTab);
 
 			// Load config if exists
 			LoadMainDbConnection();
@@ -191,6 +184,86 @@ namespace GXIntegration_Levis
 			txtHost.TextChanged += DisableSaveOnEdit;
 			txtPort.TextChanged += DisableSaveOnEdit;
 			cmbDbType.SelectedIndexChanged += DisableSaveOnEdit;
+		}
+
+		private void SetupSftpTab(TabPage tab)
+		{
+			tab.AutoScroll = true;
+
+			// Labels
+			var lblHost = new GunaLabel { Text = "Hostname", Location = new Point(20, 20), Width = 120 };
+			var lblPort = new GunaLabel { Text = "Port", Location = new Point(20, 60), Width = 120 };
+			var lblUser = new GunaLabel { Text = "Username", Location = new Point(20, 100), Width = 120 };
+			var lblPassword = new GunaLabel { Text = "Password", Location = new Point(20, 140), Width = 120 };
+
+			tab.Controls.Add(lblHost);
+			tab.Controls.Add(lblPort);
+			tab.Controls.Add(lblUser);
+			tab.Controls.Add(lblPassword);
+
+			// Inputs
+			var txtHost = new GunaTextBox
+			{
+				Location = new Point(150, 20),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+
+			var txtPort = new GunaTextBox
+			{
+				Location = new Point(150, 60),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
+				Text = "22" // default SFTP port
+			};
+
+			var txtUser = new GunaTextBox
+			{
+				Location = new Point(150, 100),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black
+			};
+
+			var txtPassword = new GunaTextBox
+			{
+				Location = new Point(150, 140),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
+				PasswordChar = '*'
+			};
+
+			tab.Controls.Add(txtHost);
+			tab.Controls.Add(txtPort);
+			tab.Controls.Add(txtUser);
+			tab.Controls.Add(txtPassword);
+
+			// Buttons
+			var btnTestSftp = new GunaButton
+			{
+				Text = "Test SFTP Connection",
+				Location = new Point(150, 190),
+				Size = new Size(160, 35)
+			};
+
+			StyleGunaButton(
+				btnTestSftp,
+				baseColor: Color.FromArgb(0, 123, 255),        // Blue
+				hoverColor: Color.FromArgb(30, 144, 255),
+				pressedColor: Color.FromArgb(0, 102, 204),
+				borderColor: Color.FromArgb(0, 123, 255)
+			);
+
+			btnTestSftp.Click += (s, e) =>
+			{
+				// Placeholder: Add your SFTP test logic here
+				MessageBox.Show("SFTP connection test clicked!", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			};
+
+			tab.Controls.Add(btnTestSftp);
 		}
 
 		private void BtnEdit_Click(object sender, EventArgs e)
