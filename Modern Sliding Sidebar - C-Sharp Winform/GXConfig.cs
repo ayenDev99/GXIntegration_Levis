@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Modern_Sliding_Sidebar___C_Sharp_Winform.Properties
 {
-	internal class GXConfig
+	public class GXConfig
 	{
 		public string MainDbConnection { get; set; }
 		public string CountryCode { get; set; }

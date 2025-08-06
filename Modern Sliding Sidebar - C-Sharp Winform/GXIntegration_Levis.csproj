@@ -130,6 +130,16 @@
     <Compile Include="Inventory.cs" />
     <Compile Include="InventoryModel.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="OutboundHandlers\OutboundAdjustment.cs" />
+    <Compile Include="OutboundHandlers\OutboundASN.cs" />
+    <Compile Include="OutboundHandlers\OutboundInTransit.cs" />
+    <Compile Include="OutboundHandlers\OutboundInventorySnapshots.cs" />
+    <Compile Include="OutboundHandlers\OutboundPrice.cs" />
+    <Compile Include="OutboundHandlers\OutboundRetailSale.cs" />
+    <Compile Include="OutboundHandlers\OutboundReturnSale.cs" />
+    <Compile Include="OutboundHandlers\OutboundReturnToDC.cs" />
+    <Compile Include="OutboundHandlers\OutboundStoreReceiving.cs" />
+    <Compile Include="OutboundHandlers\OutboundStoreShipping.cs" />
     <Compile Include="OutboundPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -212,6 +222,7 @@
   <ItemGroup>
     <None Include="Resources\github_64px_Hover.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

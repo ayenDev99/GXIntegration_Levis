@@ -1,29 +1,25 @@
 ﻿using Guna.UI.WinForms;
-using Modern_Sliding_Sidebar___C_Sharp_Winform;
+using GXIntegration_Levis.OutboundHandlers;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
-
 
 namespace GXIntegration_Levis
 {
 	public partial class OutboundPage : UserControl
 	{
-		static GXConfig config;
+		private static GXConfig config;
 		private InventoryModel _inventoryModel;
 		private GunaDataGridView guna1DataGridView1;
+
+		// Map name -> action
+		private Dictionary<string, Func<Task>> downloadActions;
+
 		public OutboundPage()
 		{
 			config = GXConfig.Load("config.xml");
@@ -31,193 +27,107 @@ namespace GXIntegration_Levis
 
 			InitializeComponent();
 			InitializeTable();
+			InitializeDownloadActions();
 		}
+
 		private void InitializeTable()
 		{
-			// Create and configure the DataGridView
-			guna1DataGridView1 = new GunaDataGridView();
-			guna1DataGridView1.Location = new Point(220, 70);
-			guna1DataGridView1.Size = new Size(800, 300);
+			guna1DataGridView1 = new GunaDataGridView
+			{
+				Location = new Point(220, 70),
+				Size = new Size(900, 300),
+				AllowUserToAddRows = false,
+				ScrollBars = ScrollBars.Both,
+				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+				BackgroundColor = Color.White,
+				BorderStyle = BorderStyle.None,
+				GridColor = Color.LightGray,
+				Theme = GunaDataGridViewPresetThemes.Guna
+			};
 
+			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
+			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
+			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+
+			// Columns
 			guna1DataGridView1.ColumnCount = 4;
-			guna1DataGridView1.AllowUserToAddRows = false;
-
-			// Enable scrollbars
-			guna1DataGridView1.ScrollBars = ScrollBars.Both;
-
-			// Disable auto-sizing to allow scrolling
-			guna1DataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
-
-			// Set column headers
 			guna1DataGridView1.Columns[0].Name = "ID";
 			guna1DataGridView1.Columns[1].Name = "Name";
 			guna1DataGridView1.Columns[2].Name = "File Name Format";
 			guna1DataGridView1.Columns[3].Name = "File Type";
 
-			// Set column widths (sum should exceed DataGridView width to trigger horizontal scroll)
-			guna1DataGridView1.Columns[0].Width = 50;
+			guna1DataGridView1.Columns[0].Width = 30;
 			guna1DataGridView1.Columns[1].Width = 200;
-			guna1DataGridView1.Columns[2].Width = 450;
-			guna1DataGridView1.Columns[3].Width = 100;
+			guna1DataGridView1.Columns[2].Width = 455;
+			guna1DataGridView1.Columns[3].Width = 70;
 
-			// Optional: Allow cell text to clip or wrap
-			guna1DataGridView1.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
+			// Add action button column
+			var actionColumn = new DataGridViewButtonColumn
+			{
+				HeaderText = "Action",
+				Name = "Action",
+				Text = "Download",
+				UseColumnTextForButtonValue = true,
+				Width = 100
+			};
+			guna1DataGridView1.Columns.Add(actionColumn);
 
-			// Optional: Styling
-			guna1DataGridView1.Theme = GunaDataGridViewPresetThemes.Guna;
-			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
-			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
-			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-			guna1DataGridView1.BackgroundColor = Color.White;
-			guna1DataGridView1.BorderStyle = BorderStyle.None;
-			guna1DataGridView1.GridColor = Color.LightGray;
+			// Rows
+			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
+			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
+			AddRow("3", "RETAIL_SALE", "StoreSale_[yyyymmddhhmmss]", ".xml");
+			AddRow("4", "RETURN_SALE", "StoreReturn_[yyyymmddhhmmss]", ".xml");
+			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
+			AddRow("6", "STORE_TRANSFER - SHIPPING ", "StoreShipping_[yyyymmddhhmmss]", ".xml");
+			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
+			AddRow("8", "Inventory Snapshot", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
+			AddRow("9", "InTransit", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
+			AddRow("10", "Price", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
-			// EOD rows
-			guna1DataGridView1.Rows.Add("1", "Inventory Snapshot", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
-			guna1DataGridView1.Rows.Add("2", "InTransit", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
-			guna1DataGridView1.Rows.Add("3", "Price", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
-
-			// Add to form
+			// Add to UI
 			this.Controls.Add(guna1DataGridView1);
+
+			// Event
+			guna1DataGridView1.CellContentClick += Guna1DataGridView1_CellContentClick;
 		}
 
-		private async void testInventorySnapshot_Click(object sender, EventArgs e)
+		private void AddRow(string id, string name, string format, string type)
 		{
-			await RunInventorySyncAsync();
+			guna1DataGridView1.Rows.Add(id, name, format, type);
 		}
 
-		private async void testInTransit_Click(object sender, EventArgs e)
+		private void InitializeDownloadActions()
 		{
-			await RunInTransitSyncAsync();
-		}
-
-		public async Task RunInventorySyncAsync()
-		{
-			try
+			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
-				var newItems = await _inventoryModel.GetMainData();
+				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryModel, config),
+				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryModel, config),
+				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_inventoryModel, config),
+				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_inventoryModel, config),
+				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryModel, config),
+				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryModel, config),
+				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryModel, config),
+				["Inventory Snapshot"] = () => OutboundInventorySnapshots.Execute(_inventoryModel, config),
+				["InTransit"] = () => OutboundInTransit.Execute(_inventoryModel, config),
+				["Price"] = () => OutboundPrice.Execute(_inventoryModel, config)
+			};
+		}
 
-				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-				Directory.CreateDirectory(outboundDir);
+		private async void Guna1DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+		{
+			if (e.RowIndex < 0 || guna1DataGridView1.Columns[e.ColumnIndex].Name != "Action")
+				return;
 
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+			string name = guna1DataGridView1.Rows[e.RowIndex].Cells["Name"].Value?.ToString();
 
-				// Group items by CurrencyId
-				var groupedByCurrency = newItems
-					.GroupBy(item => item.CurrencyId ?? "UNKNOWN")
-					.OrderBy(g => g.Key);
-
-				foreach (var group in groupedByCurrency)
-				{
-					string currencyCode = group.Key.Substring(0, 2);
-					string fileName = $"LS{currencyCode}_AMA_PSSTKR_{timestamp}.txt";
-					string filePath = Path.Combine(outboundDir, fileName);
-
-					string output = FormatInventorySnapshot(group.ToList());
-
-					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-
-					Logger.Log($"✅ Inventory for currency '{currencyCode}' saved to: {filePath}");
-				}
-
-				MessageBox.Show($"✅ Inventory synced.\n{groupedByCurrency.Count()} file(s) created.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			if (downloadActions.TryGetValue(name, out var handler))
+			{
+				await handler();
 			}
-			catch (Exception ex)
+			else
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
+				MessageBox.Show($"No action defined for: {name}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 		}
-
-		public async Task RunInTransitSyncAsync()
-		{
-			try
-			{
-				var newItems = await _inventoryModel.GetMainData();
-				string output = FormatIntransit(newItems);
-
-				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-
-				Directory.CreateDirectory(outboundDir);
-
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-				string countryCode = config.CountryCode ?? "XX";
-				string fileName = $"LS{countryCode}_AMA_INTRANSIT_{timestamp}.txt";
-				string filePath = Path.Combine(outboundDir, fileName);
-
-				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-
-				MessageBox.Show($"✅ Inventory synced.\nSaved to: {newItems}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-				Logger.Log($"✅ New inventory file saved to: {filePath}");
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
-			}
-		}
-
-		private string FormatInventorySnapshot(List<Inventory> items)
-		{
-			var sb = new StringBuilder();
-			string d = config.Delimiter ?? "|";
-
-			foreach (var item in items)
-			{
-				sb.AppendLine(
-					$"{item.CurrencyId}" +
-					$"{d}{item.StoreId}" +
-					$"{d}BIN_TYPE:" +
-					$"{d}{item.ProductCode}" +
-					$"{d}{item.Sku}" +
-					$"{d}{item.Waist}" +
-					$"{d}{item.Inseam}" +
-					$"{d}" +
-					$"{d}STOCK_FETCH_DATE:" +
-					$"{d}{item.LastMovementDate}" +
-					$"{d}QUANTITY_SIGN:" +
-					$"{d}{item.Quantity}" +
-					$"{d}0" +
-					$"{d}{item.RetailPrice}" +
-					$"{d}0" +
-					$"{d}0" +
-					$"{d}AMA" +
-					$"{d}{item.CountryCode}" +
-					$"{d}{item.ManufactureUpc}" +
-					$"{d}{item.Division}" +
-					$"{d}" +
-					$"{d}" +
-					$"{d}" +
-					$"{d}UNITCOUNT_SIGN:" +
-					$"{d}UNITCOUNT:{d}"
-				);
-			}
-
-			return sb.ToString();
-		}
-
-		private string FormatIntransit(List<Inventory> items)
-		{
-			var sb = new StringBuilder();
-			string d = config.Delimiter ?? "|";
-
-			foreach (var item in items)
-			{
-				sb.AppendLine(
-					$"{item.ProductCode}" +
-					$"{d}{item.Sku}" +
-					$"{d}{item.Waist}" +
-					$"{d}{item.Inseam}" +
-					$"{d}{item.StoreId}" +
-					$"{d}{item.Quantity}{d}"
-				);
-			}
-
-			return sb.ToString();
-		}
-
-
 	}
 }
