@@ -2,6 +2,7 @@
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Model;
 using GXIntegration_Levis.OutboundHandlers;
+using GXIntegration_Levis.Properties;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ namespace GXIntegration_Levis
 		private static GXConfig config;
 		private InventoryRepository _inventoryRepository;
 		private GunaDataGridView guna1DataGridView1;
+		private int _hoveredRowIndex = -1;
 
 		// Map name -> action
 		private Dictionary<string, Func<Task>> downloadActions;
@@ -48,6 +50,10 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
 			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+			guna1DataGridView1.CellMouseMove += Guna1DataGridView1_CellMouseMove;
+			guna1DataGridView1.CellMouseLeave += Guna1DataGridView1_CellMouseLeave;
+
 
 			// Columns
 			guna1DataGridView1.ColumnCount = 4;
@@ -62,15 +68,25 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.Columns[3].Width = 70;
 
 			// Add action button column
-			var actionColumn = new DataGridViewButtonColumn
+			var imageColumn = new DataGridViewImageColumn
 			{
-				HeaderText = "Action",
 				Name = "Action",
-				Text = "Download",
-				UseColumnTextForButtonValue = true,
-				Width = 100
+				HeaderText = "Action",
+				Image = Resources.icon_download, // Make sure this is the correct resource reference
+				Width = 50,
+				ImageLayout = DataGridViewImageCellLayout.Zoom
 			};
-			guna1DataGridView1.Columns.Add(actionColumn);
+			guna1DataGridView1.Columns.Add(imageColumn);
+
+			guna1DataGridView1.CellMouseMove += (s, e) =>
+			{
+				if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
+					guna1DataGridView1.Cursor = Cursors.Hand;
+				else
+					guna1DataGridView1.Cursor = Cursors.Default;
+			};
+
+
 
 			// Rows
 			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
@@ -128,6 +144,39 @@ namespace GXIntegration_Levis
 			{
 				MessageBox.Show($"No action defined for: {name}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
+		}
+
+
+		private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
+			{
+				// Reset previous hovered row style if any
+				if (_hoveredRowIndex >= 0)
+				{
+					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White; // Or original bg color
+				}
+
+				// Set new hovered row style
+				guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue; // Hover color
+				_hoveredRowIndex = e.RowIndex;
+
+				// Change cursor to hand if over "Action" column, else default
+				if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
+					guna1DataGridView1.Cursor = Cursors.Hand;
+				else
+					guna1DataGridView1.Cursor = Cursors.Default;
+			}
+		}
+
+		private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+		{
+			if (_hoveredRowIndex >= 0)
+			{
+				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White; // Reset back color
+				_hoveredRowIndex = -1;
+			}
+			guna1DataGridView1.Cursor = Cursors.Default;
 		}
 	}
 }

@@ -133,7 +133,6 @@
     <Compile Include="InboundPage.Designer.cs">
       <DependentUpon>InboundPage.cs</DependentUpon>
     </Compile>
-    <Compile Include="Inventory.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\VoucherModel.cs" />
@@ -229,7 +228,9 @@
   <ItemGroup>
     <None Include="Resources\github_64px_Hover.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Resources\icon_download.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
