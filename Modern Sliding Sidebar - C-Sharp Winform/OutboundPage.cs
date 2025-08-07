@@ -15,17 +15,20 @@ namespace GXIntegration_Levis
 	public partial class OutboundPage : UserControl
 	{
 		private static GXConfig config;
+
 		private InventoryRepository _inventoryRepository;
+		private SalesRepository _salesRepository;
+
 		private GunaDataGridView guna1DataGridView1;
 		private int _hoveredRowIndex = -1;
 
-		// Map name -> action
 		private Dictionary<string, Func<Task>> downloadActions;
 
 		public OutboundPage()
 		{
 			config = GXConfig.Load("config.xml");
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
+			_salesRepository = new SalesRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeTable();
@@ -54,7 +57,6 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.CellMouseMove += Guna1DataGridView1_CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += Guna1DataGridView1_CellMouseLeave;
 
-
 			// Columns
 			guna1DataGridView1.ColumnCount = 4;
 			guna1DataGridView1.Columns[0].Name = "ID";
@@ -72,7 +74,7 @@ namespace GXIntegration_Levis
 			{
 				Name = "Action",
 				HeaderText = "Action",
-				Image = Resources.icon_download, // Make sure this is the correct resource reference
+				Image = Resources.icon_download,
 				Width = 50,
 				ImageLayout = DataGridViewImageCellLayout.Zoom
 			};
@@ -86,8 +88,6 @@ namespace GXIntegration_Levis
 					guna1DataGridView1.Cursor = Cursors.Default;
 			};
 
-
-
 			// Rows
 			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
 			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
@@ -100,10 +100,8 @@ namespace GXIntegration_Levis
 			AddRow("9", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
 			AddRow("10", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
-			// Add to UI
 			this.Controls.Add(guna1DataGridView1);
 
-			// Event
 			guna1DataGridView1.CellContentClick += Guna1DataGridView1_CellContentClick;
 		}
 
@@ -118,7 +116,7 @@ namespace GXIntegration_Levis
 			{
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryRepository, config),
 				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryRepository, config),
-				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_inventoryRepository, config),
+				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_inventoryRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
 				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryRepository, config),
@@ -151,17 +149,14 @@ namespace GXIntegration_Levis
 		{
 			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
 			{
-				// Reset previous hovered row style if any
 				if (_hoveredRowIndex >= 0)
 				{
-					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White; // Or original bg color
+					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
 				}
 
-				// Set new hovered row style
-				guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue; // Hover color
+				guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue;
 				_hoveredRowIndex = e.RowIndex;
 
-				// Change cursor to hand if over "Action" column, else default
 				if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
 					guna1DataGridView1.Cursor = Cursors.Hand;
 				else
@@ -173,7 +168,7 @@ namespace GXIntegration_Levis
 		{
 			if (_hoveredRowIndex >= 0)
 			{
-				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White; // Reset back color
+				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
 				_hoveredRowIndex = -1;
 			}
 			guna1DataGridView1.Cursor = Cursors.Default;

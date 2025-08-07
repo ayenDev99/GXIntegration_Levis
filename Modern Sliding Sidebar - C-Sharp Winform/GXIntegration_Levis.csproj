@@ -114,6 +114,7 @@
       <DependentUpon>ConfigurationPage.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\Access\InventoryRepository.cs" />
+    <Compile Include="Data\Access\SalesRepository.cs" />
     <Compile Include="Data\DbConnection.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -135,7 +136,7 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="Model\InventoryModel.cs" />
-    <Compile Include="Model\VoucherModel.cs" />
+    <Compile Include="Model\SalesModel.cs" />
     <Compile Include="OutboundHandlers\OutboundAdjustment.cs" />
     <Compile Include="OutboundHandlers\OutboundASN.cs" />
     <Compile Include="OutboundHandlers\OutboundInTransit.cs" />

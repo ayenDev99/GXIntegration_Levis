@@ -63,26 +63,6 @@ namespace GXIntegration_Levis.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap github_64px {
-            get {
-                object obj = ResourceManager.GetObject("github_64px", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap github_64px_Hover {
-            get {
-                object obj = ResourceManager.GetObject("github_64px_Hover", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap icon_download {
             get {
                 object obj = ResourceManager.GetObject("icon_download", resourceCulture);
@@ -136,16 +116,6 @@ namespace GXIntegration_Levis.Properties {
         internal static System.Drawing.Bitmap multiply_48px1 {
             get {
                 object obj = ResourceManager.GetObject("multiply_48px1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap undraw_data_reports_706v {
-            get {
-                object obj = ResourceManager.GetObject("undraw_data_reports_706v", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

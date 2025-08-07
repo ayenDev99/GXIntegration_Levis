@@ -59,7 +59,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					// Log the exception or handle it as needed
+					Logger.Log($"Error fetching inventory data: {ex.Message}");
 					Console.WriteLine($"Error fetching inventory data: {ex.Message}");
 					return new List<InventoryModel>();
 				}
