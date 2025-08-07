@@ -30,11 +30,17 @@ namespace GXIntegration_Levis.Data.Access
 							s.store_no AS StoreNo,
 							d.workstation_no AS WorkstationNo,
 							d.doc_no AS DocNo,
+							d.created_datetime as CreatedDateTime,
 							d.invc_post_date as InvcPostDate,
+							d.cashier_login_name as CashierLoginName,
 
 
 
 							c.alphabetic_code as CurrencyCode,
+							ctry.country_code as CountryCode,
+	
+							di.item_pos as ItemSequenceNumber,
+
 							di.alu AS Alu
 							
 							
@@ -48,6 +54,11 @@ namespace GXIntegration_Levis.Data.Access
 							rps.tender t ON t.doc_sid = d.sid
 						LEFT JOIN   
 							rps.currency c ON c.sid = t.currency_sid
+						LEFT JOIN   
+								rps.subsidiary sbs ON sbs.sid = d.subsidiary_sid
+						LEFT JOIN   
+								rps.country ctry ON ctry.sid = sbs.country_sid
+
 						WHERE 
 							s.store_no = 1
 							AND d.status IN (3, 4)

@@ -15,6 +15,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundRetailSale
 	{
+		private static readonly string NsIXRetail = "http://www.nrf-arts.org/IXRetail/namespace/";
+		private static readonly string NsDtv = "http://www.datavantagecorp.com/xstore/";
+		private static readonly string NsXs = "http://www.w3.org/2001/XMLSchema-instance";
 		public static async Task Execute(SalesRepository repository, GXConfig config)
 		{
 			try
@@ -26,10 +29,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
+
 				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-
 				string fileName = $"StoreSale_{timestamp}.xml";
-
 				string filePath = Path.Combine(outboundDir, fileName);
 
 				GenerateXml(items, filePath);
@@ -45,7 +47,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void GenerateXml(List<SalesModel> items, string filePath)
 		{
-			XmlWriterSettings settings = new XmlWriterSettings
+			var settings = new XmlWriterSettings
 			{
 				Indent = true,
 				Encoding = Encoding.UTF8
@@ -55,142 +57,129 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				writer.WriteStartDocument();
 
-				// <POSLog>
-				writer.WriteStartElement("POSLog", "http://www.nrf-arts.org/IXRetail/namespace/");
-
-				// Add namespaces as attributes
-				writer.WriteAttributeString("xmlns", "dtv", null, "http://www.datavantagecorp.com/xstore/");
-				writer.WriteAttributeString("xmlns", "xs", null, "http://www.w3.org/2001/XMLSchema-instance");
-				writer.WriteAttributeString("dtv", "http://www.datavantagecorp.com/xstore/");
-				writer.WriteAttributeString("xs", "http://www.w3.org/2001/XMLSchema-instance");
-				writer.WriteAttributeString("schemaLocation", "http://www.nrf-arts.org/IXRetail/namespace/ POSLog.xsd");
+				// <POSLog> with namespaces
+				writer.WriteStartElement("POSLog", NsIXRetail);
+				writer.WriteAttributeString("xmlns", "dtv", null, NsDtv);
+				writer.WriteAttributeString("xmlns", "xs", null, NsXs);
+				writer.WriteAttributeString("xsi", "schemaLocation", NsXs, NsIXRetail + " POSLog.xsd");
 
 				// <Transaction>
-				writer.WriteStartElement("Transaction", "http://www.nrf-arts.org/IXRetail/namespace/");
+				writer.WriteStartElement("Transaction", NsIXRetail);
 				writer.WriteAttributeString("CancelFlag", "false");
 				writer.WriteAttributeString("OfflineFlag", "false");
 				writer.WriteAttributeString("TrainingModeFlag", "false");
+				writer.WriteAttributeString("dtv", "TransactionType", NsDtv, "RETAIL_SALE");
 
-				writer.WriteAttributeString("dtv", "TransactionType", "http://www.datavantagecorp.com/xstore/", "RETAIL_SALE");
-
-				// <dtv:OrganizationID><![CDATA[1]]></dtv:OrganizationID>
-				writer.WriteStartElement("dtv", "OrganizationID", "http://www.datavantagecorp.com/xstore/");
+				// <dtv:OrganizationID>
+				writer.WriteStartElement("dtv", "OrganizationID", NsDtv);
 				writer.WriteCData("1");
-				writer.WriteEndElement(); // </dtv:OrganizationID>
+				writer.WriteEndElement();
 
-				var stores = items
-					.GroupBy(i => i.StoreNo ?? "UNKNOWN")
-					.OrderBy(g =>
-					{
-						int.TryParse(g.Key, out int storeNo);
-						return storeNo;
-					});
-
-				foreach (var storeGroup in stores)
+				// Group by store, workstation, transaction
+				foreach (var storeGroup in GroupBySafe(items, i => i.StoreNo))
 				{
-					writer.WriteStartElement("RetailStoreID");
-					writer.WriteCData(storeGroup.Key ?? "");
-					writer.WriteEndElement();
+					WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
 
-					var workstations = storeGroup
-						.GroupBy(i => i.WorkstationNo ?? "UNKNOWN")
-						.OrderBy(g =>
-						{
-							int.TryParse(g.Key, out int workstationNo);
-							return workstationNo;
-						});
-
-					foreach (var wsGroup in workstations)
+					foreach (var wsGroup in GroupBySafe(storeGroup, i => i.WorkstationNo))
 					{
-						writer.WriteStartElement("WorkstationID");
-						writer.WriteCData(wsGroup.Key ?? "");
-						writer.WriteEndElement();
+						WriteCDataElement(writer, "WorkstationID", wsGroup.Key);
+						WriteCDataElement(writer, "TillID", storeGroup.Key + wsGroup.Key);
 
-						writer.WriteStartElement("TillID");
-						writer.WriteCData((storeGroup.Key + wsGroup.Key) ?? "");
-						writer.WriteEndElement();
-
-						var transactions = wsGroup
-							.GroupBy(i => i.DocNo ?? "UNKNOWN")
-							.OrderBy(g =>
-							{
-								int.TryParse(g.Key, out int docNo);
-								return docNo;
-							});
-
-						foreach (var transGroup in transactions)
+						foreach (var transGroup in GroupBySafe(wsGroup, i => i.DocNo))
 						{
-							writer.WriteStartElement("SequenceNumber");
-							writer.WriteCData(transGroup.Key ?? "");
-							writer.WriteEndElement();
+							WriteCDataElement(writer, "SequenceNumber", transGroup.Key);
 
 							var firstItem = transGroup.FirstOrDefault();
-							string formattedDate = FormatDate(firstItem?.InvcPostDate);
-							writer.WriteStartElement("BusinessDayDate");
-							writer.WriteCData(formattedDate);
-							writer.WriteEndElement();
+							WriteCDataElement(writer, "BusinessDayDate", FormatDate(firstItem?.CreatedDateTime));
+							WriteCDataElement(writer, "BeginDateTime", FormatDate(firstItem?.CreatedDateTime, true));
+							WriteCDataElement(writer, "EndDateTime", FormatDate(firstItem?.InvcPostDate, true));
+							WriteCDataElement(writer, "OperatorID", firstItem != null ? firstItem.CashierLoginName : "");
+							WriteCDataElement(writer, "CurrencyCode", firstItem != null ? firstItem.CurrencyCode : "");
 
-							writer.WriteStartElement("BeginDateTime");
-							writer.WriteCData("");
-							writer.WriteEndElement();
+							WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", "PAPER");
+							WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
+							WritePosTransactionProperties(writer, "REGION", "AMA");
+							WritePosTransactionProperties(writer, "COUNTRY", "TR");
 
-							writer.WriteStartElement("EndDateTime");
-							writer.WriteCData("");
-							writer.WriteEndElement();
+							writer.WriteStartElement("RetailTransaction");
+							writer.WriteAttributeString("TransactionStatus", "Delivered");
+							writer.WriteAttributeString("TypeCode", "Transaction");
 
-							writer.WriteStartElement("OperatorID");
-							writer.WriteCData("");
-							writer.WriteEndElement();
+							writer.WriteStartElement("LineItem");
+							writer.WriteAttributeString("EntryMethod", "dtv:ScannerScanner");
+							writer.WriteAttributeString("VoidFlag", "false");
 
-							writer.WriteStartElement("CurrencyCode");
-							writer.WriteCData(firstItem?.CurrencyCode ?? "");
-							writer.WriteEndElement();
+							foreach (var itemGroup in GroupBySafe(transGroup, i => i.ItemSequenceNumber))
+							{
+								WriteCDataElement(writer, "SequenceNumber", itemGroup.Key);
+								WriteCDataElement(writer, "LineNumber", itemGroup.Key);
+								WriteCDataElement(writer, "BeginDateTime", itemGroup.Key);
+								WriteCDataElement(writer, "EndDateTime", itemGroup.Key);
+							}
 
-							// RECEIPT_DELIVERY_METHOD
-							// INVENTORY_MOVEMENT_SUCCESS
-
-							// REGION
-							writer.WriteStartElement("dtv", "PosTransactionProperties", "http://www.datavantagecorp.com/xstore/");
-								writer.WriteStartElement("dtv", "PosTransactionPropertyCode", "http://www.datavantagecorp.com/xstore/");
-								writer.WriteCData("REGION");
-								writer.WriteEndElement();
-
-								writer.WriteStartElement("dtv", "PosTransactionPropertyValue", "http://www.datavantagecorp.com/xstore/");
-								writer.WriteCData("AMA");
-								writer.WriteEndElement();
-							writer.WriteEndElement();
-
-							// COUNTRY
-							writer.WriteStartElement("dtv", "PosTransactionProperties", "http://www.datavantagecorp.com/xstore/");
-							writer.WriteStartElement("dtv", "PosTransactionPropertyCode", "http://www.datavantagecorp.com/xstore/");
-							writer.WriteCData("COUNTRY");
-							writer.WriteEndElement();
-
-							writer.WriteStartElement("dtv", "PosTransactionPropertyValue", "http://www.datavantagecorp.com/xstore/");
-							writer.WriteCData("AMA");
-							writer.WriteEndElement();
-							writer.WriteEndElement();
-
+							writer.WriteEndElement(); // </LineItem>
+							writer.WriteEndElement(); // </RetailTransaction>
 						}
 					}
 				}
 
 				writer.WriteEndElement(); // </Transaction>
 				writer.WriteEndElement(); // </POSLog>
-
 				writer.WriteEndDocument();
 			}
 		}
 
-		private static string FormatDate(DateTimeOffset? date)
+		private static void WriteCDataElement(XmlWriter writer, string name, string content)
 		{
-			if (date.HasValue)
+			writer.WriteStartElement(name);
+			writer.WriteCData(content ?? "");
+			writer.WriteEndElement();
+		}
+
+		private static void WritePosTransactionProperties(XmlWriter writer, string code, string value)
+		{
+			writer.WriteStartElement("dtv", "PosTransactionProperties", NsDtv);
+
+			writer.WriteStartElement("dtv", "PosTransactionPropertyCode", NsDtv);
+			writer.WriteCData(code);
+			writer.WriteEndElement();
+
+			writer.WriteStartElement("dtv", "PosTransactionPropertyValue", NsDtv);
+			writer.WriteCData(value);
+			writer.WriteEndElement();
+
+			writer.WriteEndElement();
+		}
+
+		private static string FormatDate(DateTimeOffset? date, bool includeTime = false)
+		{
+			if (!date.HasValue)
+				return "";
+
+			if (includeTime)
 			{
-				// Format as "yyyy-MM-dd" (date part only)
+				// Format with time and fractional seconds (2 decimals)
+				return date.Value.ToString("yyyy-MM-ddTHH:mm:ss.ff");
+			}
+			else
+			{
+				// Format date only
 				return date.Value.ToString("yyyy-MM-dd");
 			}
-			return "";
 		}
+
+
+		private static IEnumerable<IGrouping<string, SalesModel>> GroupBySafe(IEnumerable<SalesModel> source, Func<SalesModel, string> keySelector)
+		{
+			return source
+				.GroupBy(i => keySelector(i) ?? "UNKNOWN")
+				.OrderBy(g =>
+				{
+					int n;
+					return int.TryParse(g.Key, out n) ? n : int.MaxValue;
+				});
+		}
+
 
 	}
 }
