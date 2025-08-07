@@ -1,4 +1,6 @@
-﻿using Modern_Sliding_Sidebar___C_Sharp_Winform;
+﻿using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Model;
+using Modern_Sliding_Sidebar___C_Sharp_Winform;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
@@ -16,12 +18,12 @@ namespace GXIntegration_Levis
 	public partial class InboundPage : UserControl
 	{
 		static GXConfig config;
-		private InventoryModel _inventoryModel;
+		private InventoryRepository _inventoryRepository;
 		public InboundPage()
 		{
 			InitializeComponent();
 			config = GXConfig.Load("config.xml");
-			_inventoryModel = new InventoryModel(config.MainDbConnection);
+			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 
 		}
 
@@ -34,8 +36,9 @@ namespace GXIntegration_Levis
 		{
 			try
 			{
-				var newItems = await _inventoryModel.GetMainData();
-				string output = FormatInventorySnapshot(newItems);
+				DateTime date = DateTime.Today;
+				var Items = await _inventoryRepository.GetInventoryAsync(date);
+				string output = FormatInventorySnapshot(Items);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 
@@ -59,7 +62,7 @@ namespace GXIntegration_Levis
 			}
 		}
 
-		private string FormatInventorySnapshot(List<Inventory> items)
+		private string FormatInventorySnapshot(List<InventoryModel> items)
 		{
 			var sb = new StringBuilder();
 			string d = config.Delimiter ?? "|";

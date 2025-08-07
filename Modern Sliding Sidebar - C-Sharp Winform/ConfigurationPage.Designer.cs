@@ -37,7 +37,7 @@
 			this.tabControl1.Location = new System.Drawing.Point(235, 24);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(555, 454);
+			this.tabControl1.Size = new System.Drawing.Size(853, 454);
 			this.tabControl1.TabIndex = 0;
 			// 
 			// ConfigurationPage
@@ -46,7 +46,7 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.tabControl1);
 			this.Name = "ConfigurationPage";
-			this.Size = new System.Drawing.Size(805, 494);
+			this.Size = new System.Drawing.Size(1108, 494);
 			this.ResumeLayout(false);
 
 		}

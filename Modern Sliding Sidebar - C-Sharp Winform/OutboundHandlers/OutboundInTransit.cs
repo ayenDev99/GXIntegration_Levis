@@ -1,4 +1,6 @@
-﻿using Modern_Sliding_Sidebar___C_Sharp_Winform;
+﻿using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Model;
+using Modern_Sliding_Sidebar___C_Sharp_Winform;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
@@ -12,11 +14,12 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInTransit
 	{
-		public static async Task Execute(InventoryModel model, GXConfig config)
+		public static async Task Execute(InventoryRepository repository, GXConfig config)
 		{
 			try
 			{
-				var Items = await model.GetMainData();
+				DateTime date = DateTime.Today;
+				var Items = await repository.GetInventoryAsync(date);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
@@ -44,7 +47,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				Logger.Log($"❌ Error: {ex.Message}");
 			}
 		}
-		private static string Format(List<Inventory> items, string d)
+		private static string Format(List<InventoryModel> items, string d)
 		{
 			var sb = new StringBuilder();
 

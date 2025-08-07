@@ -1,11 +1,11 @@
 ﻿using Guna.UI.WinForms;
+using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Model;
 using GXIntegration_Levis.OutboundHandlers;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,7 +14,7 @@ namespace GXIntegration_Levis
 	public partial class OutboundPage : UserControl
 	{
 		private static GXConfig config;
-		private InventoryModel _inventoryModel;
+		private InventoryRepository _inventoryRepository;
 		private GunaDataGridView guna1DataGridView1;
 
 		// Map name -> action
@@ -23,7 +23,7 @@ namespace GXIntegration_Levis
 		public OutboundPage()
 		{
 			config = GXConfig.Load("config.xml");
-			_inventoryModel = new InventoryModel(config.MainDbConnection);
+			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeTable();
@@ -80,9 +80,9 @@ namespace GXIntegration_Levis
 			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
 			AddRow("6", "STORE_TRANSFER - SHIPPING ", "StoreShipping_[yyyymmddhhmmss]", ".xml");
 			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
-			AddRow("8", "Inventory Snapshot", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
-			AddRow("9", "InTransit", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
-			AddRow("10", "Price", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
+			AddRow("8", "INVENTORY SNAPSHOTS", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
+			AddRow("9", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
+			AddRow("10", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
 			// Add to UI
 			this.Controls.Add(guna1DataGridView1);
@@ -100,16 +100,16 @@ namespace GXIntegration_Levis
 		{
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
-				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryModel, config),
-				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryModel, config),
-				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_inventoryModel, config),
-				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_inventoryModel, config),
-				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryModel, config),
-				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryModel, config),
-				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryModel, config),
-				["Inventory Snapshot"] = () => OutboundInventorySnapshots.Execute(_inventoryModel, config),
-				["InTransit"] = () => OutboundInTransit.Execute(_inventoryModel, config),
-				["Price"] = () => OutboundPrice.Execute(_inventoryModel, config)
+				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryRepository, config),
+				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryRepository, config),
+				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_inventoryRepository, config),
+				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_inventoryRepository, config),
+				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
+				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryRepository, config),
+				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryRepository, config),
+				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(_inventoryRepository, config),
+				["INTRANSIT"] = () => OutboundInTransit.Execute(_inventoryRepository, config),
+				["PRICE"] = () => OutboundPrice.Execute(_inventoryRepository, config)
 			};
 		}
 

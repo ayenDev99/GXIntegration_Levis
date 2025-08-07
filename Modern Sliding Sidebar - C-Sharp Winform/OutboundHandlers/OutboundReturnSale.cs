@@ -1,4 +1,5 @@
-﻿using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
+﻿using GXIntegration_Levis.Data.Access;
+using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundReturnSale
 	{
-		public static async Task Execute(InventoryModel model, GXConfig config)
+		public static async Task Execute(InventoryRepository repository, GXConfig config)
 		{
 			MessageBox.Show($"DEVELOPMENT ONGOING");
 		}
