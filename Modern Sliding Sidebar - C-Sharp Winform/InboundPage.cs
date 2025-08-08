@@ -70,7 +70,7 @@ namespace GXIntegration_Levis
 			foreach (var item in items)
 			{
 				sb.AppendLine($"{item.CurrencyId}" +	// CURRENCY_ID
-					$"{d}{item.StoreId}" +				// STORE_ID
+					$"{d}{item.StoreCode}" +				// STORE_ID
 					$"{d}BIN_TYPE:" +					// BIN_TYPE
 					$"{d}{item.ProductCode}" +			// PRODUCT_CODE 
 					$"{d}{item.Sku}" +					// SKU 

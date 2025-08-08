@@ -30,13 +30,11 @@ namespace GXIntegration_Levis.Data.Access
 					string sql = @"
 						SELECT 
 							CT.COUNTRY_CODE AS CurrencyId
-							, TO_CHAR(S.ADDRESS5) AS StoreId
-
+							, TO_CHAR(S.ADDRESS5) AS StoreCode
 							, ISI.DESCRIPTION1 AS ProductCode
 							, ISI.ALU AS Sku
 							, ISI.ITEM_SIZE AS Waist
 							, ISI.ATTRIBUTE AS Inseam
-
 							, ISI.LAST_RCVD_DATE AS LastMovementDate
 							, CASE 
 								WHEN ISIQ.QTY >= 0 THEN 'P'
@@ -55,7 +53,11 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
 						LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
 						LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
-						WHERE TRUNC(ISI.post_date) BETWEEN TO_DATE('01-MAR-25', 'DD-MON-YY') AND TO_DATE('31-MAR-25', 'DD-MON-YY')
+						WHERE 
+							ISI.active = 1 AND
+							TRUNC(ISI.post_date) BETWEEN 
+							TO_DATE('01-MAR-25', 'DD-MON-YY') AND 
+							TO_DATE('31-MAR-25', 'DD-MON-YY')
 					";
 
 					return (await connection.QueryAsync<InventoryModel>(sql, new { CreatedDate = date })).ToList();

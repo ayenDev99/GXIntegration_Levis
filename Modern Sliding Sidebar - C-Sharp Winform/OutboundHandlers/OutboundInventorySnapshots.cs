@@ -39,32 +39,33 @@ namespace GXIntegration_Levis.OutboundHandlers
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 				}
 
-				MessageBox.Show($"✅ Inventory synced.\n{grouped.Count()} file(s) created.");
+				MessageBox.Show($"Inventory synced.\n{grouped.Count()} file(s) created.");
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log("❌ Error: " + ex.Message);
+				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Logger.Log("Error: " + ex.Message);
 			}
 		}
 
 		private static string Format(List<InventoryModel> items, string d)
 		{
 			var sb = new StringBuilder();
+			string StockFetchDate = DateTime.Now.ToString("yyyyMMdd");
 
 			foreach (var item in items)
 			{
 				sb.AppendLine(
 					$"{item.CurrencyId}" +
-					$"{d}{item.StoreId}" +
-					$"{d}" +    // BIN_TYPE
+					$"{d}{item.StoreCode}" +
+					$"{d}ON_HAND" +
 					$"{d}{item.ProductCode}" +
 					$"{d}{item.Sku}" +
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
 					$"{d}" +
-					$"{d}" +    // STOCK_FETCH_DATE
-					$"{d}{item.LastMovementDate}" +
+					$"{d}{StockFetchDate}" +
+					$"{d}{item.LastMovementDate:yyyyMMdd}" +
 					$"{d}{item.QuantitySign}" +
 					$"{d}{item.Quantity}" +
 					$"{d}0" +

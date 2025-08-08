@@ -6,22 +6,14 @@ using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Model
 {
-	public class InventoryModel
+	public class InTransitModel
 	{
 		public string CurrencyId { get; set; }
-		public string StoreCode { get; set; }
 		public string ProductCode { get; set; }
 		public string Sku { get; set; }
 		public string Waist { get; set; }
 		public string Inseam { get; set; }
-		public DateTimeOffset? LastMovementDate { get; set; }
-		public string QuantitySign { get; set; }
+		public string StoreCode { get; set; }
 		public string Quantity { get; set; }
-		public string RetailPrice { get; set; }
-		public string CountryCode { get; set; }
-		public string ManufactureUpc { get; set; }
-		public string Division { get; set; }
-		// UNITCOUNT_SIGN
-		// UNITCOUNT
 	}
 }

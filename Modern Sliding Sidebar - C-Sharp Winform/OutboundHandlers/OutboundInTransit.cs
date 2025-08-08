@@ -14,7 +14,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInTransit
 	{
-		public static async Task Execute(InventoryRepository repository, GXConfig config)
+		public static async Task Execute(InTransitRepository repository, GXConfig config)
 		{
 			try
 			{
@@ -39,15 +39,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 				}
 
-				MessageBox.Show($"✅ Inventory synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				MessageBox.Show($"Intransit synced.\n{grouped.Count()} file(s) created.");
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
+				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Logger.Log($"Error: {ex.Message}");
 			}
 		}
-		private static string Format(List<InventoryModel> items, string d)
+		private static string Format(List<InTransitModel> items, string d)
 		{
 			var sb = new StringBuilder();
 
@@ -58,7 +58,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					$"{d}{item.Sku}" +
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
-					$"{d}{item.StoreId}" +
+					$"{d}{item.StoreCode}" +
 					$"{d}{item.Quantity}{d}"
 				);
 			}
