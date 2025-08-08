@@ -102,7 +102,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 							WritePosTransactionProperties(writer, "REGION", "AMA");
 							WritePosTransactionProperties(writer, "COUNTRY", "PH");
 							WritePosTransactionProperties(writer, "ALTERNATE_STOREID", "PH");
-							// ALTERNATE_STOREID
 							// TRANSACTION_CODE
 							// BARCODE
 
