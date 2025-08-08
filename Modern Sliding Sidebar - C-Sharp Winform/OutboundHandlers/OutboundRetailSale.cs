@@ -1,6 +1,5 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Model;
-using Modern_Sliding_Sidebar___C_Sharp_Winform;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using System;
 using System.Collections.Generic;
@@ -61,7 +60,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 				writer.WriteStartElement("POSLog", NsIXRetail);
 				writer.WriteAttributeString("xmlns", "dtv", null, NsDtv);
 				writer.WriteAttributeString("xmlns", "xs", null, NsXs);
-				writer.WriteAttributeString("xsi", "schemaLocation", NsXs, NsIXRetail + " POSLog.xsd");
+				writer.WriteAttributeString("dtv", NsDtv);
+				writer.WriteAttributeString("xs", NsXs);
+				writer.WriteAttributeString("schemaLocation", NsIXRetail + " POSLog.xsd");
 
 				// <Transaction>
 				writer.WriteStartElement("Transaction", NsIXRetail);
@@ -99,7 +100,11 @@ namespace GXIntegration_Levis.OutboundHandlers
 							WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", "PAPER");
 							WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
 							WritePosTransactionProperties(writer, "REGION", "AMA");
-							WritePosTransactionProperties(writer, "COUNTRY", "TR");
+							WritePosTransactionProperties(writer, "COUNTRY", "PH");
+							WritePosTransactionProperties(writer, "ALTERNATE_STOREID", "PH");
+							// ALTERNATE_STOREID
+							// TRANSACTION_CODE
+							// BARCODE
 
 							writer.WriteStartElement("RetailTransaction");
 							writer.WriteAttributeString("TransactionStatus", "Delivered");
@@ -156,14 +161,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 			if (!date.HasValue)
 				return "";
 
-			if (includeTime)
-			{
-				// Format with time and fractional seconds (2 decimals)
+			if (includeTime) {
 				return date.Value.ToString("yyyy-MM-ddTHH:mm:ss.ff");
-			}
-			else
-			{
-				// Format date only
+			} else {
 				return date.Value.ToString("yyyy-MM-dd");
 			}
 		}

@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Model
 		public string Inseam { get; set; }
 		// STOCK_FETCH_DATE
 		public string LastMovementDate { get; set; }
-		// QUANTITY_SIGN
+		public string QuantitySign { get; set; }
 		public string Quantity { get; set; }
 		public string RetailPrice { get; set; }
 		public string CountryCode { get; set; }

@@ -30,7 +30,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				foreach (var group in grouped)
 				{
 					string currencyCode = group.Key.Substring(0, 2);
-					string fileName = $"LS{currencyCode}_AMA_PSSTKR_{timestamp}.txt";
+					string fileName = $"LSPH_AMA_PSSTKR_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
 					string output = Format(group.ToList(), config.Delimiter ?? "|");
@@ -57,15 +57,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 				sb.AppendLine(
 					$"{item.CurrencyId}" +
 					$"{d}{item.StoreId}" +
-					$"{d}BIN_TYPE:" +
+					$"{d}" +    // BIN_TYPE
 					$"{d}{item.ProductCode}" +
 					$"{d}{item.Sku}" +
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
 					$"{d}" +
-					$"{d}STOCK_FETCH_DATE:" +
+					$"{d}" +    // STOCK_FETCH_DATE
 					$"{d}{item.LastMovementDate}" +
-					$"{d}QUANTITY_SIGN:" +
+					$"{d}{item.QuantitySign}" +
 					$"{d}{item.Quantity}" +
 					$"{d}0" +
 					$"{d}{item.RetailPrice}" +
@@ -78,8 +78,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 					$"{d}" +
 					$"{d}" +
 					$"{d}" +
-					$"{d}UNITCOUNT_SIGN:" +
-					$"{d}UNITCOUNT:" +
+					$"{d}" +	// UNITCOUNT_SIGN
+					$"{d}" +    // UNITCOUNT
 					$"{d}"
 				);
 			}

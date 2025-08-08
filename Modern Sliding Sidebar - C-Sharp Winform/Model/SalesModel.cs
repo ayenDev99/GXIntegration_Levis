@@ -18,7 +18,5 @@ namespace GXIntegration_Levis.Model
 
 		public string ItemSequenceNumber { get; set; }
 
-
-
 	}
 }

@@ -18,6 +18,7 @@ namespace GXIntegration_Levis
 
 		private InventoryRepository _inventoryRepository;
 		private SalesRepository _salesRepository;
+		private PriceRepository _priceRepository;
 
 		private GunaDataGridView guna1DataGridView1;
 		private int _hoveredRowIndex = -1;
@@ -29,6 +30,7 @@ namespace GXIntegration_Levis
 			config = GXConfig.Load("config.xml");
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 			_salesRepository = new SalesRepository(config.MainDbConnection);
+			_priceRepository = new PriceRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeTable();
@@ -123,7 +125,7 @@ namespace GXIntegration_Levis
 				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryRepository, config),
 				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(_inventoryRepository, config),
 				["INTRANSIT"] = () => OutboundInTransit.Execute(_inventoryRepository, config),
-				["PRICE"] = () => OutboundPrice.Execute(_inventoryRepository, config)
+				["PRICE"] = () => OutboundPrice.Execute(_priceRepository, config)
 			};
 		}
 

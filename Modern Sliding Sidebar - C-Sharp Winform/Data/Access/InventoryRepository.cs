@@ -28,22 +28,25 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 
 					string sql = @"
-							SELECT 
-							CT.COUNTRY_CODE AS CurrencyId,
-							TO_CHAR(S.ADDRESS5) AS StoreId,
+						SELECT 
+							CT.COUNTRY_CODE AS CurrencyId
+							, TO_CHAR(S.ADDRESS5) AS StoreId
 
-							ISI.DESCRIPTION1 AS ProductCode,
-							ISI.ALU AS Sku,
-							ISI.ITEM_SIZE AS Waist,
-							ISI.ATTRIBUTE AS Inseam,
+							, ISI.DESCRIPTION1 AS ProductCode
+							, ISI.ALU AS Sku
+							, ISI.ITEM_SIZE AS Waist
+							, ISI.ATTRIBUTE AS Inseam
 
-							ISI.LAST_RCVD_DATE AS LastMovementDate,
-
-							ISIQ.QTY AS Quantity,
-							ISI.COST AS RetailPrice,
-							SUBSTR(CT.COUNTRY_CODE, 1, 2) AS CountryCode,
-							ISI.UPC AS ManufactureUpc,
-							ISI.UDF5_STRING AS Division
+							, ISI.LAST_RCVD_DATE AS LastMovementDate
+							, CASE 
+								WHEN ISIQ.QTY >= 0 THEN 'P'
+								WHEN ISIQ.QTY < 0 THEN 'N'
+							  END AS QuantitySign
+							, ISIQ.QTY AS Quantity
+							, ISI.COST AS RetailPrice
+							, SUBSTR(CT.COUNTRY_CODE, 1, 2) AS CountryCode
+							, ISI.UPC AS ManufactureUpc
+							, ISI.UDF5_STRING AS Division
 
 
 						FROM rps.INVN_SBS_ITEM ISI
@@ -52,7 +55,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
 						LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
 						LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
-						WHERE TRUNC(ISI.CREATED_DATETIME) = TO_DATE('2020-03-18', 'YYYY-MM-DD')
+						WHERE TRUNC(ISI.post_date) BETWEEN TO_DATE('01-MAR-25', 'DD-MON-YY') AND TO_DATE('31-MAR-25', 'DD-MON-YY')
 					";
 
 					return (await connection.QueryAsync<InventoryModel>(sql, new { CreatedDate = date })).ToList();
