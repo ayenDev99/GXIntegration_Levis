@@ -113,6 +113,7 @@
     <Compile Include="ConfigurationPage.Designer.cs">
       <DependentUpon>ConfigurationPage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Data\Access\ASNRepository.cs" />
     <Compile Include="Data\Access\InTransitRepository.cs" />
     <Compile Include="Data\Access\InventoryRepository.cs" />
     <Compile Include="Data\Access\PriceRepository.cs" />
@@ -137,6 +138,7 @@
       <DependentUpon>InboundPage.cs</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
+    <Compile Include="Model\ASNModel.cs" />
     <Compile Include="Model\InTransitModel.cs" />
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\PriceModel.cs" />

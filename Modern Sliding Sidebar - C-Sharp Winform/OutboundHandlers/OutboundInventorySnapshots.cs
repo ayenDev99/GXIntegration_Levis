@@ -79,8 +79,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 					$"{d}" +
 					$"{d}" +
 					$"{d}" +
-					$"{d}" +	// UNITCOUNT_SIGN
-					$"{d}" +    // UNITCOUNT
+					$"{d}{item.QuantitySign}" +	// UNITCOUNT_SIGN tempo
+					$"{d}{item.Quantity}" +		// UNITCOUNT tempo
 					$"{d}"
 				);
 			}

@@ -16,7 +16,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 	{
 		private static readonly string NsIXRetail = "http://www.nrf-arts.org/IXRetail/namespace/";
 		private static readonly string NsDtv = "http://www.datavantagecorp.com/xstore/";
-		private static readonly string NsXs = "http://www.w3.org/2001/XMLSchema-instance";
+		private static readonly string NsXsi = "http://www.w3.org/2001/XMLSchema-instance";
+
 		public static async Task Execute(SalesRepository repository, GXConfig config)
 		{
 			try
@@ -59,9 +60,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 				// <POSLog> with namespaces
 				writer.WriteStartElement("POSLog", NsIXRetail);
 				writer.WriteAttributeString("xmlns", "dtv", null, NsDtv);
-				writer.WriteAttributeString("xmlns", "xs", null, NsXs);
+				writer.WriteAttributeString("xmlns", "xs", null, NsXsi);
 				writer.WriteAttributeString("dtv", NsDtv);
-				writer.WriteAttributeString("xs", NsXs);
+				writer.WriteAttributeString("xs", NsXsi);
 				writer.WriteAttributeString("schemaLocation", NsIXRetail + " POSLog.xsd");
 
 				// <Transaction>
@@ -72,9 +73,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				writer.WriteAttributeString("dtv", "TransactionType", NsDtv, "RETAIL_SALE");
 
 				// <dtv:OrganizationID>
-				writer.WriteStartElement("dtv", "OrganizationID", NsDtv);
-				writer.WriteCData("1");
-				writer.WriteEndElement();
+				WriteCDataElement(writer, "dtv", "OrganizationID", NsDtv, "1");
 
 				// Group by store, workstation, transaction
 				foreach (var storeGroup in GroupBySafe(items, i => i.StoreNo))
@@ -90,20 +89,20 @@ namespace GXIntegration_Levis.OutboundHandlers
 						{
 							WriteCDataElement(writer, "SequenceNumber", transGroup.Key);
 
-							var firstItem = transGroup.FirstOrDefault();
-							WriteCDataElement(writer, "BusinessDayDate", FormatDate(firstItem?.CreatedDateTime));
-							WriteCDataElement(writer, "BeginDateTime", FormatDate(firstItem?.CreatedDateTime, true));
-							WriteCDataElement(writer, "EndDateTime", FormatDate(firstItem?.InvcPostDate, true));
-							WriteCDataElement(writer, "OperatorID", firstItem != null ? firstItem.CashierLoginName : "");
-							WriteCDataElement(writer, "CurrencyCode", firstItem != null ? firstItem.CurrencyCode : "");
+							var transactionItems = transGroup.FirstOrDefault();
+							WriteCDataElement(writer, "BusinessDayDate", FormatDate(transactionItems?.CreatedDateTime));
+							WriteCDataElement(writer, "BeginDateTime", FormatDate(transactionItems?.CreatedDateTime, true));
+							WriteCDataElement(writer, "EndDateTime", FormatDate(transactionItems?.InvcPostDate, true));
+							WriteCDataElement(writer, "OperatorID", (transactionItems != null ? transactionItems.CashierLoginName : ""));
+							WriteCDataElement(writer, "CurrencyCode", (transactionItems != null ? transactionItems.CurrencyCode : ""));
 
 							WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", "PAPER");
 							WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
 							WritePosTransactionProperties(writer, "REGION", "AMA");
 							WritePosTransactionProperties(writer, "COUNTRY", "PH");
-							WritePosTransactionProperties(writer, "ALTERNATE_STOREID", "PH");
-							// TRANSACTION_CODE
-							// BARCODE
+							WritePosTransactionProperties(writer, "ALTERNATE_STOREID", (transactionItems != null ? transactionItems.AlternateStoreId : ""));
+							WritePosTransactionProperties(writer, "TRANSACTION_CODE", (transactionItems != null ? transactionItems.TransactionCode : ""));
+							WritePosTransactionProperties(writer, "BARCODE", (transactionItems != null ? transactionItems.Barcode : ""));
 
 							writer.WriteStartElement("RetailTransaction");
 							writer.WriteAttributeString("TransactionStatus", "Delivered");
@@ -115,27 +114,116 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 							foreach (var itemGroup in GroupBySafe(transGroup, i => i.ItemSequenceNumber))
 							{
-								WriteCDataElement(writer, "SequenceNumber", itemGroup.Key);
-								WriteCDataElement(writer, "LineNumber", itemGroup.Key);
-								WriteCDataElement(writer, "BeginDateTime", itemGroup.Key);
-								WriteCDataElement(writer, "EndDateTime", itemGroup.Key);
+								var itemItems = itemGroup.FirstOrDefault(); // corrected: use itemGroup, not transGroup
+								WriteCDataElement(writer, "SequenceNumber", (itemItems != null ? itemItems.SequenceNumber : ""));
+								WriteCDataElement(writer, "LineNumber", (itemItems != null ? itemItems.SequenceNumber : ""));
+								WriteCDataElement(writer, "BeginDateTime", FormatDate(transactionItems?.CreatedDateTime));
+								WriteCDataElement(writer, "EndDateTime", FormatDate(transactionItems?.EndDateTime));
+
+								writer.WriteStartElement("Sale");
+								writer.WriteAttributeString("ItemType", "Stock");
+
+								WriteCDataElement(writer, "ItemID", (itemItems != null ? itemItems.ItemId : ""));
+								WriteCDataElement(writer, "Description", (itemItems != null ? itemItems.Description : ""));
+								WriteCDataElement(writer, "RegularSalesUnitPrice", (itemItems != null ? itemItems.RegularPrice : ""));
+								WriteCDataElement(writer, "ActualSalesUnitPrice", (itemItems != null ? itemItems.ActualPrice : ""));
+								WriteCDataElement(writer, "ExtendedAmount", (itemItems != null ? itemItems.ExtendedAmount : ""));
+								WriteCDataElement(writer, "Quantity", (itemItems != null ? itemItems.Quantity : ""));
+
+								WriteMerchandiseHierarchy(writer, "DIVISION", "10");
+								WriteMerchandiseHierarchy(writer, "DEPARTMENT", "00674");
+								WriteMerchandiseHierarchy(writer, "SUBDEPARTMENT", "00054");
+								WriteMerchandiseHierarchy(writer, "CLASS", "02");
+
+								WriteCDataElement(writer, "dtv", "ScannedItemID", NsDtv, "5401157298299");
+								WriteCDataElement(writer, "GiftReceiptFlag", "false");
+
+								writer.WriteStartElement("Associate");
+								WriteCDataElement(writer, "AssociateID", "6794");
+								writer.WriteEndElement();
+
+								writer.WriteStartElement("dtv", "PercentageOfItem", NsDtv);
+								WriteCDataElement(writer, "dtv", "AssociateID", NsDtv, "6794");
+								WriteCDataElement(writer, "dtv", "Percentage", NsDtv, "1");
+								writer.WriteEndElement();
+
+								writer.WriteStartElement("Tax");
+								writer.WriteAttributeString("TaxType", "Sales");
+								writer.WriteAttributeString("dtv", "VoidFlag", NsDtv, "false");
+
+								WriteCDataElement(writer, "TaxAuthority", "TR_VAT");
+								WriteCDataElement(writer, "TaxableAmount", "0.00");
+								WriteCDataElement(writer, "Amount", "0.00");
+								WriteCDataElement(writer, "Percent", "0.00");
+								WriteCDataElement(writer, "dtv", "RawTaxPercentage", NsDtv, "0.00");
+
+								writer.WriteStartElement("dtv", "TaxLocationId", NsDtv);
+								writer.WriteEndElement();
+
+								WriteCDataElement(writer, "dtv", "TaxGroupId", NsDtv, "3");
+
+								writer.WriteEndElement(); // </Tax>
+
+								WriteLineItemProperty(writer, "DEAL_ITEM_PERCENT_OFF", "STRING", "yes");
+								WriteLineItemProperty(writer, "DIM1", "STRING", "32");
+								WriteLineItemProperty(writer, "DIM2", "STRING", "30");
+								WriteLineItemProperty(writer, "STYLE", "STRING", "005013603");
+								WriteLineItemProperty(writer, "EAN", "STRING", "5401157298299");
+
 							}
 
+							writer.WriteEndElement(); // </Sale>
 							writer.WriteEndElement(); // </LineItem>
-							writer.WriteEndElement(); // </RetailTransaction>
+
+							writer.WriteStartElement("LineItem");
+							writer.WriteAttributeString("VoidFlag", "false");
+
+							WriteCDataElement(writer, "SequenceNumber", "2");
+							WriteCDataElement(writer, "LineNumber", "0");
+							WriteCDataElement(writer, "BeginDateTime", "2025-02-21T10:16:31.97");
+							WriteCDataElement(writer, "EndDateTime", "2025-02-21T10:16:45.64");
+
+							writer.WriteStartElement("Tender");
+							writer.WriteAttributeString("TenderType", "CREDIT");
+							writer.WriteAttributeString("TypeCode", "SALE");
+							writer.WriteAttributeString("ChangeFlag", "false");
+
+							WriteCDataElement(writer, "TenderID", "TR0111-1");
+
+							writer.WriteStartElement("Amount");
+							writer.WriteAttributeString("Currency", "TRY");
+							writer.WriteCData("2449.9000");
+							writer.WriteEndElement(); // </Amount>
+
+							writer.WriteEndElement(); // </Tender>
+							writer.WriteEndElement(); // </LineItem>
+
+							writer.WriteStartElement("Total");
+							writer.WriteAttributeString("TotalType", "TransactionGrandAmount");
+							writer.WriteCData("2449.9000");
+							writer.WriteEndElement();
+
+							WriteCDataElement(writer, "RoundedTotal", "0.0000");
 						}
 					}
 				}
 
+				writer.WriteEndElement(); // </RetailTransaction>
 				writer.WriteEndElement(); // </Transaction>
-				writer.WriteEndElement(); // </POSLog>
-				writer.WriteEndDocument();
+				writer.WriteEndDocument(); // </POSLog>
 			}
 		}
 
-		private static void WriteCDataElement(XmlWriter writer, string name, string content)
+		private static void WriteCDataElement(XmlWriter writer, string elementName, string content)
 		{
-			writer.WriteStartElement(name);
+			writer.WriteStartElement(elementName);
+			writer.WriteCData(content ?? "");
+			writer.WriteEndElement();
+		}
+
+		private static void WriteCDataElement(XmlWriter writer, string prefix, string localName, string ns, string content)
+		{
+			writer.WriteStartElement(prefix, localName, ns);
 			writer.WriteCData(content ?? "");
 			writer.WriteEndElement();
 		}
@@ -155,18 +243,38 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteEndElement();
 		}
 
+		private static void WriteMerchandiseHierarchy(XmlWriter writer, string level, string value)
+		{
+			writer.WriteStartElement("MerchandiseHierarchy");
+			writer.WriteAttributeString("Level", level);
+			writer.WriteCData(value ?? "");
+			writer.WriteEndElement();
+		}
+
+		private static void WriteLineItemProperty(XmlWriter writer, string code, string type, string value)
+		{
+			writer.WriteStartElement("dtv", "LineItemProperty", NsDtv);
+
+			WriteCDataElement(writer, "dtv", "LineItemPropertyCode", NsDtv, code);
+			WriteCDataElement(writer, "dtv", "LineItemPropertyType", NsDtv, type);
+			WriteCDataElement(writer, "dtv", "LineItemPropertyValue", NsDtv, value);
+
+			writer.WriteEndElement(); // </dtv:LineItemProperty>
+		}
+
 		private static string FormatDate(DateTimeOffset? date, bool includeTime = false)
 		{
-			if (!date.HasValue)
-				return "";
+			if (!date.HasValue) return "";
 
-			if (includeTime) {
+			if (includeTime)
+			{
 				return date.Value.ToString("yyyy-MM-ddTHH:mm:ss.ff");
-			} else {
+			}
+			else
+			{
 				return date.Value.ToString("yyyy-MM-dd");
 			}
 		}
-
 
 		private static IEnumerable<IGrouping<string, SalesModel>> GroupBySafe(IEnumerable<SalesModel> source, Func<SalesModel, string> keySelector)
 		{
@@ -178,7 +286,5 @@ namespace GXIntegration_Levis.OutboundHandlers
 					return int.TryParse(g.Key, out n) ? n : int.MaxValue;
 				});
 		}
-
-
 	}
 }
