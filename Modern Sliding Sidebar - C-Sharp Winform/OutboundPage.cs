@@ -20,6 +20,7 @@ namespace GXIntegration_Levis
 		private InTransitRepository _inTransitRepository;
 		private PriceRepository _priceRepository;
 
+		private ASNRepository _asnRepository;
 		private SalesRepository _salesRepository;
 		
 		private GunaDataGridView guna1DataGridView1;
@@ -34,7 +35,9 @@ namespace GXIntegration_Levis
 			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
 			_priceRepository = new PriceRepository(config.MainDbConnection);
 
+			_asnRepository = new ASNRepository(config.MainDbConnection);
 			_salesRepository = new SalesRepository(config.MainDbConnection);
+			
 
 			InitializeComponent();
 			InitializeTable();
@@ -120,7 +123,7 @@ namespace GXIntegration_Levis
 		{
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
-				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryRepository, config),
+				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
 				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryRepository, config),
 				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),

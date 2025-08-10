@@ -8,7 +8,8 @@ namespace GXIntegration_Levis.Model
 {
 	public class ASNModel
 	{
-		//public string SalesOrg { get; set; }
+		public string DocNo { get; set; }
+		//public DateTimeOffset? CreatedDateTime { get; set; }
 	}
 	
 }

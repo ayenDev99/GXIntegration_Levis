@@ -35,8 +35,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
+				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Logger.Log($"Error: {ex.Message}");
 			}
 		}
 
