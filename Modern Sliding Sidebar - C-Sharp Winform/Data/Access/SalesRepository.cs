@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<SalesModel>> GetSalesAsync(DateTime date)
+		public async Task<List<SalesModel>> GetSalesAsync(DateTime date, List<int> receiptTypes)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -61,17 +61,27 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.COUNTRY CTRY ON CTRY.SID = SBS.COUNTRY_SID
 							WHERE 
 								S.STORE_NO = 1
-								AND D.STATUS IN (3, 4)
+								AND D.STATUS = 4
+								AND D.RECEIPT_TYPE IN :ReceiptTypes
 								AND D.DOC_NO IS NOT NULL
 								AND TRUNC(D.CREATED_DATETIME) BETWEEN TO_DATE('2020-03-01', 'YYYY-MM-DD')
-								AND TO_DATE('2020-03-31', 'YYYY-MM-DD')
+								AND TO_DATE('2025-03-31', 'YYYY-MM-DD')
 							ORDER BY  
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
 								, D.DOC_NO ASC
-FETCH FIRST 1 ROWS ONLY
+							FETCH FIRST 1 ROWS ONLY
 					";
-					return (await connection.QueryAsync<SalesModel>(sql, new { SaleDate = date })).ToList();
+
+					var parameters = new
+					{
+						SaleDate = date.Date,
+						ReceiptTypes = receiptTypes
+					};
+
+
+					var sales = await connection.QueryAsync<SalesModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{

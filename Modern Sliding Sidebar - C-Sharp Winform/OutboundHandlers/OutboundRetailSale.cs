@@ -23,7 +23,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 			try
 			{
 				DateTime date = DateTime.Today;
-				var items = await repository.GetSalesAsync(date);
+				var receipt_type = new List<int> { 0, 2 };
+				var items = await repository.GetSalesAsync(date, receipt_type);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -36,7 +37,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				GenerateXml(items, filePath);
 
-				MessageBox.Show($"✅ Inventory synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				MessageBox.Show($"Retail Sale synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 			catch (Exception ex)
 			{
@@ -45,7 +46,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		private static void GenerateXml(List<SalesModel> items, string filePath)
+		public static void GenerateXml(List<SalesModel> items, string filePath)
 		{
 			var settings = new XmlWriterSettings
 			{

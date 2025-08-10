@@ -123,7 +123,7 @@ namespace GXIntegration_Levis
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_inventoryRepository, config),
 				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryRepository, config),
 				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
-				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_inventoryRepository, config),
+				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
 				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryRepository, config),
 				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryRepository, config),
