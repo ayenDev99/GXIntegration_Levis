@@ -143,6 +143,7 @@
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\PriceModel.cs" />
     <Compile Include="Model\SalesModel.cs" />
+    <Compile Include="OutboundHandlers\GlobalOutbound.cs" />
     <Compile Include="OutboundHandlers\OutboundAdjustment.cs" />
     <Compile Include="OutboundHandlers\OutboundASN.cs" />
     <Compile Include="OutboundHandlers\OutboundInTransit.cs" />

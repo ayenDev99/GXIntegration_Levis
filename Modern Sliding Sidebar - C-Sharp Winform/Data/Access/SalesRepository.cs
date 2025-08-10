@@ -27,38 +27,37 @@ namespace GXIntegration_Levis.Data.Access
 					string sql = @"
 							SELECT 
 								D.SID
-								, S.STORE_NO AS StoreNo
-								, S.ADDRESS5 AS AlternateStoreId
-								, D.WORKSTATION_NO AS WorkstationNo
-								, D.DOC_NO AS DocNo
-								, D.CREATED_DATETIME as CreatedDateTime
-								, D.INVC_POST_DATE as InvcPostDate
-								, D.CASHIER_LOGIN_NAME as CashierLoginName
-								, C.ALPHABETIC_CODE as CurrencyCode
-								, CTRY.COUNTRY_CODE as CountryCode
-								, DI.ITEM_POS as ItemSequenceNumber
-								, DI.ALU AS Alu
-								, D.DOC_NO AS TransactionCode
-								, DI.SCAN_UPC AS Barcode
-								, DI.ITEM_POS AS SequenceNumber
-								, DI.CREATED_DATETIME AS BeginDateTime
-								, DI.POST_DATE AS EndDateTime
-
-								, DI.ALU AS ItemId
-								, DI.DESCRIPTION2 AS Description
-								, DI.PRICE AS RegularPrice
-								, DI.ORIG_PRICE AS ActualPrice
-								, DI.PRICE * DI.QTY AS ExtendedAmount
-								, DI.QTY AS Quantity
+								, S.STORE_NO			AS StoreNo
+								, S.ADDRESS5			AS AlternateStoreId
+								, D.WORKSTATION_NO		AS WorkstationNo
+								, D.DOC_NO				AS DocNo
+								, D.CREATED_DATETIME	AS CreatedDateTime
+								, D.INVC_POST_DATE		AS InvcPostDate
+								, D.CASHIER_LOGIN_NAME	AS CashierLoginName
+								, C.ALPHABETIC_CODE		AS CurrencyCode
+								, CTRY.COUNTRY_CODE		AS CountryCode
+								, DI.ITEM_POS			AS ItemSequenceNumber
+								, DI.ALU				AS Alu
+								, D.DOC_NO				AS TransactionCode
+								, DI.SCAN_UPC			AS Barcode
+								, DI.ITEM_POS			AS SequenceNumber
+								, DI.CREATED_DATETIME	AS BeginDateTime
+								, DI.POST_DATE			AS EndDateTime
+								, DI.ALU				AS ItemId
+								, DI.DESCRIPTION2		AS Description
+								, DI.PRICE				AS RegularPrice
+								, DI.ORIG_PRICE			AS ActualPrice
+								, DI.PRICE * DI.QTY		AS ExtendedAmount
+								, DI.QTY				AS Quantity
 
 							FROM 
 								RPS.DOCUMENT D
-							LEFT JOIN RPS.STORE S ON S.SID = D.STORE_SID
-							LEFT JOIN RPS.DOCUMENT_ITEM DI ON DI.DOC_SID = D.SID
-							LEFT JOIN RPS.TENDER T ON T.DOC_SID = D.SID
-							LEFT JOIN RPS.CURRENCY C ON C.SID = T.CURRENCY_SID
-							LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = D.SUBSIDIARY_SID
-							LEFT JOIN RPS.COUNTRY CTRY ON CTRY.SID = SBS.COUNTRY_SID
+							LEFT JOIN RPS.STORE S			ON S.SID = D.STORE_SID
+							LEFT JOIN RPS.DOCUMENT_ITEM DI	ON DI.DOC_SID = D.SID
+							LEFT JOIN RPS.TENDER T			ON T.DOC_SID = D.SID
+							LEFT JOIN RPS.CURRENCY C		ON C.SID = T.CURRENCY_SID
+							LEFT JOIN RPS.SUBSIDIARY SBS	ON SBS.SID = D.SUBSIDIARY_SID
+							LEFT JOIN RPS.COUNTRY CTRY		ON CTRY.SID = SBS.COUNTRY_SID
 							WHERE 
 								S.STORE_NO = 1
 								AND D.STATUS = 4
@@ -78,7 +77,6 @@ namespace GXIntegration_Levis.Data.Access
 						SaleDate = date.Date,
 						ReceiptTypes = receiptTypes
 					};
-
 
 					var sales = await connection.QueryAsync<SalesModel>(sql, parameters);
 					return sales.ToList();
