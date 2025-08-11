@@ -12,7 +12,7 @@ namespace GXIntegration_Levis.Model
 		public string PC9 { get; set; }
 		public string PriceLevel { get; set; }
 		public string ConditionType { get; set; }
-		public string PriceStartDate { get; set; }
+		public DateTimeOffset? PriceStartDate { get; set; }
 		public string PriceEndDate { get; set; }
 		public string Price { get; set; }
 		public string Flag { get; set; }

@@ -46,6 +46,14 @@ namespace GXIntegration_Levis.Model
 		public string QuantityOrdered { get; set; }
 		public string QuantityReceived { get; set; }
 		public string Description { get; set; }
+		public string ReasonCode { get; set; }
+		public string OriginatorName { get; set; }
+		public DateTimeOffset? ActualDeliveryDate { get; set; }
+		public DateTimeOffset? ActualShipDate { get; set; }
+		public string DestinationPartyID { get; set; }
+		public string ShipmentPostalCode { get; set; }
+		public string ShipmentCountry { get; set; }
+		public string QuantityShipped { get; set; }
 	}
 	
 }

@@ -124,7 +124,7 @@ namespace GXIntegration_Levis
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
-				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_inventoryRepository, config),
+				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_asnRepository, config),
 				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),

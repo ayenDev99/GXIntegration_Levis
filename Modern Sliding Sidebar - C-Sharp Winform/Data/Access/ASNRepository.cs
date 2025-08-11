@@ -66,21 +66,32 @@ namespace GXIntegration_Levis.Data.Access
 								, VI.QTY						AS QuantityOrdered
 								, ''							AS QuantityReceived
 								, ISB.DESCRIPTION2				AS Description
+
+								, VOU_REASON.NAME				AS ReasonCode
+								, ''							AS OriginatorName
+								, ''							AS ActualDeliveryDate
+								, ''							AS ActualShipDate
+								, S.ADDRESS5					AS DestinationPartyID
+								, S.ZIP							AS ShipmentPostalCode
+								, COUNTRY.COUNTRY_CODE			AS ShipmentCountry
+								, VI.QTY 					AS QuantityShipped
+	
 							FROM
 								RPS.VOUCHER VOU
-							LEFT JOIN RPS.VOU_ITEM VI			ON VOU.SID = VI.VOU_SID
-							LEFT JOIN RPS.STORE	S				ON S.SID = VOU.STORE_SID
-							LEFT JOIN RPS.SUBSIDIARY SBS		ON SBS.SID = VOU.SBS_SID
-							LEFT JOIN RPS.COUNTRY				ON COUNTRY.SID = SBS.COUNTRY_SID
-							LEFT JOIN RPS.REGION_SUBSIDIARY		ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
-							LEFT JOIN RPS.REGION				ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
-							LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = VI.ITEM_SID
-							INNER JOIN RPS.EMPLOYEE				ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
-							LEFT JOIN RPS.CURRENCY C			ON SBS.BASE_CURRENCY_SID = C.SID
+							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
+							LEFT JOIN RPS.STORE	S					ON S.SID = VOU.STORE_SID
+							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
+							LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
+							LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
+							LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
+							LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
+							INNER JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
+							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
+							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
 								TRUNC(VOU.CREATED_DATETIME) BETWEEN DATE '2020-08-01' AND DATE '2025-08-07'
 								AND VOU.VOU_TYPE IN :VoucherTypes
-								AND VOU.VOU_CLASS IN :CoucherClass
+								AND VOU.VOU_CLASS IN :VoucherClass
 							--  AND VOU.STATUS = 4
 							FETCH FIRST 1 ROWS ONLY
 					";
@@ -89,7 +100,7 @@ namespace GXIntegration_Levis.Data.Access
 					{
 						SaleDate = date.Date,
 						VoucherTypes = vouType,
-						CoucherClass = vouClass
+						VoucherClass = vouClass
 					};
 
 					var sales = await connection.QueryAsync<ASNModel>(sql, parameters);
