@@ -75,7 +75,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		public static IEnumerable<IGrouping<string, SalesModel>> GroupBySafe(IEnumerable<SalesModel> source, Func<SalesModel, string> keySelector)
+		public static IEnumerable<IGrouping<string, T>> GroupBySafe<T>(IEnumerable<T> source, Func<T, string> keySelector)
 		{
 			return source
 				.GroupBy(i => keySelector(i) ?? "UNKNOWN")
@@ -86,5 +86,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 				});
 		}
 
+		internal static IEnumerable<IGrouping<string, SalesModel>> GroupBySafe(List<ASNModel> items, Func<SalesModel, string> value)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -25,67 +25,80 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								'1'						AS ORG_ID
-								, S.ADDRESS5			AS STORE_ID
-								, VOU.VOU_NO			AS SEQ_NO
-								, VOU.WORKSTATION
-								, ''					AS TILL_ID
-								, VOU.CREATED_DATETIME	AS BUS_DATE
-								, VOU.CREATED_DATETIME	AS BEG_TIME
-								, VOU.CREATED_DATETIME	AS END_TIME
-								, VOU.CLERK_SID			AS OPT_ID
-								, C.ALPHABETIC_CODE		AS CURR_CODE
-								, REGION.REGION_NAME	AS P2_VAL
-								, COUNTRY.COUNTRY_CODE	AS P3_VAL
-								, S.ADDRESS5			AS P4_VAL
-								, CASE WHEN VOU.STATUS = 4 THEN 'CLOSED' ELSE 'PENDING' END AS DOC_STATUS
-								, VOU.VOU_NO			AS DOC_ID
-								, 'RECEIVING_ASN'		AS DOC_TYPE_DESC
-								, 'RECEIVING'			AS DOC_TYPE
-								, 'ASN'					AS DOC_SUBTYPE
-								, VOU.MODIFIED_DATETIME AS COM_TIMESTAMP
-								, VOU.MODIFIED_DATETIME AS LAST_ACT_TIMESTAMP
-								, ''					AS SHP_SEQ
-								, ''					AS SHP_LOC
-								, ''					AS SHP_STAT
-								, VI.CARTON_NO
-								, VI.CARTON_STATUS
-								, VI.ITEM_POS			AS LINE_NO
-								, DESCRIPTION1			AS ITEM_ID
-								, VI.QTY				AS ACT_COUNT
-								, VI.QTY				AS EXP_COUNT
-								, VI.QTY				AS POST_COUNT
-								, VOU.CREATED_DATETIME	AS BUS_DATE2
-								, ''					AS TRANS_SEQ
-								, ''					AS LINE_SEQ
-								, ''					AS REC_CRE
-								, ''					AS REC_STAT
-								, VI.QTY				AS QTY_ORD
-								, VI.QTY				AS QTY_REC
+								S.STORE_CODE                    AS StoreCode
+								, VOU.WORKSTATION               AS WorkstationNo
+								, VOU.VOU_NO			        AS SequenceNo
+								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
+								, VOU.CREATED_DATETIME	        AS BeginDateTime
+								, VOU.POST_DATE                 AS EndDateTime
+								, VOU.CLERK_SID			        AS OperatorId
+								, C.ALPHABETIC_CODE             AS CurrencyCode
+								, REGION.REGION_NAME	        AS Region
+								, COUNTRY.COUNTRY_CODE          AS Country
+								, S.ADDRESS5			        AS AlternateStoreId
+								, CASE WHEN VOU.STATUS = 4 
+									THEN 'CLOSED' 
+									ELSE 'PENDING' 
+									END							AS DocumentStatus
+								, VOU.VOU_NO					AS DocumentId
+								, VOU.MODIFIED_DATETIME			AS CompletionTimestamp
+								, VOU.MODIFIED_DATETIME			AS LastActivityTimestamp
+								, ''							AS ShipmentSequence
+								, ''							AS DestinationRetailLocationId
+								, ''							AS ShipmentStatusCode
+								, VI.CARTON_NO					AS CartonId
+								, VI.CARTON_STATUS				AS CartonStatusCode
+								, VI.ITEM_POS					AS LineNumber
+								, ISB.DESCRIPTION1				AS ItemId
+								, VI.QTY						AS ActualCount
+								, ''							AS ExpectedCount
+								, ''							AS PostedCount
+								, VOU.CREATED_DATETIME			AS SaleLineBusinessDayDate
+								, ''							AS TransactionSequence
+								, ''							AS LineItemSequence
+								, ''							AS RecordCreationType
+								, ''							AS LineItemStatusCode
+								, ''							AS PTDIM1
+								, ''							AS PTDIM2
+								, ''							AS PTStyle
+								, ''							AS PTControlNumber
+								, ''							AS PTEAN
+								, VI.QTY						AS QuantityOrdered
+								, ''							AS QuantityReceived
+								, ISB.DESCRIPTION2				AS Description
 							FROM
 								RPS.VOUCHER VOU
-							LEFT JOIN RPS.VOU_ITEM VI		ON VOU.SID = VI.VOU_SID
-							LEFT JOIN RPS.STORE	S			ON S.SID = VOU.STORE_SID
-							LEFT JOIN RPS.SUBSIDIARY SBS	ON SBS.SID = VOU.SBS_SID
-							LEFT JOIN RPS.COUNTRY			ON COUNTRY.SID = SBS.COUNTRY_SID
-							LEFT JOIN RPS.REGION_SUBSIDIARY ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
-							LEFT JOIN RPS.REGION			ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
-							LEFT JOIN RPS.INVN_SBS_ITEM ISB ON ISB.SID = VI.ITEM_SID
-							INNER JOIN RPS.EMPLOYEE			ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
-							LEFT JOIN RPS.CURRENCY C		ON SBS.BASE_CURRENCY_SID = C.SID
+							LEFT JOIN RPS.VOU_ITEM VI			ON VOU.SID = VI.VOU_SID
+							LEFT JOIN RPS.STORE	S				ON S.SID = VOU.STORE_SID
+							LEFT JOIN RPS.SUBSIDIARY SBS		ON SBS.SID = VOU.SBS_SID
+							LEFT JOIN RPS.COUNTRY				ON COUNTRY.SID = SBS.COUNTRY_SID
+							LEFT JOIN RPS.REGION_SUBSIDIARY		ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
+							LEFT JOIN RPS.REGION				ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
+							LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = VI.ITEM_SID
+							INNER JOIN RPS.EMPLOYEE				ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
+							LEFT JOIN RPS.CURRENCY C			ON SBS.BASE_CURRENCY_SID = C.SID
 							WHERE
 								TRUNC(VOU.CREATED_DATETIME) BETWEEN DATE '2020-08-01' AND DATE '2025-08-07'
-								AND VOU.VOU_TYPE = 0
-								AND VOU.VOU_CLASS = 2
+								AND VOU.VOU_TYPE IN :VoucherTypes
+								AND VOU.VOU_CLASS IN :CoucherClass
 							--  AND VOU.STATUS = 4
 							FETCH FIRST 1 ROWS ONLY
 					";
-					return (await connection.QueryAsync<ASNModel>(sql, new { SaleDate = date })).ToList();
+
+					var parameters = new
+					{
+						SaleDate = date.Date,
+						VoucherTypes = vouType,
+						CoucherClass = vouClass
+					};
+
+					var sales = await connection.QueryAsync<ASNModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching sales data: {ex.Message}");
-					Console.WriteLine($"Error fetching sakes data: {ex.Message}");
+					Logger.Log($"Error fetching ASN - Receiving data: {ex.Message}");
+					Console.WriteLine($"Error fetching ASN - Receiving data: {ex.Message}");
 					return new List<ASNModel>();
 				}
 			}
