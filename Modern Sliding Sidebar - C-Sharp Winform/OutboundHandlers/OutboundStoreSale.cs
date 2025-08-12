@@ -12,15 +12,15 @@ using System.Xml;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {
-	public static class OutboundRetailSale
+	public static class OutboundStoreSale
 	{
-		public static async Task Execute(SalesRepository repository, GXConfig config)
+		public static async Task Execute(StoreSaleRepository repository, GXConfig config)
 		{
 			try
 			{
 				DateTime date = DateTime.Today;
 				var receipt_type = new List<int> { 0, 2 };
-				var items = await repository.GetSalesAsync(date, receipt_type);
+				var items = await repository.GetStoreSaleAsync(date, receipt_type);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -33,16 +33,16 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				GenerateXml(items, filePath);
 
-				MessageBox.Show($"Retail Sale synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				MessageBox.Show($"RETAIL SALE synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
+				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Logger.Log($"Error: {ex.Message}");
 			}
 		}
 
-		public static void GenerateXml(List<SalesModel> items, string filePath)
+		public static void GenerateXml(List<StoreSaleModel> items, string filePath)
 		{
 			var settings = new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 };
 

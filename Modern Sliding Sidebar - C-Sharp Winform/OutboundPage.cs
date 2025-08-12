@@ -21,6 +21,8 @@ namespace GXIntegration_Levis
 		private PriceRepository _priceRepository;
 
 		private ASNRepository _asnRepository;
+
+		private StoreSaleRepository _storeSaleRepository;
 		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
 		private SalesRepository _salesRepository;
 		private StoreShippingRepository _storeShippingRepository;
@@ -38,6 +40,8 @@ namespace GXIntegration_Levis
 			_priceRepository = new PriceRepository(config.MainDbConnection);
 
 			_asnRepository = new ASNRepository(config.MainDbConnection);
+
+			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
 			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
 			_salesRepository = new SalesRepository(config.MainDbConnection);
 			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
@@ -128,7 +132,7 @@ namespace GXIntegration_Levis
 			{
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
 				["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(_storeGoodsReturnRepository, config),
-				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
+				["RETAIL_SALE"] = () => OutboundStoreSale.Execute(_storeSaleRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
 				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_storeShippingRepository, config),
