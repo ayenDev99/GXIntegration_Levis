@@ -19,9 +19,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			try
 			{
 				DateTime date = DateTime.Today;
-				var vou_type = new List<int> { 0 }; // [0] Regular
-				var vou_class = new List<int> { 2 }; // [2] ASN
-				var items = await repository.GetStoreShippingAsync(date, vou_type, vou_class);
+				var items = await repository.GetStoreShippingAsync(date);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -65,7 +63,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				writer.WriteAttributeString("TrainingModeFlag", "false");
 				writer.WriteAttributeString("dtv", "AppVersion", GlobalOutbound.NsDtv, "");
 				writer.WriteAttributeString("dtv", "InventoryDocumentSubType", GlobalOutbound.NsDtv, "STORE_TRANSFER");
-				writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "RECEIVING");
+				writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "SHIPPING");
 				writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "INVENTORY_CONTROL");
 
 				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, "1");

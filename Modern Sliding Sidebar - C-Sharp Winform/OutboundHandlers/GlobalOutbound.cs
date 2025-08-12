@@ -85,10 +85,5 @@ namespace GXIntegration_Levis.OutboundHandlers
 					return int.TryParse(g.Key, out n) ? n : int.MaxValue;
 				});
 		}
-
-		internal static IEnumerable<IGrouping<string, SalesModel>> GroupBySafe(List<ASNModel> items, Func<SalesModel, string> value)
-		{
-			throw new NotImplementedException();
-		}
 	}
 }

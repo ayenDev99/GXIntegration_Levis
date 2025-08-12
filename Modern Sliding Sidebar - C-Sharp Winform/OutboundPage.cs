@@ -25,7 +25,6 @@ namespace GXIntegration_Levis
 		private StoreSaleRepository _storeSaleRepository;
 		private StoreReturnRepository _storeReturnRepository;
 		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
-		private SalesRepository _salesRepository;
 		private StoreShippingRepository _storeShippingRepository;
 
 		private GunaDataGridView guna1DataGridView1;
@@ -45,7 +44,6 @@ namespace GXIntegration_Levis
 			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
 			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
 			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
-			_salesRepository = new SalesRepository(config.MainDbConnection);
 			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
 
 			InitializeComponent();

@@ -19,9 +19,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			try
 			{
 				DateTime date = DateTime.Today;
-				var vou_type = new List<int> { 1 }; // [1] Return
-				var vou_class = new List<int> { 0 }; // [0] Voucher
-				var items = await repository.GetStoreGoodsReturnAsync(date, vou_type, vou_class);
+				var items = await repository.GetStoreGoodsReturnAsync(date);
 
 				Logger.Log($"Items count: {items.Count}");
 

@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime date, List<int> vouType, List<int> vouClass)
+		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -89,21 +89,13 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
 								TRUNC(VOU.CREATED_DATETIME) BETWEEN DATE '2020-08-01' AND DATE '2025-08-07'
-								AND VOU.VOU_TYPE IN :VoucherTypes
-								AND VOU.VOU_CLASS IN :VoucherClass
-							--  AND VOU.STATUS = 4
+								AND VOU.VOU_CLASS = 0
+								AND VOU.VOU_TYPE = 1
+								AND VOU.STATUS = 4
 							FETCH FIRST 1 ROWS ONLY
 					";
 
-					var parameters = new
-					{
-						SaleDate = date.Date,
-						VoucherTypes = vouType,
-						VoucherClass = vouClass
-					};
-
-					var sales = await connection.QueryAsync<StoreGoodsReturnModel>(sql, parameters);
-					return sales.ToList();
+					return (await connection.QueryAsync<StoreGoodsReturnModel>(sql, new { CurrentDate = date })).ToList();
 				}
 				catch (Exception ex)
 				{

@@ -117,7 +117,6 @@
     <Compile Include="Data\Access\InTransitRepository.cs" />
     <Compile Include="Data\Access\InventoryRepository.cs" />
     <Compile Include="Data\Access\PriceRepository.cs" />
-    <Compile Include="Data\Access\SalesRepository.cs" />
     <Compile Include="Data\Access\StoreGoodsReturnRepository.cs" />
     <Compile Include="Data\Access\StoreReturnRepository.cs" />
     <Compile Include="Data\Access\StoreSaleRepository.cs" />
@@ -146,7 +145,6 @@
     <Compile Include="Model\InTransitModel.cs" />
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\PriceModel.cs" />
-    <Compile Include="Model\SalesModel.cs" />
     <Compile Include="Model\StoreGoodsReturnModel.cs" />
     <Compile Include="Model\StoreReturnModel.cs" />
     <Compile Include="Model\StoreSaleModel.cs" />
