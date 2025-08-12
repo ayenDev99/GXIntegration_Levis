@@ -22,7 +22,8 @@ namespace GXIntegration_Levis
 
 		private ASNRepository _asnRepository;
 		private SalesRepository _salesRepository;
-		
+		private TransferRepository _transferRepository;
+
 		private GunaDataGridView guna1DataGridView1;
 		private int _hoveredRowIndex = -1;
 
@@ -37,7 +38,7 @@ namespace GXIntegration_Levis
 
 			_asnRepository = new ASNRepository(config.MainDbConnection);
 			_salesRepository = new SalesRepository(config.MainDbConnection);
-			
+			_transferRepository = new TransferRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeTable();
@@ -128,7 +129,7 @@ namespace GXIntegration_Levis
 				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
-				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_inventoryRepository, config),
+				["STORE_TRANSFER - SHIPPING "] = () => OutboundStoreShipping.Execute(_transferRepository, config),
 				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_inventoryRepository, config),
 				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(_inventoryRepository, config),
 				["INTRANSIT"] = () => OutboundInTransit.Execute(_inTransitRepository, config),

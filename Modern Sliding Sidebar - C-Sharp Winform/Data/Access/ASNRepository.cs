@@ -115,7 +115,5 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-
-
 	}
 }

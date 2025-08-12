@@ -118,6 +118,7 @@
     <Compile Include="Data\Access\InventoryRepository.cs" />
     <Compile Include="Data\Access\PriceRepository.cs" />
     <Compile Include="Data\Access\SalesRepository.cs" />
+    <Compile Include="Data\Access\TransferRepository.cs" />
     <Compile Include="Data\DbConnection.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -143,6 +144,7 @@
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\PriceModel.cs" />
     <Compile Include="Model\SalesModel.cs" />
+    <Compile Include="Model\TransferModel.cs" />
     <Compile Include="OutboundHandlers\GlobalOutbound.cs" />
     <Compile Include="OutboundHandlers\OutboundAdjustment.cs" />
     <Compile Include="OutboundHandlers\OutboundASN.cs" />
