@@ -12,16 +12,16 @@ using System.Xml;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {
-	public static class OutboundReturnToDC
+	public static class OutboundStoreGoodsReturn
 	{
-		public static async Task Execute(ASNRepository repository, GXConfig config)
+		public static async Task Execute(StoreGoodsReturnRepository repository, GXConfig config)
 		{
 			try
 			{
 				DateTime date = DateTime.Today;
 				var vou_type = new List<int> { 1 }; // [1] Return
 				var vou_class = new List<int> { 0 }; // [0] Voucher
-				var items = await repository.GetASNAsync(date, vou_type, vou_class);
+				var items = await repository.GetStoreGoodsReturnAsync(date, vou_type, vou_class);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		public static void GenerateXml(List<ASNModel> items, string filePath)
+		public static void GenerateXml(List<StoreGoodsReturnModel> items, string filePath)
 		{
 			var settings = new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 };
 

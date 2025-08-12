@@ -21,6 +21,7 @@ namespace GXIntegration_Levis
 		private PriceRepository _priceRepository;
 
 		private ASNRepository _asnRepository;
+		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
 		private SalesRepository _salesRepository;
 		private TransferRepository _transferRepository;
 
@@ -37,6 +38,7 @@ namespace GXIntegration_Levis
 			_priceRepository = new PriceRepository(config.MainDbConnection);
 
 			_asnRepository = new ASNRepository(config.MainDbConnection);
+			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
 			_salesRepository = new SalesRepository(config.MainDbConnection);
 			_transferRepository = new TransferRepository(config.MainDbConnection);
 
@@ -125,7 +127,7 @@ namespace GXIntegration_Levis
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
-				["RETURN_TO_DC"] = () => OutboundReturnToDC.Execute(_asnRepository, config),
+				["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(_storeGoodsReturnRepository, config),
 				["RETAIL_SALE"] = () => OutboundRetailSale.Execute(_salesRepository, config),
 				["RETURN_SALE"] = () => OutboundReturnSale.Execute(_salesRepository, config),
 				["ADJUSTMENT"] = () => OutboundAdjustment.Execute(_inventoryRepository, config),
