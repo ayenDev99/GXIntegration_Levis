@@ -14,14 +14,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundStoreShipping
 	{
-		public static async Task Execute(TransferRepository repository, GXConfig config)
+		public static async Task Execute(StoreShippingRepository repository, GXConfig config)
 		{
 			try
 			{
 				DateTime date = DateTime.Today;
 				var vou_type = new List<int> { 0 }; // [0] Regular
 				var vou_class = new List<int> { 2 }; // [2] ASN
-				var items = await repository.GetTransferAsync(date, vou_type, vou_class);
+				var items = await repository.GetStoreShippingAsync(date, vou_type, vou_class);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		public static void GenerateXml(List<TransferModel> items, string filePath)
+		public static void GenerateXml(List<StoreShippingModel> items, string filePath)
 		{
 			var settings = new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 };
 

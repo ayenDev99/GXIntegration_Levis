@@ -4,18 +4,19 @@ using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Data.Access
 {
-	public class StoreGoodsReturnRepository
+	public class StoreShippingRepository
 	{
 		private readonly string _connectionString;
-		public StoreGoodsReturnRepository(string connectionString)
+		public StoreShippingRepository(string connectionString)
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime date, List<int> vouType, List<int> vouClass)
+		public async Task<List<StoreShippingModel>> GetStoreShippingAsync(DateTime date, List<int> vouType, List<int> vouClass)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -102,14 +103,14 @@ namespace GXIntegration_Levis.Data.Access
 						VoucherClass = vouClass
 					};
 
-					var sales = await connection.QueryAsync<StoreGoodsReturnModel>(sql, parameters);
+					var sales = await connection.QueryAsync<StoreShippingModel>(sql, parameters);
 					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
 					Logger.Log($"Error fetching ASN - Receiving data: {ex.Message}");
 					Console.WriteLine($"Error fetching ASN - Receiving data: {ex.Message}");
-					return new List<StoreGoodsReturnModel>();
+					return new List<StoreShippingModel>();
 				}
 			}
 		}
