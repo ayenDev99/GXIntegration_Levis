@@ -36,45 +36,32 @@ namespace GXIntegration_Levis.Data.Access
 								, REGION.REGION_NAME	        AS Region
 								, COUNTRY.COUNTRY_CODE          AS Country
 								, S.ADDRESS5			        AS AlternateStoreId
+								, ''							AS DestinationAlternateStoreId
+								, ''							AS OriginAlternateStoreId
 								, CASE WHEN VOU.STATUS = 4 
 									THEN 'CLOSED' 
 									ELSE 'PENDING' 
 									END							AS DocumentStatus
 								, VOU.VOU_NO					AS DocumentId
+								, VOU.MODIFIED_DATETIME			AS CreationTimestamp
 								, VOU.MODIFIED_DATETIME			AS CompletionTimestamp
 								, VOU.MODIFIED_DATETIME			AS LastActivityTimestamp
 								, ''							AS ShipmentSequence
+								, ''							AS ActualShipDate
 								, ''							AS DestinationRetailLocationId
+								, ''							AS ShippingCarrier
+								, ''							AS TrackingNumber
 								, ''							AS ShipmentStatusCode
-								, VI.CARTON_NO					AS CartonId
-								, VI.CARTON_STATUS				AS CartonStatusCode
-								, VI.ITEM_POS					AS LineNumber
+								, ''							AS PostalCode
 								, ISB.DESCRIPTION1				AS ItemId
-								, VI.QTY						AS ActualCount
-								, ''							AS ExpectedCount
-								, ''							AS PostedCount
-								, VOU.CREATED_DATETIME			AS SaleLineBusinessDayDate
-								, ''							AS TransactionSequence
-								, ''							AS LineItemSequence
-								, ''							AS RecordCreationType
-								, ''							AS LineItemStatusCode
 								, ''							AS PTDIM1
 								, ''							AS PTDIM2
 								, ''							AS PTStyle
 								, ''							AS PTControlNumber
 								, ''							AS PTEAN
-								, VI.QTY						AS QuantityOrdered
-								, ''							AS QuantityReceived
-								, ISB.DESCRIPTION2				AS Description
-
-								, VOU_REASON.NAME				AS ReasonCode
-								, ''							AS OriginatorName
-								, ''							AS ActualDeliveryDate
-								, ''							AS ActualShipDate
-								, S.ADDRESS5					AS DestinationPartyID
-								, S.ZIP							AS ShipmentPostalCode
-								, COUNTRY.COUNTRY_CODE			AS ShipmentCountry
 								, VI.QTY 						AS QuantityShipped
+								, VI.ITEM_POS					AS LineNumber
+								, ISB.DESCRIPTION2				AS Description
 	
 							FROM
 								RPS.VOUCHER VOU
