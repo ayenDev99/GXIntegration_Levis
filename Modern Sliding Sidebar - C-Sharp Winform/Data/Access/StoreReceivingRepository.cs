@@ -47,21 +47,26 @@ namespace GXIntegration_Levis.Data.Access
 								, VOU.MODIFIED_DATETIME			AS CompletionTimestamp
 								, VOU.MODIFIED_DATETIME			AS LastActivityTimestamp
 								, ''							AS ShipmentSequence
-								, ''							AS ActualShipDate
 								, ''							AS DestinationRetailLocationId
 								, ''							AS ShippingCarrier
 								, ''							AS TrackingNumber
 								, ''							AS ShipmentStatusCode
-								, ''							AS PostalCode
+								, VI.ITEM_POS					AS LineNumber
 								, ISB.DESCRIPTION1				AS ItemId
+								, ''							AS ActualCount
+								, ''							AS ExpectedCount
+								, ''							AS PostedCount
+								, ''							AS RecordCreationType
+								, ''							AS StatusCode
+								, VI.QTY							AS QuantityOrdered
+								, ''							AS QuantityReceived
+								, ''							AS CartonNumber
+								, ''							AS Description
 								, ''							AS PTDIM1
 								, ''							AS PTDIM2
 								, ''							AS PTStyle
 								, ''							AS PTControlNumber
 								, ''							AS PTEAN
-								, VI.QTY 						AS QuantityShipped
-								, VI.ITEM_POS					AS LineNumber
-								, ISB.DESCRIPTION2				AS Description
 	
 							FROM
 								RPS.VOUCHER VOU

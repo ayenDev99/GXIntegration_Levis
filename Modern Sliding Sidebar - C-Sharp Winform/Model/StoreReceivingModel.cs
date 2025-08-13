@@ -27,21 +27,34 @@ namespace GXIntegration_Levis.Model
 		public DateTimeOffset? CompletionTimestamp { get; set; }
 		public DateTimeOffset? LastActivityTimestamp { get; set; }
 		public string ShipmentSequence { get; set; }
-		public DateTimeOffset? ActualDeliveryDate { get; set; }
-		public DateTimeOffset? ActualShipDate { get; set; }
 		public string DestinationRetailLocationId { get; set; }
 		public string ShippingCarrier { get; set; }
 		public string TrackingNumber { get; set; }
 		public string ShipmentStatusCode { get; set; }
-		public string PostalCode { get; set; }
+		public string LineNumber { get; set; }
 		public string ItemId { get; set; }
+		public string ActualCount { get; set; }
+		public string ExpectedCount { get; set; }
+		public string PostedCount { get; set; }
+		public string RecordCreationType { get; set; }
+		public string StatusCode { get; set; }
+		public string QuantityOrdered { get; set; }
+		public string QuantityReceived { get; set; }
+		public string CartonNumber { get; set; }
+		public string Description { get; set; }
 		public string PTDIM1 { get; set; }
 		public string PTDIM2 { get; set; }
 		public string PTStyle { get; set; }
 		public string PTControlNumber { get; set; }
 		public string PTEAN { get; set; }
-		public string QuantityShipped { get; set; }
-		public string LineNumber { get; set; }
-		public string Description { get; set; }
+
+
+
+		public string PostalCode { get; set; } // DEL
+		
+		
+		public string QuantityShipped { get; set; } // DEL
+		
+		
 	}
 }
