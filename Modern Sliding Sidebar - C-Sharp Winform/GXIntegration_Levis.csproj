@@ -118,6 +118,8 @@
     <Compile Include="Data\Access\InventoryRepository.cs" />
     <Compile Include="Data\Access\PriceRepository.cs" />
     <Compile Include="Data\Access\StoreGoodsReturnRepository.cs" />
+    <Compile Include="Data\Access\StoreInventoryAdjustmentRepository.cs" />
+    <Compile Include="Data\Access\StoreReceivingRepository.cs" />
     <Compile Include="Data\Access\StoreReturnRepository.cs" />
     <Compile Include="Data\Access\StoreSaleRepository.cs" />
     <Compile Include="Data\Access\StoreShippingRepository.cs" />
@@ -146,11 +148,13 @@
     <Compile Include="Model\InventoryModel.cs" />
     <Compile Include="Model\PriceModel.cs" />
     <Compile Include="Model\StoreGoodsReturnModel.cs" />
+    <Compile Include="Model\StoreInventoryAdjustmentModel.cs" />
+    <Compile Include="Model\StoreReceivingModel.cs" />
     <Compile Include="Model\StoreReturnModel.cs" />
     <Compile Include="Model\StoreSaleModel.cs" />
     <Compile Include="Model\StoreShippingModel.cs" />
     <Compile Include="OutboundHandlers\GlobalOutbound.cs" />
-    <Compile Include="OutboundHandlers\OutboundAdjustment.cs" />
+    <Compile Include="OutboundHandlers\OutboundStoreInventoryAdjustment.cs" />
     <Compile Include="OutboundHandlers\OutboundASN.cs" />
     <Compile Include="OutboundHandlers\OutboundInTransit.cs" />
     <Compile Include="OutboundHandlers\OutboundInventorySnapshots.cs" />

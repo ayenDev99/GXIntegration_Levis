@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Model
 {
-	public class StoreShippingModel
+	public class StoreReceivingModel
 	{
 		public string StoreCode { get; set; }
 		public string WorkstationNo { get; set; }
@@ -43,6 +43,5 @@ namespace GXIntegration_Levis.Model
 		public string QuantityShipped { get; set; }
 		public string LineNumber { get; set; }
 		public string Description { get; set; }
-
 	}
 }
