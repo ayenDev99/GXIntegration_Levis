@@ -3,14 +3,14 @@ using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
 using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
+using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.IO;
 using System.Linq;
-using Renci.SshNet;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace GXIntegration_Levis
 {
@@ -18,7 +18,6 @@ namespace GXIntegration_Levis
 	{
 		private static GXConfig config;
 
-		// Repositories
 		private InventoryRepository _inventoryRepository;
 		private InTransitRepository _inTransitRepository;
 		private PriceRepository _priceRepository;
@@ -32,10 +31,8 @@ namespace GXIntegration_Levis
 
 		private GunaDataGridView guna1DataGridView1;
 		private GunaButton processAllButton;
-
-		private Panel loadingOverlay;
-		private Label loadingLabel;
-		private PictureBox loadingSpinner;
+		private TabControl tabControl;
+		private TabPage tabText, tabXml, tabApi;
 
 		private int _hoveredRowIndex = -1;
 		private Dictionary<string, Func<Task>> downloadActions;
@@ -56,16 +53,38 @@ namespace GXIntegration_Levis
 			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
 
 			InitializeComponent();
-			InitializeTable();
+			InitializeTabs();
 			InitializeDownloadActions();
+		}
+
+		private void InitializeTabs()
+		{
+			tabControl = new TabControl
+			{
+				Location = new Point(220, 10),
+				Size = new Size(850, 450),
+				Font = new Font("Segoe UI", 9)
+			};
+
+			tabText = new TabPage("TEXT");
+			tabXml = new TabPage("XML");
+			tabApi = new TabPage("API");
+
+			tabControl.TabPages.Add(tabText);
+			tabControl.TabPages.Add(tabXml);
+			tabControl.TabPages.Add(tabApi);
+
+			this.Controls.Add(tabControl);
+
+			InitializeGrid();
 			InitializeProcessAllButton();
 		}
 
-		private void InitializeTable()
+		private void InitializeGrid()
 		{
 			guna1DataGridView1 = new GunaDataGridView
 			{
-				Location = new Point(220, 70),
+				Location = new Point(20, 20),
 				Size = new Size(900, 300),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
@@ -80,8 +99,6 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-			guna1DataGridView1.CellMouseMove += Guna1DataGridView1_CellMouseMove;
-			guna1DataGridView1.CellMouseLeave += Guna1DataGridView1_CellMouseLeave;
 
 			guna1DataGridView1.ColumnCount = 4;
 			guna1DataGridView1.Columns[0].Name = "ID";
@@ -104,13 +121,9 @@ namespace GXIntegration_Levis
 			};
 			guna1DataGridView1.Columns.Add(imageColumn);
 
-			guna1DataGridView1.CellMouseMove += (s, e) =>
-			{
-				if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
-					guna1DataGridView1.Cursor = Cursors.Hand;
-				else
-					guna1DataGridView1.Cursor = Cursors.Default;
-			};
+			guna1DataGridView1.CellContentClick += Guna1DataGridView1_CellContentClick;
+			guna1DataGridView1.CellMouseMove += Guna1DataGridView1_CellMouseMove;
+			guna1DataGridView1.CellMouseLeave += Guna1DataGridView1_CellMouseLeave;
 
 			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
 			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
@@ -123,8 +136,31 @@ namespace GXIntegration_Levis
 			AddRow("9", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
 			AddRow("10", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
-			this.Controls.Add(guna1DataGridView1);
-			guna1DataGridView1.CellContentClick += Guna1DataGridView1_CellContentClick;
+			tabText.Controls.Add(guna1DataGridView1);
+		}
+
+		private void InitializeProcessAllButton()
+		{
+			processAllButton = new GunaButton
+			{
+				Text = "Process All",
+				Location = new Point(20, 340),
+				Size = new Size(150, 40),
+				BaseColor = Color.FromArgb(100, 88, 255),
+				ForeColor = Color.White,
+				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+				OnHoverBaseColor = Color.FromArgb(72, 61, 255),
+				Cursor = Cursors.Hand
+			};
+
+			processAllButton.Click += async (s, e) => await ProcessAllDownloads();
+
+			tabText.Controls.Add(processAllButton);
+		}
+
+		private void AddRow(string id, string name, string format, string type)
+		{
+			guna1DataGridView1.Rows.Add(id, name, format, type);
 		}
 
 		private void InitializeDownloadActions()
@@ -144,24 +180,7 @@ namespace GXIntegration_Levis
 			};
 		}
 
-		private void InitializeProcessAllButton()
-		{
-			processAllButton = new GunaButton
-			{
-				Text = "Process All",
-				Location = new Point(220, 390),
-				Size = new Size(150, 40),
-				BaseColor = Color.FromArgb(100, 88, 255),
-				ForeColor = Color.White,
-				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-				OnHoverBaseColor = Color.FromArgb(72, 61, 255),
-				Cursor = Cursors.Hand
-			};
-
-			processAllButton.Click += async (s, e) => await ProcessAllDownloads();
-
-			this.Controls.Add(processAllButton);
-		}
+		// Include your existing Guna1 event handlers like Guna1DataGridView1_CellContentClick, etc.
 
 		private async Task ProcessAllDownloads()
 		{
@@ -210,9 +229,7 @@ namespace GXIntegration_Levis
 						sftp.Connect();
 
 						if (!sftp.Exists(remoteDirectory))
-						{
 							sftp.CreateDirectory(remoteDirectory);
-						}
 
 						if (!Directory.Exists(localDirectory))
 						{
@@ -221,13 +238,12 @@ namespace GXIntegration_Levis
 						}
 
 						var files = Directory.GetFiles(localDirectory)
-							.Where(f => f.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-									|| f.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+							.Where(f => f.EndsWith(".txt") || f.EndsWith(".xml"))
 							.ToArray();
 
 						if (files.Length == 0)
 						{
-							MessageBox.Show("No .txt or .xml files to upload.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+							MessageBox.Show("No files to upload.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 							return;
 						}
 
@@ -248,7 +264,6 @@ namespace GXIntegration_Levis
 						}
 
 						sftp.Disconnect();
-
 						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}
@@ -259,63 +274,59 @@ namespace GXIntegration_Levis
 			});
 		}
 
-
-		private void AddRow(string id, string name, string format, string type)
-		{
-			guna1DataGridView1.Rows.Add(id, name, format, type);
-		}
-
 		private async void Guna1DataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+{
+	if (e.RowIndex < 0 || guna1DataGridView1.Columns[e.ColumnIndex].Name != "Action")
+		return;
+
+	string name = guna1DataGridView1.Rows[e.RowIndex].Cells["Name"].Value?.ToString();
+
+	if (downloadActions.TryGetValue(name, out var handler))
+	{
+		try
 		{
-			if (e.RowIndex < 0 || guna1DataGridView1.Columns[e.ColumnIndex].Name != "Action")
-				return;
-
-			string name = guna1DataGridView1.Rows[e.RowIndex].Cells["Name"].Value?.ToString();
-
-			if (downloadActions.TryGetValue(name, out var handler))
-			{
-				try
-				{
-					await handler();
-				}
-				catch (Exception ex)
-				{
-					MessageBox.Show($"Error executing action for {name}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				}
-			}
-			else
-			{
-				MessageBox.Show($"No action defined for: {name}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
-			}
+			await handler();
 		}
-
-		private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+		catch (Exception ex)
 		{
-			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
-			{
-				if (_hoveredRowIndex >= 0)
-				{
-					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
-				}
-
-				guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue;
-				_hoveredRowIndex = e.RowIndex;
-
-				if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
-					guna1DataGridView1.Cursor = Cursors.Hand;
-				else
-					guna1DataGridView1.Cursor = Cursors.Default;
-			}
+			MessageBox.Show($"Error executing action for {name}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 		}
-		
-		private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-		{
-			if (_hoveredRowIndex >= 0)
-			{
-				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
-				_hoveredRowIndex = -1;
-			}
+	}
+	else
+	{
+		MessageBox.Show($"No action defined for: {name}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+	}
+}
+
+private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+{
+	if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
+	{
+		if (_hoveredRowIndex >= 0)
+			guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
+
+		guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue;
+		_hoveredRowIndex = e.RowIndex;
+
+		if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
+			guna1DataGridView1.Cursor = Cursors.Hand;
+		else
 			guna1DataGridView1.Cursor = Cursors.Default;
-		}
+	}
+}
+
+private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+{
+	if (_hoveredRowIndex >= 0)
+	{
+		guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
+		_hoveredRowIndex = -1;
+	}
+
+	guna1DataGridView1.Cursor = Cursors.Default;
+}
+
+
+
 	}
 }
