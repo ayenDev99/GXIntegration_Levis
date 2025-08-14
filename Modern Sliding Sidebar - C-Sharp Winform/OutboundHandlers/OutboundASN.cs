@@ -34,7 +34,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				GenerateXml(items, filePath);
 
-				MessageBox.Show($"ASN - RECEIVING synced.\nFile Name: {fileName}. \nSaved to: {filePath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				//MessageBox.Show($"ASN - RECEIVING synced.\nFile Name: {fileName}. \nSaved to: {filePath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 			catch (Exception ex)
 			{

@@ -39,7 +39,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 				}
 
-				MessageBox.Show($"Inventory synced.\n{grouped.Count()} file(s) created.");
+				//MessageBox.Show($"Inventory synced.\n{grouped.Count()} file(s) created.");
 			}
 			catch (Exception ex)
 			{

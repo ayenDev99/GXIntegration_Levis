@@ -15,13 +15,11 @@ namespace GXIntegration_Levis
 	{
 		private static GXConfig config;
 
-		// Generate TXT files
+		// Repositories
 		private InventoryRepository _inventoryRepository;
 		private InTransitRepository _inTransitRepository;
 		private PriceRepository _priceRepository;
-
-		// Generate XML files
-		private ASNRepository _asnRepository; // Store Goods
+		private ASNRepository _asnRepository;
 		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
 		private StoreSaleRepository _storeSaleRepository;
 		private StoreReturnRepository _storeReturnRepository;
@@ -30,31 +28,34 @@ namespace GXIntegration_Levis
 		private StoreReceivingRepository _storeReceivingRepository;
 
 		private GunaDataGridView guna1DataGridView1;
-		private int _hoveredRowIndex = -1;
+		private GunaButton processAllButton;
 
+		private Panel loadingOverlay;
+		private Label loadingLabel;
+		private PictureBox loadingSpinner;
+
+		private int _hoveredRowIndex = -1;
 		private Dictionary<string, Func<Task>> downloadActions;
 
 		public OutboundPage()
 		{
 			config = GXConfig.Load("config.xml");
 
-			// Generate TXT files
-			_inventoryRepository	= new InventoryRepository(config.MainDbConnection);
-			_inTransitRepository	= new InTransitRepository(config.MainDbConnection);
-			_priceRepository		= new PriceRepository(config.MainDbConnection);
-
-			// Generate XML files
-			_asnRepository						= new ASNRepository(config.MainDbConnection); // Store Goods
-			_storeGoodsReturnRepository			= new StoreGoodsReturnRepository(config.MainDbConnection);
-			_storeSaleRepository				= new StoreSaleRepository(config.MainDbConnection);
-			_storeReturnRepository				= new StoreReturnRepository(config.MainDbConnection);
+			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
+			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
+			_priceRepository = new PriceRepository(config.MainDbConnection);
+			_asnRepository = new ASNRepository(config.MainDbConnection);
+			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
+			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
+			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
 			_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
-			_storeShippingRepository			= new StoreShippingRepository(config.MainDbConnection);
-			_storeReceivingRepository			= new StoreReceivingRepository(config.MainDbConnection);
+			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
+			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeTable();
 			InitializeDownloadActions();
+			InitializeProcessAllButton();
 		}
 
 		private void InitializeTable()
@@ -79,7 +80,6 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.CellMouseMove += Guna1DataGridView1_CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += Guna1DataGridView1_CellMouseLeave;
 
-			// Columns
 			guna1DataGridView1.ColumnCount = 4;
 			guna1DataGridView1.Columns[0].Name = "ID";
 			guna1DataGridView1.Columns[1].Name = "Name";
@@ -91,7 +91,6 @@ namespace GXIntegration_Levis
 			guna1DataGridView1.Columns[2].Width = 455;
 			guna1DataGridView1.Columns[3].Width = 70;
 
-			// Add action button column
 			var imageColumn = new DataGridViewImageColumn
 			{
 				Name = "Action",
@@ -110,20 +109,18 @@ namespace GXIntegration_Levis
 					guna1DataGridView1.Cursor = Cursors.Default;
 			};
 
-			// Rows
 			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
 			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
 			AddRow("3", "RETAIL_SALE", "StoreSale_[yyyymmddhhmmss]", ".xml");
 			AddRow("4", "RETURN_SALE", "StoreReturn_[yyyymmddhhmmss]", ".xml");
 			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
-			AddRow("6", "STORE_TRANSFER - SHIPPING ", "StoreShipping_[yyyymmddhhmmss]", ".xml");
+			AddRow("6", "STORE_TRANSFER - SHIPPING", "StoreShipping_[yyyymmddhhmmss]", ".xml");
 			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
 			AddRow("8", "INVENTORY SNAPSHOTS", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
 			AddRow("9", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
 			AddRow("10", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
 			this.Controls.Add(guna1DataGridView1);
-
 			guna1DataGridView1.CellContentClick += Guna1DataGridView1_CellContentClick;
 		}
 
@@ -131,22 +128,66 @@ namespace GXIntegration_Levis
 		{
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
 			{
-				  ["ASN - RECEIVING"]				= () => OutboundASN.Execute(_asnRepository, config)
-				, ["RETURN_TO_DC"]					= () => OutboundStoreGoodsReturn.Execute(_storeGoodsReturnRepository, config)
-				, ["RETAIL_SALE"]					= () => OutboundStoreSale.Execute(_storeSaleRepository, config)
-				, ["RETURN_SALE"]					= () => OutboundStoreReturn.Execute(_storeReturnRepository, config)
-				, ["ADJUSTMENT"]					= () => OutboundStoreInventoryAdjustment.Execute(_storeInventoryAdjustmentRepository, config)
-				, ["STORE_TRANSFER - SHIPPING"]		= () => OutboundStoreShipping.Execute(_storeShippingRepository, config)
-				, ["STORE_TRANSFER - RECEIVING"]	= () => OutboundStoreReceiving.Execute(_storeReceivingRepository, config)
-				, ["INVENTORY SNAPSHOTS"]			= () => OutboundInventorySnapshots.Execute(_inventoryRepository, config)
-				, ["INTRANSIT"]						= () => OutboundInTransit.Execute(_inTransitRepository, config)
-				, ["PRICE"]							= () => OutboundPrice.Execute(_priceRepository, config)
+				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
+				["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(_storeGoodsReturnRepository, config),
+				["RETAIL_SALE"] = () => OutboundStoreSale.Execute(_storeSaleRepository, config),
+				["RETURN_SALE"] = () => OutboundStoreReturn.Execute(_storeReturnRepository, config),
+				["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(_storeInventoryAdjustmentRepository, config),
+				["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(_storeShippingRepository, config),
+				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(_storeReceivingRepository, config),
+				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(_inventoryRepository, config),
+				["INTRANSIT"] = () => OutboundInTransit.Execute(_inTransitRepository, config),
+				["PRICE"] = () => OutboundPrice.Execute(_priceRepository, config)
 			};
 		}
 
-		// ******************************************
-		// Helpers
-		// ******************************************
+		private void InitializeProcessAllButton()
+		{
+			processAllButton = new GunaButton
+			{
+				Text = "Process All",
+				Location = new Point(220, 390),
+				Size = new Size(150, 40),
+				BaseColor = Color.FromArgb(100, 88, 255),
+				ForeColor = Color.White,
+				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+				OnHoverBaseColor = Color.FromArgb(72, 61, 255),
+				Cursor = Cursors.Hand
+			};
+
+			processAllButton.Click += async (s, e) => await ProcessAllDownloads();
+
+			this.Controls.Add(processAllButton);
+		}
+
+		private async Task ProcessAllDownloads()
+		{
+			processAllButton.Enabled = false;
+			Cursor.Current = Cursors.WaitCursor;
+
+			try
+			{
+				foreach (var action in downloadActions)
+				{
+					try
+					{
+						await action.Value.Invoke();
+					}
+					catch (Exception ex)
+					{
+						MessageBox.Show($"Failed to process {action.Key}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					}
+				}
+
+				MessageBox.Show("All downloads processed.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+			finally
+			{
+				processAllButton.Enabled = true;
+				Cursor.Current = Cursors.Default;
+			}
+		}
+
 		private void AddRow(string id, string name, string format, string type)
 		{
 			guna1DataGridView1.Rows.Add(id, name, format, type);
@@ -159,17 +200,29 @@ namespace GXIntegration_Levis
 
 			string name = guna1DataGridView1.Rows[e.RowIndex].Cells["Name"].Value?.ToString();
 
-			if (downloadActions.TryGetValue(name, out var handler)) {
-				await handler();
-			} else {
+			if (downloadActions.TryGetValue(name, out var handler))
+			{
+				try
+				{
+					await handler();
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"Error executing action for {name}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+			else
+			{
 				MessageBox.Show($"No action defined for: {name}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 		}
 
 		private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
 		{
-			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex) {
-				if (_hoveredRowIndex >= 0) {
+			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
+			{
+				if (_hoveredRowIndex >= 0)
+				{
 					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
 				}
 
@@ -182,10 +235,11 @@ namespace GXIntegration_Levis
 					guna1DataGridView1.Cursor = Cursors.Default;
 			}
 		}
-
+		
 		private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
 		{
-			if (_hoveredRowIndex >= 0) {
+			if (_hoveredRowIndex >= 0)
+			{
 				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
 				_hoveredRowIndex = -1;
 			}

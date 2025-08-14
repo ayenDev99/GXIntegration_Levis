@@ -33,7 +33,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				GenerateXml(items, filePath);
 
-				MessageBox.Show($"Return Sale synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				//MessageBox.Show($"Return Sale synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 			catch (Exception ex)
 			{

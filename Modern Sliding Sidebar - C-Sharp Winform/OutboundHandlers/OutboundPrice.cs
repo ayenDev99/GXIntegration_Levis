@@ -32,7 +32,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 		
-				MessageBox.Show($"✅ Price synced file(s) created.");
+				//MessageBox.Show($"✅ Price synced file(s) created.");
 			}
 			catch (Exception ex)
 			{
