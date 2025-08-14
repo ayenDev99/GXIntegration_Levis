@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
+using System.Linq;
+using Renci.SshNet;
 
 namespace GXIntegration_Levis
 {
@@ -179,7 +182,8 @@ namespace GXIntegration_Levis
 					}
 				}
 
-				MessageBox.Show("All downloads processed.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				MessageBox.Show("All downloads processed. Starting SFTP upload...", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				await UploadToSftpAsync();
 			}
 			finally
 			{
@@ -187,6 +191,74 @@ namespace GXIntegration_Levis
 				Cursor.Current = Cursors.Default;
 			}
 		}
+
+		private async Task UploadToSftpAsync()
+		{
+			await Task.Run(() =>
+			{
+				string host = "levib2bstage.levi.com";
+				int port = 49153;
+				string username = "TestRetailPro";
+				string password = "X67zZkTTAkIC";
+				string remoteDirectory = "/IN/";
+				string localDirectory = @"C:\GXIntegration_Levis\Modern Sliding Sidebar - C-Sharp Winform\bin\Debug\OUTBOUND\";
+
+				try
+				{
+					using (var sftp = new SftpClient(host, port, username, password))
+					{
+						sftp.Connect();
+
+						if (!sftp.Exists(remoteDirectory))
+						{
+							sftp.CreateDirectory(remoteDirectory);
+						}
+
+						if (!Directory.Exists(localDirectory))
+						{
+							MessageBox.Show($"Local directory does not exist:\n{localDirectory}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+							return;
+						}
+
+						var files = Directory.GetFiles(localDirectory)
+							.Where(f => f.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+									|| f.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+							.ToArray();
+
+						if (files.Length == 0)
+						{
+							MessageBox.Show("No .txt or .xml files to upload.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+							return;
+						}
+
+						foreach (var filePath in files)
+						{
+							try
+							{
+								using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+								{
+									string remotePath = remoteDirectory + Path.GetFileName(filePath);
+									sftp.UploadFile(fileStream, remotePath, true);
+								}
+							}
+							catch (Exception ex)
+							{
+								MessageBox.Show($"Failed to upload {Path.GetFileName(filePath)}:\n{ex.Message}", "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+							}
+						}
+
+						sftp.Disconnect();
+
+						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"SFTP Upload failed:\n{ex.Message}", "SFTP Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			});
+		}
+
 
 		private void AddRow(string id, string name, string format, string type)
 		{
