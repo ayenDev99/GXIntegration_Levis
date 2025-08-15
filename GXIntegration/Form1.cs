@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Guna.UI.WinForms;
 using GXIntegration_Levis;
-using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
+using GXIntegration.Properties;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SQLite;
 
-namespace Modern_Sliding_Sidebar___C_Sharp_Winform
+namespace GXIntegration
 {
 	public partial class Form1 : Form
 	{

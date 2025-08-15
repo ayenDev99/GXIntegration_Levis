@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Modern_Sliding_Sidebar___C_Sharp_Winform.Properties
+namespace GXIntegration.Properties
 {
 	public class GXConfig
 	{

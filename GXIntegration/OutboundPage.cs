@@ -2,7 +2,7 @@
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
-using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
+using GXIntegration.Properties;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;

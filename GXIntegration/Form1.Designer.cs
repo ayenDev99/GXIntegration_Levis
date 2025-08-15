@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace Modern_Sliding_Sidebar___C_Sharp_Winform
+namespace GXIntegration
 {
     partial class Form1
     {

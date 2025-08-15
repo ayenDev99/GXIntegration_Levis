@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36327.8 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXIntegration_Levis", "Modern Sliding Sidebar - C-Sharp Winform\GXIntegration_Levis.csproj", "{ABD8ED90-9ACA-4FA2-BED7-A2780F07B06B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXIntegration_Levis", "GXIntegration\GXIntegration_Levis.csproj", "{ABD8ED90-9ACA-4FA2-BED7-A2780F07B06B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

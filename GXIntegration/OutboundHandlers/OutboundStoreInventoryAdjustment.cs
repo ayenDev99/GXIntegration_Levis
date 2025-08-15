@@ -1,6 +1,6 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Model;
-using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
+using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
 using System.IO;

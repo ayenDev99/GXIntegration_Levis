@@ -4,7 +4,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Windows.Forms;
 
-namespace Modern_Sliding_Sidebar___C_Sharp_Winform
+namespace GXIntegration
 {
 	static class Program
 	{
