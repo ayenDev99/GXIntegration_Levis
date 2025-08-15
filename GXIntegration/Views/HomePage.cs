@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace GXIntegration_Levis
+namespace GXIntegration_Levis.Views
 {
 	public partial class HomePage : UserControl
 	{

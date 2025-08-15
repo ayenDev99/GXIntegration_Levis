@@ -128,16 +128,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AboutPage.cs">
+    <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="AboutPage.Designer.cs">
+    <Compile Include="Views\AboutPage.Designer.cs">
       <DependentUpon>AboutPage.cs</DependentUpon>
     </Compile>
-    <Compile Include="ConfigurationPage.cs">
+    <Compile Include="Views\ConfigurationPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ConfigurationPage.Designer.cs">
+    <Compile Include="Views\ConfigurationPage.Designer.cs">
       <DependentUpon>ConfigurationPage.cs</DependentUpon>
     </Compile>
     <Compile Include="Data\Access\ASNRepository.cs" />
@@ -157,19 +157,19 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="HomePage.cs">
+    <Compile Include="Views\HomePage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="HomePage.Designer.cs">
+    <Compile Include="Views\HomePage.Designer.cs">
       <DependentUpon>HomePage.cs</DependentUpon>
     </Compile>
-    <Compile Include="InboundPage.cs">
+    <Compile Include="Views\InboundPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="InboundPage.Designer.cs">
+    <Compile Include="Views\InboundPage.Designer.cs">
       <DependentUpon>InboundPage.cs</DependentUpon>
     </Compile>
-    <Compile Include="Logger.cs" />
+    <Compile Include="Helpers\Logger.cs" />
     <Compile Include="Model\ASNModel.cs" />
     <Compile Include="Model\InTransitModel.cs" />
     <Compile Include="Model\InventoryModel.cs" />
@@ -180,7 +180,6 @@
     <Compile Include="Model\StoreReturnModel.cs" />
     <Compile Include="Model\StoreSaleModel.cs" />
     <Compile Include="Model\StoreShippingModel.cs" />
-    <Compile Include="OutboundHandlers\BulkXmlSender.cs" />
     <Compile Include="OutboundHandlers\GlobalOutbound.cs" />
     <Compile Include="OutboundHandlers\OutboundStoreInventoryAdjustment.cs" />
     <Compile Include="OutboundHandlers\OutboundASN.cs" />
@@ -192,33 +191,29 @@
     <Compile Include="OutboundHandlers\OutboundStoreGoodsReturn.cs" />
     <Compile Include="OutboundHandlers\OutboundStoreReceiving.cs" />
     <Compile Include="OutboundHandlers\OutboundStoreShipping.cs" />
-    <Compile Include="OutboundHandlers\XmlApiSender.cs" />
-    <Compile Include="OutboundPage.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="OutboundPage.Designer.cs">
-      <DependentUpon>OutboundPage.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="AboutPage.resx">
+    <Compile Include="Views\OutboundPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\OutboundPage.Designer.cs">
+      <DependentUpon>OutboundPage.cs</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Views\AboutPage.resx">
       <DependentUpon>AboutPage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ConfigurationPage.resx">
+    <EmbeddedResource Include="Views\ConfigurationPage.resx">
       <DependentUpon>ConfigurationPage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="HomePage.resx">
+    <EmbeddedResource Include="Views\HomePage.resx">
       <DependentUpon>HomePage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="InboundPage.resx">
+    <EmbeddedResource Include="Views\InboundPage.resx">
       <DependentUpon>InboundPage.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="OutboundPage.resx">
-      <DependentUpon>OutboundPage.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -231,6 +226,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="Views\OutboundPage.resx">
+      <DependentUpon>OutboundPage.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Oracle.DataAccess.Common.Configuration.Section.xsd">
       <SubType>Designer</SubType>
     </None>

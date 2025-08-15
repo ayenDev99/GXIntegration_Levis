@@ -3,13 +3,13 @@ using GXIntegration_Levis.Model;
 using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {

@@ -8,7 +8,7 @@ using Guna.UI.WinForms;
 
 
 
-namespace GXIntegration_Levis
+namespace GXIntegration_Levis.Views
 {
 	public partial class ConfigurationPage : UserControl
 	{

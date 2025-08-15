@@ -1,19 +1,15 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Model;
-using GXIntegration;
 using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GXIntegration_Levis.Helpers;
 
-namespace GXIntegration_Levis
+namespace GXIntegration_Levis.Views
 {
 	public partial class InboundPage : UserControl
 	{

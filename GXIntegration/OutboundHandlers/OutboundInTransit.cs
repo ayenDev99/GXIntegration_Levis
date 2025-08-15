@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {

@@ -1,6 +1,6 @@
-﻿namespace GXIntegration_Levis
+﻿namespace GXIntegration_Levis.Views
 {
-	partial class InboundPage
+	partial class AboutPage
 	{
 		/// <summary> 
 		/// Required designer variable.
@@ -28,32 +28,19 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.inventoryButton = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
-			// inventoryButton
-			// 
-			this.inventoryButton.Location = new System.Drawing.Point(564, 324);
-			this.inventoryButton.Name = "inventoryButton";
-			this.inventoryButton.Size = new System.Drawing.Size(128, 23);
-			this.inventoryButton.TabIndex = 0;
-			this.inventoryButton.Text = "Test Inventory";
-			this.inventoryButton.UseVisualStyleBackColor = true;
-			this.inventoryButton.Click += new System.EventHandler(this.inventoryButton_Click);
-			// 
-			// InboundPage
+			// AboutPage
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.inventoryButton);
-			this.Name = "InboundPage";
+			this.Name = "AboutPage";
 			this.Size = new System.Drawing.Size(805, 494);
+			this.Load += new System.EventHandler(this.AboutPage_Load);
 			this.ResumeLayout(false);
 
 		}
 
 		#endregion
-
-		private System.Windows.Forms.Button inventoryButton;
 	}
 }

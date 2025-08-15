@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.Data.Access
 {

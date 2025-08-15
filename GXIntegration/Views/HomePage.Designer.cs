@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace GXIntegration_Levis
+namespace GXIntegration_Levis.Views
 {
 
 		partial class HomePage

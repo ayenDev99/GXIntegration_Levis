@@ -1,6 +1,6 @@
-﻿namespace GXIntegration_Levis
+﻿namespace GXIntegration_Levis.Views
 {
-	partial class ConfigurationPage
+	partial class OutboundPage
 	{
 		/// <summary> 
 		/// Required designer variable.
@@ -28,24 +28,22 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.tabControl1 = new System.Windows.Forms.TabControl();
+			this.testInventorySnapshot = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
-			// tabControl1
+			// testInventorySnapshot
 			// 
-			this.tabControl1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-			this.tabControl1.Location = new System.Drawing.Point(235, 24);
-			this.tabControl1.Name = "tabControl1";
-			this.tabControl1.SelectedIndex = 0;
-			this.tabControl1.Size = new System.Drawing.Size(853, 454);
-			this.tabControl1.TabIndex = 0;
+			this.testInventorySnapshot.Location = new System.Drawing.Point(0, 0);
+			this.testInventorySnapshot.Name = "testInventorySnapshot";
+			this.testInventorySnapshot.Size = new System.Drawing.Size(75, 23);
+			this.testInventorySnapshot.TabIndex = 1;
 			// 
-			// ConfigurationPage
+			// OutboundPage
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.tabControl1);
-			this.Name = "ConfigurationPage";
+			this.Controls.Add(this.testInventorySnapshot);
+			this.Name = "OutboundPage";
 			this.Size = new System.Drawing.Size(1108, 494);
 			this.ResumeLayout(false);
 
@@ -53,6 +51,6 @@
 
 		#endregion
 
-		private System.Windows.Forms.TabControl tabControl1;
+		private System.Windows.Forms.Button testInventorySnapshot;
 	}
 }

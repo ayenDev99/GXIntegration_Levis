@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GXIntegration_Levis
+namespace GXIntegration_Levis.Helpers
 {
 	public static class Logger
 	{

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using GXIntegration_Levis.Model;
 using System.Threading.Tasks;
+using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.Data.Access
 {
