@@ -8,11 +8,12 @@ namespace GXIntegration_Levis.Model
 {
 	public class StoreSaleModel
 	{
+		public string DocSid { get; set; }
 		public string StoreNo { get; set; }
 		public string AlternateStoreId { get; set; }
 		public string WorkstationNo { get; set; }
 		public string DocNo { get; set; }
-		public DateTimeOffset? CreatedDateTime { get; set; }
+		public DateTimeOffset CreatedDateTime { get; set; }
 		public DateTimeOffset? InvcPostDate { get; set; }
 		public string CurrencyCode { get; set; }
 		public string CashierLoginName { get; set; }

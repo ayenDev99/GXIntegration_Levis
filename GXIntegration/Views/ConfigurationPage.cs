@@ -12,7 +12,6 @@ namespace GXIntegration_Levis.Views
 {
 	public partial class ConfigurationPage : UserControl
 	{
-		// Guna UI controls for database tab
 		private GunaComboBox cmbDbType;
 		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort;
 		private GunaLabel lblDbStatus;
@@ -22,19 +21,15 @@ namespace GXIntegration_Levis.Views
 		{
 			InitializeComponent();
 
-			// Create tabs
 			TabPage databaseTab = new TabPage("Database");
 			TabPage sftpTab = new TabPage("SFTP");
 
-			// Setup database tab controls
 			SetupDatabaseTab(databaseTab);
 			SetupSftpTab(sftpTab);
 
-			// Add tabs to TabControl
 			tabControl1.TabPages.Add(databaseTab);
 			tabControl1.TabPages.Add(sftpTab);
 
-			// Load config if exists
 			LoadMainDbConnection();
 		}
 

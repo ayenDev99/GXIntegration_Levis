@@ -32,6 +32,7 @@ namespace GXIntegration_Levis.Views
 			InitializeGrid();
 			InitializeProcessAllButton();
 		}
+
 		// ***************************************************
 		// Initialization Methods
 		// ***************************************************

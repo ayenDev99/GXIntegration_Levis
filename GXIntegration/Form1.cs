@@ -29,21 +29,21 @@ namespace GXIntegration
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
 
 		// Declare lstSIDs as a class-level field
-		private ListBox lstSIDs;
+		//private ListBox lstSIDs;
 
 		public Form1()
 		{
 			InitializeComponent();
 
-			// Initialize lstSIDs and add to MainContentPanel
-			lstSIDs = new ListBox()
-			{
-				Dock = DockStyle.Fill
-			};
-			MainContentPanel.Controls.Add(lstSIDs);
+			//// Initialize lstSIDs and add to MainContentPanel
+			//lstSIDs = new ListBox()
+			//{
+			//	Dock = DockStyle.Fill
+			//};
+			//MainContentPanel.Controls.Add(lstSIDs);
 
-			// Now safe to load SIDs into the ListBox
-			LoadSIDs();
+			//// Now safe to load SIDs into the ListBox
+			//LoadSIDs();
 
 			EnableDrag(SideBar);
 
@@ -195,60 +195,60 @@ namespace GXIntegration
 
 		}
 
-		private void LoadSIDs()
-		{
-			string[] sids = GetAllSIDs();
-			string sidListString = sids.Length > 0 ? string.Join(", ", sids) : "No SID records found";
+		//private void LoadSIDs()
+		//{
+		//	string[] sids = GetAllSIDs();
+		//	string sidListString = sids.Length > 0 ? string.Join(", ", sids) : "No SID records found";
 
-			Logger.Log($"SIDs loaded: {sidListString}");
-			lstSIDs.Items.Clear();
+		//	Logger.Log($"SIDs loaded: {sidListString}");
+		//	lstSIDs.Items.Clear();
 
-			if (sids.Length == 0)
-			{
-				lstSIDs.Items.Add("No SID records found.");
-				Logger.Log("No SID records found.");
-			}
-			else
-			{
-				lstSIDs.Items.AddRange(sids);
-			}
-		}
+		//	if (sids.Length == 0)
+		//	{
+		//		lstSIDs.Items.Add("No SID records found.");
+		//		Logger.Log("No SID records found.");
+		//	}
+		//	else
+		//	{
+		//		lstSIDs.Items.AddRange(sids);
+		//	}
+		//}
 
-		public static string[] GetAllSIDs()
-		{
-			string folderPath = Path.Combine(Application.StartupPath, "AppData");
-			string dbPath = Path.Combine(folderPath, "APISender.db");
+		//public static string[] GetAllSIDs()
+		//{
+		//	string folderPath = Path.Combine(Application.StartupPath, "AppData");
+		//	string dbPath = Path.Combine(folderPath, "APISender.db");
 
-			Logger.Log($"GetAllSIDs: Application.StartupPath = {Application.StartupPath}");
-			Logger.Log($"GetAllSIDs: Database path = {dbPath}");
+		//	Logger.Log($"GetAllSIDs: Application.StartupPath = {Application.StartupPath}");
+		//	Logger.Log($"GetAllSIDs: Database path = {dbPath}");
 
-			if (!File.Exists(dbPath))
-			{
-				Logger.Log("Database file does not exist at the specified path.");
-				return new string[0];
-			}
+		//	if (!File.Exists(dbPath))
+		//	{
+		//		Logger.Log("Database file does not exist at the specified path.");
+		//		return new string[0];
+		//	}
 
-			string connectionString = $"Data Source={dbPath};Version=3;";
-			var sidList = new List<string>();
+		//	string connectionString = $"Data Source={dbPath};Version=3;";
+		//	var sidList = new List<string>();
 
-			using (var conn = new SQLiteConnection(connectionString))
-			{
-				conn.Open();
+		//	using (var conn = new SQLiteConnection(connectionString))
+		//	{
+		//		conn.Open();
 
-				string query = "SELECT SID FROM APISender;";
-				using (var cmd = new SQLiteCommand(query, conn))
-				using (var reader = cmd.ExecuteReader())
-				{
-					while (reader.Read())
-					{
-						sidList.Add(reader["SID"].ToString());
-					}
-				}
-			}
+		//		string query = "SELECT SID FROM APISender;";
+		//		using (var cmd = new SQLiteCommand(query, conn))
+		//		using (var reader = cmd.ExecuteReader())
+		//		{
+		//			while (reader.Read())
+		//			{
+		//				sidList.Add(reader["SID"].ToString());
+		//			}
+		//		}
+		//	}
 
-			Logger.Log($"GetAllSIDs: Retrieved {sidList.Count} SIDs from the database.");
-			return sidList.ToArray();
-		}
+		//	Logger.Log($"GetAllSIDs: Retrieved {sidList.Count} SIDs from the database.");
+		//	return sidList.ToArray();
+		//}
 	
 	}
 }

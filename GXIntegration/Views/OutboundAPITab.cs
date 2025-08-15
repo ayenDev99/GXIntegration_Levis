@@ -1,15 +1,17 @@
 ﻿using Guna.UI.WinForms;
 using GXIntegration.Properties;
-using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
 using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Org.BouncyCastle.Math.EC.ECCurve;
-
+using System.Linq;
 
 namespace GXIntegration_Levis.Views
 {
@@ -26,12 +28,13 @@ namespace GXIntegration_Levis.Views
 			_config = config;
 			_repositories = repositories;
 
-
 			InitializeControls();
 			InitializeGrid();
 		}
 
-
+		// ***************************************************
+		// Initialization Methods
+		// ***************************************************
 		private void InitializeGrid()
 		{
 			guna1DataGridView1 = new GunaDataGridView
@@ -101,15 +104,27 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 
+		// ***************************************************
+		// Process Methods
+		// ***************************************************
 		private async Task SendXmlFilesToApi()
 		{
 			string apiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
 			string username = "1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417";
 			string password = "3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4";
 
-			string xmlTemplate = await OutboundStoreSale.ExecuteAPI(_repositories.StoreSaleRepository, _config, "template");
+			var items = await _repositories.StoreSaleRepository.GetStoreSaleAsync(
+				TimeHelper.GetPhilippineTimeRange(10).from_date,
+				TimeHelper.GetPhilippineTimeRange(10).to_date,
+				new List<int> { 0, 2 }
+			);
 
-			Logger.Log($"TEMPLATE : {xmlTemplate}");
+			if (items == null || !items.Any())
+			{
+				Logger.Log("No sales data found to send.");
+				MessageBox.Show("No data found to send.", "API Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				return;
+			}
 
 			using (var client = new System.Net.Http.HttpClient())
 			{
@@ -117,36 +132,94 @@ namespace GXIntegration_Levis.Views
 				client.DefaultRequestHeaders.Authorization =
 					new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
 
-				try
+				foreach (var item in items)
 				{
-					var soapEnvelope = $@"<?xml version=""1.0"" ?>
-						<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
-						  <S:Body>
-							<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
-							  <rawPoslogString>{System.Security.SecurityElement.Escape(xmlTemplate)}</rawPoslogString>
-							</ns2:postTransaction>
-						  </S:Body>
-						</S:Envelope>";
-
-					var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
-					var response = await client.PostAsync(apiUrl, content);
-					var result = await response.Content.ReadAsStringAsync();
-
-					if (response.IsSuccessStatusCode)
+					try
 					{
-						Logger.Log($"[API POST] SUCCESS: Template sent | Status: {response.StatusCode}");
-						MessageBox.Show("Template XML sent successfully.", "API Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
+						// Skip if already processed
+						if (IsSidAlreadyProcessed(item.DocSid))
+						{
+							Logger.Log($"SID {item.DocSid} already processed. Skipping.");
+							continue;
+						}
+
+						// Generate XML for individual transaction
+						string xml = OutboundStoreSale.GenerateXml(new List<StoreSaleModel> { item }, null, "template");
+
+						var soapEnvelope = $@"<?xml version=""1.0"" ?>
+								<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
+								  <S:Body>
+									<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
+									  <rawPoslogString>{System.Security.SecurityElement.Escape(xml)}</rawPoslogString>
+									</ns2:postTransaction>
+								  </S:Body>
+								</S:Envelope>";
+
+						var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
+
+						var response = await client.PostAsync(apiUrl, content);
+						var result = await response.Content.ReadAsStringAsync();
+
+						if (response.IsSuccessStatusCode)
+						{
+							Logger.Log($"[API POST] SUCCESS: SID {item.DocSid} | DocNo: {item.DocNo} | Status: {response.StatusCode}");
+
+							// Mark as processed in DB
+							InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success");
+						}
+						else
+						{
+							Logger.Log($"[API POST] FAIL: SID {item.DocSid} | DocNo: {item.DocNo} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
+
+							// Optionally: Save failed status
+							InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed");
+						}
 					}
-					else
+					catch (Exception ex)
 					{
-						Logger.Log($"[API POST] FAILURE: Template send failed | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
-						MessageBox.Show($"Template send failed:\n{result}", "API Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+						Logger.Log($"[API POST] ERROR for SID {item.DocSid} | Exception: {ex.Message}");
+						InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
 					}
 				}
-				catch (Exception ex)
+
+				MessageBox.Show("Sales data processed. See logs for details.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+		}
+		private bool IsSidAlreadyProcessed(string sid)
+		{
+			string dbPath = Path.Combine(Application.StartupPath, "AppData", "ProcessedPrismTransactions.db");
+			string connStr = $"Data Source={dbPath};Version=3;";
+
+			using (var conn = new SQLiteConnection(connStr))
+			{
+				conn.Open();
+				string query = "SELECT COUNT(*) FROM ProcessedPrismTransactions WHERE SID = @SID";
+				using (var cmd = new SQLiteCommand(query, conn))
 				{
-					Logger.Log($"[API POST] ERROR while sending template\nException: {ex.GetType().Name} | Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
-					MessageBox.Show($"Error sending template:\n{ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					cmd.Parameters.AddWithValue("@SID", sid);
+					long count = (long)cmd.ExecuteScalar();
+					return count > 0;
+				}
+			}
+		}
+
+		private void InsertProcessedTransaction(string sid, string type, string date, string status)
+		{
+			string dbPath = Path.Combine(Application.StartupPath, "AppData", "ProcessedPrismTransactions.db");
+			string connStr = $"Data Source={dbPath};Version=3;";
+
+			using (var conn = new SQLiteConnection(connStr))
+			{
+				conn.Open();
+				string insert = @"INSERT INTO ProcessedPrismTransactions (SID, TYPE, DATE, STATUS) 
+						  VALUES (@SID, @TYPE, @DATE, @STATUS)";
+				using (var cmd = new SQLiteCommand(insert, conn))
+				{
+					cmd.Parameters.AddWithValue("@SID", sid);
+					cmd.Parameters.AddWithValue("@TYPE", type);
+					cmd.Parameters.AddWithValue("@DATE", date);
+					cmd.Parameters.AddWithValue("@STATUS", status);
+					cmd.ExecuteNonQuery();
 				}
 			}
 		}
@@ -154,7 +227,6 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		// Handlers/Helpers
 		// ***************************************************
-
 		private void CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
 		{
 			GlobalHelper.HandleCellMouseMove(guna1DataGridView1, e);

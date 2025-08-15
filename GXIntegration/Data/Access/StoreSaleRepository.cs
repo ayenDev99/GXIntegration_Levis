@@ -1,11 +1,16 @@
-﻿using GXIntegration_Levis.Model;
+﻿using Dapper;
+using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Data.SQLite;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Dapper;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -16,7 +21,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime date, List<int> receiptTypes)
+		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, List<int> receiptTypes)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -25,7 +30,7 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT 
-								D.SID
+								D.SID					AS DocSid
 								, S.STORE_NO			AS StoreNo
 								, S.ADDRESS5			AS AlternateStoreId
 								, D.WORKSTATION_NO		AS WorkstationNo
@@ -68,14 +73,19 @@ namespace GXIntegration_Levis.Data.Access
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
 								, D.DOC_NO ASC
-							FETCH FIRST 1 ROWS ONLY
+							
 					";
+
+					//FETCH FIRST 1 ROWS ONLY
+					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{
-						SaleDate = date.Date,
+						FromDate = from_date,
+						ToDate = to_date,
 						ReceiptTypes = receiptTypes
 					};
+
 
 					var sales = await connection.QueryAsync<StoreSaleModel>(sql, parameters);
 					return sales.ToList();
@@ -88,6 +98,8 @@ namespace GXIntegration_Levis.Data.Access
 				}
 			}
 		}
+
+		
 
 	}
 }

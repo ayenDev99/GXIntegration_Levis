@@ -1,6 +1,9 @@
-﻿using GXIntegration_Levis.Data.Access;
+﻿using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
-using GXIntegration.Properties;
+using GXIntegration_Levis.Views;
+using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +12,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
-using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {
@@ -19,9 +21,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				DateTime date = DateTime.Today;
+				DateTime from_date = DateTime.Today; // 00:00:00
+				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
 				var receipt_type = new List<int> { 0, 2 };
-				var items = await repository.GetStoreSaleAsync(date, receipt_type);
+				var items = await repository.GetStoreSaleAsync(from_date, to_date, receipt_type);
 
 				Logger.Log($"Items count: {items.Count}");
 
@@ -45,23 +48,59 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		public static async Task<string> ExecuteAPI(StoreSaleRepository repository, GXConfig config, string generate_type)
 		{
+			Logger.Log($"ExecuteAPI*************************************************************************");
 			try
 			{
-				DateTime date = DateTime.Today;
 				var receipt_type = new List<int> { 0, 2 };
-				var items = await repository.GetStoreSaleAsync(date, receipt_type);
+				int timeWindowInMinutes = 10; // from config or UI
+				var (from_date, to_date) = TimeHelper.GetPhilippineTimeRange(timeWindowInMinutes);
+				Logger.Log($"PH Time range: {from_date} - {to_date}");
 
-				var xmlString = GenerateXml(items, null, generate_type);
+				var items = await repository.GetStoreSaleAsync(from_date, to_date, receipt_type);
 
+				if (items == null || !items.Any())
+				{
+					Logger.Log("No sales data found for the given time range and receipt types.");
+					Console.WriteLine("No sales data found.");
+					return null;
+				}
+
+				Logger.Log($"Found {items.Count} sales records:");
+
+				// Filter items to those NOT yet processed
+				var itemsToProcess = new List<StoreSaleModel>();
+				foreach (var item in items)
+				{
+					bool exists = await OutboundPage.IsSidProcessedAsync(item.DocSid);
+					if (exists)
+					{
+						Logger.Log($"SID {item.DocSid} already processed.");
+					}
+					else
+					{
+						Logger.Log($"SID {item.DocSid} NOT found in ProcessedPrismTransactions. Will process.");
+						itemsToProcess.Add(item);
+					}
+
+					Logger.Log($"DocSid: {item.DocSid}, DocNo: {item.DocNo}, CreatedDateTime: {item.CreatedDateTime}");
+					Console.WriteLine($"DocSid: {item.DocSid}, DocNo: {item.DocNo}, CreatedDateTime: {item.CreatedDateTime}");
+				}
+
+				if (!itemsToProcess.Any())
+				{
+					Logger.Log("All records are already processed. No XML generated.");
+					return null;
+				}
+
+				Logger.Log($"Generating XML for {itemsToProcess.Count} new records.");
+
+				var xmlString = GenerateXml(itemsToProcess, null, generate_type);
 				return xmlString;
-
-				//MessageBox.Show($"RETAIL SALE synced.\nSaved to: {outboundDir}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Logger.Log($"Error: {ex.Message}");
-
 				return null;
 			}
 		}
@@ -75,7 +114,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 				OmitXmlDeclaration = false
 			};
 
-			// If generate_type == "template", create XmlWriter over StringWriter to build string
 			if (generate_type == "template")
 			{
 				using (var stringWriter = new StringWriter())
@@ -93,7 +131,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					WriteXmlContent(items, writer);
 					writer.Flush();
 				}
-				return null;  // File written, no string to return
+				return null;
 			}
 			else
 			{
@@ -101,7 +139,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		// Separate method for writing the XML content to an XmlWriter
 		private static void WriteXmlContent(List<StoreSaleModel> items, XmlWriter writer)
 		{
 			writer.WriteStartDocument();
@@ -262,9 +299,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteEndDocument(); // </POSLog>
 
 		}
-
-
-		
 
 	}
 }

@@ -61,6 +61,9 @@
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=8.0.0.3, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.8.0.3\lib\net462\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="NtpClient, Version=1.0.14.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NtpClient.1.0.14\lib\net40\NtpClient.dll</HintPath>
+    </Reference>
     <Reference Include="Oracle.ManagedDataAccess, Version=4.122.23.1, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL">
       <HintPath>..\packages\Oracle.ManagedDataAccess.23.9.1\lib\net472\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
@@ -129,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\GlobalHelper.cs" />
+    <Compile Include="Helpers\TimeHelper.cs" />
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
