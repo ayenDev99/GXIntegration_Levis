@@ -55,11 +55,6 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.DESCRIPTION1				AS PTStyle
 								, ISB.ALU						AS PTEAN
 
-
-
-		
-
-
 							FROM
 								RPS.ADJUSTMENT ADJ
 							LEFT JOIN RPS.ADJ_ITEM ADJ_ITEM		ON ADJ.SID = ADJ_ITEM.ADJ_SID

@@ -14,12 +14,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.Data.SQLite;
 
 namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 {
 	public partial class Form1 : Form
-    {
+	{
 		[DllImport("user32.dll")]
 		public static extern bool ReleaseCapture();
 
@@ -35,12 +35,24 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
 
-		public Form1()
-        {
-            InitializeComponent();
-			
-			EnableDrag(SideBar); 
+		// Declare lstSIDs as a class-level field
+		private ListBox lstSIDs;
 
+		public Form1()
+		{
+			InitializeComponent();
+
+			// Initialize lstSIDs and add to MainContentPanel
+			lstSIDs = new ListBox()
+			{
+				Dock = DockStyle.Fill
+			};
+			MainContentPanel.Controls.Add(lstSIDs);
+
+			// Now safe to load SIDs into the ListBox
+			LoadSIDs();
+
+			EnableDrag(SideBar);
 
 			config = GXConfig.Load("config.xml");
 			MainContentPanel.Dock = DockStyle.Fill;
@@ -58,7 +70,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			};
 		}
 
-
 		private void Form1_MouseDown(object sender, MouseEventArgs e)
 		{
 			// Trigger dragging
@@ -70,58 +81,58 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
-        {
+		{
 			SetActiveSidebarButton(Home_Button);
 			LoadPage(new HomePage());
 			EnableDrag(this);
 		}
 
-        private void gunaPanel1_Paint(object sender, PaintEventArgs e)
-        {
+		private void gunaPanel1_Paint(object sender, PaintEventArgs e)
+		{
 
-        }
-        private void Close_Button_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
+		}
 
-        private void Timer_Sidebar_Menu_Tick(object sender, EventArgs e)
-        {
-            if (sideBar_Expand)
-            {
-                SideBar.Width -= 10;
-                if (SideBar.Width == SideBar.MinimumSize.Width)
-                {
-                    sideBar_Expand = false;
-                    Timer_Sidebar_Menu.Stop();
-                }
-            }
-            else
-                {
-                    SideBar.Width += 10;
-                    if (SideBar.Width == SideBar.MaximumSize.Width)
-                    {
-                        sideBar_Expand = true;
-                        Timer_Sidebar_Menu.Stop();
-                    }
-                }
-        }   
-        
-      
-        private void Menu_Button_Click(object sender, EventArgs e)
-        {
-            Timer_Sidebar_Menu.Start();
-        }
+		private void Close_Button_Click(object sender, EventArgs e)
+		{
+			this.Close();
+		}
 
-        private void gunaImageButton1_Click(object sender, EventArgs e)
-        {
+		private void Timer_Sidebar_Menu_Tick(object sender, EventArgs e)
+		{
+			if (sideBar_Expand)
+			{
+				SideBar.Width -= 10;
+				if (SideBar.Width == SideBar.MinimumSize.Width)
+				{
+					sideBar_Expand = false;
+					Timer_Sidebar_Menu.Stop();
+				}
+			}
+			else
+			{
+				SideBar.Width += 10;
+				if (SideBar.Width == SideBar.MaximumSize.Width)
+				{
+					sideBar_Expand = true;
+					Timer_Sidebar_Menu.Stop();
+				}
+			}
+		}
 
-        }
+		private void Menu_Button_Click(object sender, EventArgs e)
+		{
+			Timer_Sidebar_Menu.Start();
+		}
 
-        private void Link_Github_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            
-        }
+		private void gunaImageButton1_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void Link_Github_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+		{
+
+		}
 
 		// *********************************************************
 		// Sidebar Buttons
@@ -157,7 +168,6 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 		}
 
-
 		// *********************************************************
 		// Helpers
 		// *********************************************************
@@ -191,6 +201,61 @@ namespace Modern_Sliding_Sidebar___C_Sharp_Winform
 		{
 
 		}
-	}
 
+		private void LoadSIDs()
+		{
+			string[] sids = GetAllSIDs();
+			string sidListString = sids.Length > 0 ? string.Join(", ", sids) : "No SID records found";
+
+			Logger.Log($"SIDs loaded: {sidListString}");
+			lstSIDs.Items.Clear();
+
+			if (sids.Length == 0)
+			{
+				lstSIDs.Items.Add("No SID records found.");
+				Logger.Log("No SID records found.");
+			}
+			else
+			{
+				lstSIDs.Items.AddRange(sids);
+			}
+		}
+
+		public static string[] GetAllSIDs()
+		{
+			string folderPath = Path.Combine(Application.StartupPath, "AppData");
+			string dbPath = Path.Combine(folderPath, "APISender.db");
+
+			Logger.Log($"GetAllSIDs: Application.StartupPath = {Application.StartupPath}");
+			Logger.Log($"GetAllSIDs: Database path = {dbPath}");
+
+			if (!File.Exists(dbPath))
+			{
+				Logger.Log("Database file does not exist at the specified path.");
+				return new string[0];
+			}
+
+			string connectionString = $"Data Source={dbPath};Version=3;";
+			var sidList = new List<string>();
+
+			using (var conn = new SQLiteConnection(connectionString))
+			{
+				conn.Open();
+
+				string query = "SELECT SID FROM APISender;";
+				using (var cmd = new SQLiteCommand(query, conn))
+				using (var reader = cmd.ExecuteReader())
+				{
+					while (reader.Read())
+					{
+						sidList.Add(reader["SID"].ToString());
+					}
+				}
+			}
+
+			Logger.Log($"GetAllSIDs: Retrieved {sidList.Count} SIDs from the database.");
+			return sidList.ToArray();
+		}
+	
+	}
 }

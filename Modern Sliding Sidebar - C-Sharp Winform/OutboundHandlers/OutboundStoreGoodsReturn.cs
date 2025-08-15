@@ -43,6 +43,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		public static void GenerateXml(List<StoreGoodsReturnModel> items, string filePath)
 		{
+			Logger.Log($"Generating XML for {items.Count} items");
 			var settings = new XmlWriterSettings { Indent = true, Encoding = Encoding.UTF8 };
 
 			using (XmlWriter writer = XmlWriter.Create(filePath, settings))

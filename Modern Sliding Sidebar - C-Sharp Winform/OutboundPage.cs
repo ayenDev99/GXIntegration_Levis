@@ -6,11 +6,13 @@ using Modern_Sliding_Sidebar___C_Sharp_Winform.Properties;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Data.SQLite;
 
 namespace GXIntegration_Levis
 {
@@ -33,6 +35,8 @@ namespace GXIntegration_Levis
 		private GunaButton processAllButton;
 		private TabControl tabControl;
 		private TabPage tabText, tabXml, tabApi;
+		private GunaButton processApiButton;
+
 
 		private int _hoveredRowIndex = -1;
 		private Dictionary<string, Func<Task>> downloadActions;
@@ -52,9 +56,47 @@ namespace GXIntegration_Levis
 			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
 			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
 
+			initialCreateDatabase();
 			InitializeComponent();
 			InitializeTabs();
 			InitializeDownloadActions();
+		}
+
+		private void initialCreateDatabase()
+		{
+			string dbPath = "MyDatabase.sqlite";
+
+			Logger.Log($"TEST");
+
+			// Create the database file if it doesn't exist
+			if (!File.Exists(dbPath))
+			{
+				SQLiteConnection.CreateFile(dbPath);
+				Console.WriteLine("Database created successfully.");
+			}
+
+			// Create a connection string
+			string connectionString = $"Data Source={dbPath};Version=3;";
+
+			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+			{
+				conn.Open();
+
+				string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS Users (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    Email TEXT UNIQUE NOT NULL,
+                    Age INTEGER
+                );
+            ";
+
+				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
+				{
+					cmd.ExecuteNonQuery();
+					Console.WriteLine("Table created successfully.");
+				}
+			}
 		}
 
 		private void InitializeTabs()
@@ -78,6 +120,7 @@ namespace GXIntegration_Levis
 
 			InitializeGrid();
 			InitializeProcessAllButton();
+			InitializeApiProcessButton();
 		}
 
 		private void InitializeGrid()
@@ -169,7 +212,7 @@ namespace GXIntegration_Levis
 			{
 				["ASN - RECEIVING"] = () => OutboundASN.Execute(_asnRepository, config),
 				["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(_storeGoodsReturnRepository, config),
-				["RETAIL_SALE"] = () => OutboundStoreSale.Execute(_storeSaleRepository, config),
+				["RETAIL_SALE"] = () => OutboundStoreSale.Execute(_storeSaleRepository, config, "xml"),
 				["RETURN_SALE"] = () => OutboundStoreReturn.Execute(_storeReturnRepository, config),
 				["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(_storeInventoryAdjustmentRepository, config),
 				["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(_storeShippingRepository, config),
@@ -298,33 +341,102 @@ namespace GXIntegration_Levis
 	}
 }
 
-private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
-{
-	if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
-	{
-		if (_hoveredRowIndex >= 0)
-			guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
+		private void Guna1DataGridView1_CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
+		{
+			if (e.RowIndex >= 0 && e.RowIndex != _hoveredRowIndex)
+			{
+				if (_hoveredRowIndex >= 0)
+					guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
 
-		guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue;
-		_hoveredRowIndex = e.RowIndex;
+				guna1DataGridView1.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LightBlue;
+				_hoveredRowIndex = e.RowIndex;
 
-		if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
-			guna1DataGridView1.Cursor = Cursors.Hand;
-		else
+				if (guna1DataGridView1.Columns[e.ColumnIndex].Name == "Action")
+					guna1DataGridView1.Cursor = Cursors.Hand;
+				else
+					guna1DataGridView1.Cursor = Cursors.Default;
+			}
+		}
+
+		private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+		{
+			if (_hoveredRowIndex >= 0)
+			{
+				guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
+				_hoveredRowIndex = -1;
+			}
+
 			guna1DataGridView1.Cursor = Cursors.Default;
-	}
-}
+		}
 
-private void Guna1DataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
-{
-	if (_hoveredRowIndex >= 0)
-	{
-		guna1DataGridView1.Rows[_hoveredRowIndex].DefaultCellStyle.BackColor = Color.White;
-		_hoveredRowIndex = -1;
-	}
+		private void InitializeApiProcessButton()
+		{
+			processApiButton = new GunaButton
+			{
+				Text = "Send XML to API",
+				Location = new Point(20, 20),
+				Size = new Size(200, 40),
+				BaseColor = Color.FromArgb(100, 88, 255),
+				ForeColor = Color.White,
+				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+				OnHoverBaseColor = Color.FromArgb(72, 61, 255),
+				Cursor = Cursors.Hand
+			};
 
-	guna1DataGridView1.Cursor = Cursors.Default;
-}
+			processApiButton.Click += async (s, e) => await SendXmlFilesToApi();
+
+			tabApi.Controls.Add(processApiButton);
+		}
+
+		private async Task SendXmlFilesToApi()
+		{
+			string apiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
+			string username = "1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417";
+			string password = "3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4";
+
+			string xmlTemplate = await OutboundStoreSale.ExecuteAPI(_storeSaleRepository, config, "template");
+
+			Logger.Log($"TEMPLATE : {xmlTemplate}");
+
+			using (var client = new System.Net.Http.HttpClient())
+			{
+				var byteArray = System.Text.Encoding.UTF8.GetBytes($"{username}:{password}");
+				client.DefaultRequestHeaders.Authorization =
+					new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
+				try
+				{
+					var soapEnvelope = $@"<?xml version=""1.0"" ?>
+						<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
+						  <S:Body>
+							<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
+							  <rawPoslogString>{System.Security.SecurityElement.Escape(xmlTemplate)}</rawPoslogString>
+							</ns2:postTransaction>
+						  </S:Body>
+						</S:Envelope>";
+
+					var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
+					var response = await client.PostAsync(apiUrl, content);
+					var result = await response.Content.ReadAsStringAsync();
+
+					if (response.IsSuccessStatusCode)
+					{
+						Logger.Log($"[API POST] SUCCESS: Template sent | Status: {response.StatusCode}");
+						MessageBox.Show("Template XML sent successfully.", "API Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					}
+					else
+					{
+						Logger.Log($"[API POST] FAILURE: Template send failed | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
+						MessageBox.Show($"Template send failed:\n{result}", "API Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+					}
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"[API POST] ERROR while sending template\nException: {ex.GetType().Name} | Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
+					MessageBox.Show($"Error sending template:\n{ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
 
 
 

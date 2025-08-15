@@ -92,7 +92,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_CLASS = 0
 								AND VOU.VOU_TYPE = 1
 								AND VOU.STATUS = 4
-							FETCH FIRST 1 ROWS ONLY
+							FETCH FIRST 2 ROWS ONLY
 					";
 
 					return (await connection.QueryAsync<StoreGoodsReturnModel>(sql, new { CurrentDate = date })).ToList();
