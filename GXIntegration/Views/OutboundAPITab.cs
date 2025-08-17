@@ -116,13 +116,13 @@ namespace GXIntegration_Levis.Views
 			string inventoryApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory";
 
 			var timeRange = TimeHelper.GetPhilippineTimeRange(10);
-			var saleTypes = new List<int> { 0, 2 };
 
 			// Fetch data
-			var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, saleTypes);
+			var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, new List<int> { 0, 2 });
 			var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
 			var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date);
 			var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date);
+			var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, new List<int> { 1 });
 
 			// Send Store Sale Transactions
 			await SendOutboundDataAsync(
@@ -162,6 +162,7 @@ namespace GXIntegration_Levis.Views
 				username,
 				password
 			);
+
 			// Send Store Inventory Adjustment Transactions
 			await SendOutboundDataAsync(
 				storeInventoryAdjusmentItems,
@@ -170,6 +171,19 @@ namespace GXIntegration_Levis.Views
 				item => item.BusinessDayDate.DateTime,
 				list => OutboundStoreInventoryAdjustment.GenerateXml(list, null, "template"),
 				"storeinventoryadjustment",
+				saleApiUrl,
+				username,
+				password
+			);
+
+			// Send Store Inventory Adjustment Transactions
+			await SendOutboundDataAsync(
+				storeReturnItems,
+				item => item.DocSid,
+				item => item.DocNo,
+				item => item.CreatedDateTime.DateTime,
+				list => OutboundStoreReturn.GenerateXml(list, null, "template"),
+				"storereturn",
 				saleApiUrl,
 				username,
 				password

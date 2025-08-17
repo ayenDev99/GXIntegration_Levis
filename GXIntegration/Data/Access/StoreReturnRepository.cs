@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime date, List<int> receiptTypes)
+		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, List<int> receiptTypes)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -25,7 +25,7 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT 
-								D.SID
+								D.SID					AS DocSid
 								, S.STORE_NO			AS StoreNo
 								, S.ADDRESS5			AS AlternateStoreId
 								, D.WORKSTATION_NO		AS WorkstationNo
@@ -68,12 +68,15 @@ namespace GXIntegration_Levis.Data.Access
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
 								, D.DOC_NO ASC
-							FETCH FIRST 1 ROWS ONLY
 					";
+
+					//FETCH FIRST 1 ROWS ONLY
+					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{
-						SaleDate = date.Date,
+						FromDate = from_date,
+						ToDate = to_date,
 						ReceiptTypes = receiptTypes
 					};
 
