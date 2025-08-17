@@ -45,65 +45,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 		}
 
-		public static async Task<string> ExecuteAPI(StoreSaleRepository repository, GXConfig config, string generate_type)
-		{
-			Logger.Log($"ExecuteAPI*************************************************************************");
-			try
-			{
-				var receipt_type = new List<int> { 0, 2 };
-				int timeWindowInMinutes = 10; // from config or UI
-				var (from_date, to_date) = TimeHelper.GetPhilippineTimeRange(timeWindowInMinutes);
-				Logger.Log($"PH Time range: {from_date} - {to_date}");
-
-				var items = await repository.GetStoreSaleAsync(from_date, to_date, receipt_type);
-
-				if (items == null || !items.Any())
-				{
-					Logger.Log("No sales data found for the given time range and receipt types.");
-					Console.WriteLine("No sales data found.");
-					return null;
-				}
-
-				Logger.Log($"Found {items.Count} sales records:");
-
-				// Filter items to those NOT yet processed
-				var itemsToProcess = new List<StoreSaleModel>();
-				foreach (var item in items)
-				{
-					bool exists = await OutboundPage.IsSidProcessedAsync(item.DocSid);
-					if (exists)
-					{
-						Logger.Log($"SID {item.DocSid} already processed.");
-					}
-					else
-					{
-						Logger.Log($"SID {item.DocSid} NOT found in ProcessedPrismTransactions. Will process.");
-						itemsToProcess.Add(item);
-					}
-
-					Logger.Log($"DocSid: {item.DocSid}, DocNo: {item.DocNo}, CreatedDateTime: {item.CreatedDateTime}");
-					Console.WriteLine($"DocSid: {item.DocSid}, DocNo: {item.DocNo}, CreatedDateTime: {item.CreatedDateTime}");
-				}
-
-				if (!itemsToProcess.Any())
-				{
-					Logger.Log("All records are already processed. No XML generated.");
-					return null;
-				}
-
-				Logger.Log($"Generating XML for {itemsToProcess.Count} new records.");
-
-				var xmlString = GenerateXml(itemsToProcess, null, generate_type);
-				return xmlString;
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"Error: {ex.Message}");
-				return null;
-			}
-		}
-
 		public static string GenerateXml(List<StoreSaleModel> items, string filePath, string generate_type)
 		{
 			var settings = new XmlWriterSettings

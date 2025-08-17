@@ -122,6 +122,7 @@ namespace GXIntegration_Levis.Views
 			var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, saleTypes);
 			var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
 			var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date);
+			var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date);
 
 			// Send Store Sale Transactions
 			await SendOutboundDataAsync(
@@ -161,6 +162,19 @@ namespace GXIntegration_Levis.Views
 				username,
 				password
 			);
+			// Send Store Inventory Adjustment Transactions
+			await SendOutboundDataAsync(
+				storeInventoryAdjusmentItems,
+				item => item.AdjSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreInventoryAdjustment.GenerateXml(list, null, "template"),
+				"storeinventoryadjustment",
+				saleApiUrl,
+				username,
+				password
+			);
+
 		}
 
 		private async Task SendOutboundDataAsync<T>(

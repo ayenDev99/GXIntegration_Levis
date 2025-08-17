@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreInventoryAdjustmentModel>> GetStoreInventoryAdjustmentAsync(DateTime date)
+		public async Task<List<StoreInventoryAdjustmentModel>> GetStoreInventoryAdjustmentAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -26,7 +26,8 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								S.STORE_CODE                    AS StoreCode
+								ADJ.SID							AS AdjSid
+								, S.STORE_CODE                  AS StoreCode
 								, WS.WORKSTATION				AS WorkstationNo
 								, ADJ.ADJ_NO			        AS SequenceNo
 								, ADJ.CREATED_DATETIME			AS BusinessDayDate
@@ -76,10 +77,19 @@ namespace GXIntegration_Levis.Data.Access
 								AND ADJ.ADJ_TYPE = 0
 							ORDER BY 
 								ADJ.CREATED_DATETIME DESC
-							FETCH FIRST 1 ROWS ONLY
 					";
 
-					return (await connection.QueryAsync<StoreInventoryAdjustmentModel>(sql, new { CurrentDate = date })).ToList();
+					//FETCH FIRST 1 ROWS ONLY
+					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date
+					};
+
+					var sales = await connection.QueryAsync<StoreInventoryAdjustmentModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
