@@ -8,10 +8,11 @@ namespace GXIntegration_Levis.Model
 {
 	public class StoreReceivingModel
 	{
+		public string VouSid { get; set; }
 		public string StoreCode { get; set; }
 		public string WorkstationNo { get; set; }
 		public string SequenceNo { get; set; }
-		public DateTimeOffset? BusinessDayDate { get; set; }
+		public DateTimeOffset BusinessDayDate { get; set; }
 		public DateTimeOffset? BeginDateTime { get; set; }
 		public DateTimeOffset? EndDateTime { get; set; }
 		public string OperatorId { get; set; }

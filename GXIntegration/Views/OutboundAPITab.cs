@@ -111,22 +111,21 @@ namespace GXIntegration_Levis.Views
 		{
 			string username = "1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417";
 			string password = "3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4";
-			var timeRange = TimeHelper.GetPhilippineTimeRange(10);
 
-			// Example sale and shipping types
+			string saleApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
+			string inventoryApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory";
+
+			var timeRange = TimeHelper.GetPhilippineTimeRange(10);
 			var saleTypes = new List<int> { 0, 2 };
 
 			// Fetch data
-			var saleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, saleTypes);
-			var shippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
+			var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, saleTypes);
+			var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
+			var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date);
 
-			// API Endpoints
-			string saleApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
-			string inventoryApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory";
-			
-			// Send Sale Transactions
+			// Send Store Sale Transactions
 			await SendOutboundDataAsync(
-				saleItems,
+				storeSaleItems,
 				item => item.DocSid,
 				item => item.DocNo,
 				item => item.CreatedDateTime.DateTime,
@@ -137,9 +136,9 @@ namespace GXIntegration_Levis.Views
 				password
 			);
 
-			// Send Shipping Transactions
+			// Send Store Shipping Transactions
 		   await SendOutboundDataAsync(
-			   shippingItems,
+			   storeShippingItems,
 			   item => item.VouSid,
 			   item => item.SequenceNo,
 			   item => item.BusinessDayDate.DateTime,
@@ -149,6 +148,19 @@ namespace GXIntegration_Levis.Views
 			   username,
 			   password
 		   );
+
+			// Send Store Receiving Transactions
+			await SendOutboundDataAsync(
+				storeReceivingItems,
+				item => item.VouSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreReceiving.GenerateXml(list, null, "template"),
+				"storereceiving",
+				saleApiUrl,
+				username,
+				password
+			);
 		}
 
 		private async Task SendOutboundDataAsync<T>(

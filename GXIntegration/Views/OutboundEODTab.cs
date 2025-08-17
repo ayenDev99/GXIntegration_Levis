@@ -119,7 +119,7 @@ namespace GXIntegration_Levis.Views
 				["RETURN_SALE"] = () => OutboundStoreReturn.Execute(repositories.StoreReturnRepository, config),
 				["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(repositories.StoreInventoryAdjustmentRepository, config),
 				["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(repositories.StoreShippingRepository, config, "xml"),
-				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config),
+				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
 				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config),
 				["INTRANSIT"] = () => OutboundInTransit.Execute(repositories.InTransitRepository, config),
 				["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)

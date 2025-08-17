@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReceivingModel>> GetStoreReceivingAsync(DateTime date)
+		public async Task<List<StoreReceivingModel>> GetStoreReceivingAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -26,7 +26,8 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								S.STORE_CODE                    AS StoreCode
+								VOU.SID							AS VouSid
+								, S.STORE_CODE                  AS StoreCode
 								, VOU.WORKSTATION               AS WorkstationNo
 								, VOU.VOU_NO			        AS SequenceNo
 								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
@@ -87,10 +88,19 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_TYPE = 0
 								AND VOU.SLIP_FLAG = 1
 							--  AND VOU.STATUS = 4
-							FETCH FIRST 1 ROWS ONLY
 					";
 
-					return (await connection.QueryAsync<StoreReceivingModel>(sql, new { CurrentDate = date })).ToList();
+					//FETCH FIRST 1 ROWS ONLY
+					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date
+					};
+
+					var sales = await connection.QueryAsync<StoreReceivingModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
