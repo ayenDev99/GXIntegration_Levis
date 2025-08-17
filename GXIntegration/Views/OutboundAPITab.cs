@@ -109,20 +109,63 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private async Task SendXmlFilesToApi()
 		{
-			string apiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
 			string username = "1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417";
 			string password = "3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4";
+			var timeRange = TimeHelper.GetPhilippineTimeRange(10);
 
-			var items = await _repositories.StoreSaleRepository.GetStoreSaleAsync(
-				TimeHelper.GetPhilippineTimeRange(10).from_date,
-				TimeHelper.GetPhilippineTimeRange(10).to_date,
-				new List<int> { 0, 2 }
+			// Example sale and shipping types
+			var saleTypes = new List<int> { 0, 2 };
+
+			// Fetch data
+			var saleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, saleTypes);
+			var shippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
+
+			// API Endpoints
+			string saleApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale";
+			string inventoryApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory";
+			
+			// Send Sale Transactions
+			await SendOutboundDataAsync(
+				saleItems,
+				item => item.DocSid,
+				item => item.DocNo,
+				item => item.CreatedDateTime.DateTime,
+				list => OutboundStoreSale.GenerateXml(list, null, "template"),
+				"storesale",
+				saleApiUrl,
+				username,
+				password
 			);
 
+			// Send Shipping Transactions
+		   await SendOutboundDataAsync(
+			   shippingItems,
+			   item => item.VouSid,
+			   item => item.SequenceNo,
+			   item => item.BusinessDayDate.DateTime,
+			   list => OutboundStoreShipping.GenerateXml(list, null, "template"),
+			   "storeshipping",
+			   inventoryApiUrl,
+			   username,
+			   password
+		   );
+		}
+
+		private async Task SendOutboundDataAsync<T>(
+			List<T> items,
+			Func<T, string> getSid,
+			Func<T, string> getDocNo,
+			Func<T, DateTime> getCreatedDate,
+			Func<List<T>, string> generateXmlFunc,
+			string docType,
+			string apiUrl,
+			string username,
+			string password)
+		{
 			if (items == null || !items.Any())
 			{
-				Logger.Log("No sales data found to send.");
-				MessageBox.Show("No data found to send.", "API Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				Logger.Log($"No {docType} data found to send.");
+				MessageBox.Show($"No {docType} data found to send.", "API Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
 
@@ -136,55 +179,51 @@ namespace GXIntegration_Levis.Views
 				{
 					try
 					{
-						// Skip if already processed
-						if (IsSidAlreadyProcessed(item.DocSid))
+						var sid = getSid(item);
+						if (IsSidAlreadyProcessed(sid))
 						{
-							Logger.Log($"SID {item.DocSid} already processed. Skipping.");
+							Logger.Log($"SID {sid} already processed. Skipping.");
 							continue;
 						}
 
-						// Generate XML for individual transaction
-						string xml = OutboundStoreSale.GenerateXml(new List<StoreSaleModel> { item }, null, "template");
+						string xml = generateXmlFunc(new List<T> { item });
 
 						var soapEnvelope = $@"<?xml version=""1.0"" ?>
-								<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
-								  <S:Body>
-									<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
-									  <rawPoslogString>{System.Security.SecurityElement.Escape(xml)}</rawPoslogString>
-									</ns2:postTransaction>
-								  </S:Body>
-								</S:Envelope>";
+							<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
+							  <S:Body>
+								<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
+								  <rawPoslogString>{System.Security.SecurityElement.Escape(xml)}</rawPoslogString>
+								</ns2:postTransaction>
+							  </S:Body>
+							</S:Envelope>";
 
 						var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
-
 						var response = await client.PostAsync(apiUrl, content);
 						var result = await response.Content.ReadAsStringAsync();
 
 						if (response.IsSuccessStatusCode)
 						{
-							Logger.Log($"[API POST] SUCCESS: SID {item.DocSid} | DocNo: {item.DocNo} | Status: {response.StatusCode}");
-
-							// Mark as processed in DB
-							InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success");
+							Logger.Log($"[API POST] SUCCESS: SID {sid} | DocNo: {getDocNo(item)} | Status: {response.StatusCode}");
+							InsertProcessedTransaction(sid, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success");
 						}
 						else
 						{
-							Logger.Log($"[API POST] FAIL: SID {item.DocSid} | DocNo: {item.DocNo} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
-
-							// Optionally: Save failed status
-							InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed");
+							Logger.Log($"[API POST] FAIL: SID {sid} | DocNo: {getDocNo(item)} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
+							InsertProcessedTransaction(sid, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed");
 						}
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"[API POST] ERROR for SID {item.DocSid} | Exception: {ex.Message}");
-						InsertProcessedTransaction(item.DocSid, "storesale", item.CreatedDateTime.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
+						var sid = getSid(item);
+						Logger.Log($"[API POST] ERROR for SID {sid} | Exception: {ex.Message}");
+						InsertProcessedTransaction(sid, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
 					}
 				}
-
-				MessageBox.Show("Sales data processed. See logs for details.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 			}
+
+			MessageBox.Show($"{docType.ToUpper()} data processed. See logs for details.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
+
 		private bool IsSidAlreadyProcessed(string sid)
 		{
 			string dbPath = Path.Combine(Application.StartupPath, "AppData", "ProcessedPrismTransactions.db");

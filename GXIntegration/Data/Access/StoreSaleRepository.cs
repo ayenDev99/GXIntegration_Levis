@@ -86,7 +86,6 @@ namespace GXIntegration_Levis.Data.Access
 						ReceiptTypes = receiptTypes
 					};
 
-
 					var sales = await connection.QueryAsync<StoreSaleModel>(sql, parameters);
 					return sales.ToList();
 				}

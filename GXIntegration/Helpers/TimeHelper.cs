@@ -26,7 +26,5 @@ namespace GXIntegration_Levis.Helpers
 			return (from_datePh, to_datePh);
 		}
 
-
-
 	}
 }
