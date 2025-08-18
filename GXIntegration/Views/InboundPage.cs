@@ -1,13 +1,20 @@
-﻿using GXIntegration_Levis.Data.Access;
+﻿using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
-using GXIntegration.Properties;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GXIntegration_Levis.Helpers;
+using System.Xml;
+using JsonFormatting = Newtonsoft.Json.Formatting;
+
 
 namespace GXIntegration_Levis.Views
 {
@@ -32,68 +39,325 @@ namespace GXIntegration_Levis.Views
 		{
 			try
 			{
-				DateTime date = DateTime.Today;
-				var Items = await _inventoryRepository.GetInventoryAsync(date);
-				string output = FormatInventorySnapshot(Items);
+				// *** Call authentication first
+				string prismAddress = "http://rpro-levis:8080";
+				string prismUsername = "sysadmin";
+				string prismPassword = "sysadmin";
+				string workstationName = "rpro-levis_8080";
 
-				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
 
-				Directory.CreateDirectory(outboundDir);
+				if (string.IsNullOrEmpty(session))
+				{
+					Console.WriteLine("Authentication failed.");
+					return;
+				}
 
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-				string countryCode = config.CountryCode ?? "XX";
-				string fileName = $"LS{countryCode}_AMA_PSSTKR_{timestamp}.txt";
-				string filePath = Path.Combine(outboundDir, fileName);
+				Console.WriteLine(session);
 
-				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
+				// *** Continue with snapshot
+				string filePath = @"C:\Users\GNX-RPRO.TEAM\Desktop\LSPI_ITEM_20250526100553_0.txt";
 
-				MessageBox.Show($"✅ Inventory synced.\nSaved to: {filePath}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-				Logger.Log($"✅ New inventory file saved to: {filePath}");
+				var result = BuildInventorySnapshot(filePath);
+
+				foreach (var row in result)
+				{
+					foreach (var kv in row)
+					{
+						//Console.WriteLine($"{kv.Key}: {kv.Value}");
+					}
+
+					//Console.WriteLine("-----------------------------");
+
+					// Build payload for this specific row
+					var payload = new
+					{
+						data = new[]
+						{
+							new
+							{
+								OriginApplication = "RProPrismWeb",
+								PrimaryItemDefinition = new
+								{
+									dcssid       = "556255621000149144",
+									vendsid      = (string)null,
+									description1 = row["PRODUCT_NM"],
+									description2 = (string)null,
+									attribute    = (string)null,
+									itemsize     = (string)null
+								},
+								InventoryItems = new[]
+								{
+									new
+									{
+										sbssid          = "555356986000134257",
+										dcssid          = "556255621000149144",
+										description1    = row["PRODUCT_NM"],
+										cost            = 0,
+										spif            = 0,
+										taxcodesid      = "555538434000189911",
+										useqtydecimals  = 0,
+										regional        = false,
+										active          = true,
+										maxdiscperc1    = 100,
+										maxdiscperc2    = 100,
+										serialtype      = 0,
+										lottype         = 0,
+										kittype         = 0,
+										tradediscpercent= 0,
+										activestoresid  = "555444605000106428",
+										activepricelevelsid = "555357012000134500",
+										activeseasonsid     = "555357012000192512",
+										actstrprice         = 0,
+										actstrpricewt       = 0,
+										actstrohqty         = 0,
+										dcscode             = "1  1  1"
+									}
+								},
+								UpdateStyleDefinition = false,
+								UpdateStyleCost       = false,
+								UpdateStylePrice      = false
+							}
+						}
+					};
+
+					var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+
+					Console.WriteLine("Payload:");
+					Console.WriteLine(json);
+
+					string responseJson = CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
+					Console.WriteLine("Response: " + responseJson);
+				}
 			}
 			catch (Exception ex)
 			{
-				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"❌ Error: {ex.Message}");
+				Console.WriteLine($"Error in RunInventorySyncAsync: {ex.Message}");
+				return;
 			}
 		}
 
-		private string FormatInventorySnapshot(List<InventoryModel> items)
+		private List<Dictionary<string, string>> BuildInventorySnapshot(string filePath)
 		{
-			var sb = new StringBuilder();
-			string d = config.Delimiter ?? "|";
+			var result = new List<Dictionary<string, string>>();
 
-			foreach (var item in items)
+			try
 			{
-				sb.AppendLine($"{item.CurrencyId}" +	// CURRENCY_ID
-					$"{d}{item.StoreCode}" +				// STORE_ID
-					$"{d}BIN_TYPE:" +					// BIN_TYPE
-					$"{d}{item.ProductCode}" +			// PRODUCT_CODE 
-					$"{d}{item.Sku}" +					// SKU 
-					$"{d}{item.Waist}" +				// WAIST 
-					$"{d}{item.Inseam}" +				// INSEAM 
-					$"{d}" +							// EMPTY
-					$"{d}STOCK_FETCH_DATE:" +			// STOCK_FETCH_DATE
-					$"{d}{item.LastMovementDate}" +		// LAST_MOVEMENT_DATE
-					$"{d}QUANTITY_SIGN:" +				// QUANTITY_SIGN
-					$"{d}{item.Quantity}" +				// QUANTITY
-					$"{d}0" +							// PURCHASE_COST
-					$"{d}{item.RetailPrice}" +			// RETAIL_PRICE
-					$"{d}0" +							// AVERAGE_COST
-					$"{d}0" +							// MANUFACTURE_COST
-					$"{d}AMA" +							// REGION
-					$"{d}{item.CountryCode}" +			// COUNTRY_CODE
-					$"{d}{item.ManufactureUpc}" +		// MANUFACTURE_UPC
-					$"{d}{item.Division}" +				// DIVISION
-					$"{d}" +							// EMPTY
-					$"{d}" +							// EMPTY
-					$"{d}" +							// EMPTY
-					$"{d}UNITCOUNT_SIGN:" +				// UNITCOUNT_SIGN
-					$"{d}UNITCOUNT:"					// UNITCOUNT
-				);
+				var lines = File.ReadAllLines(filePath);
+				if (lines.Length == 0) return result;
+
+				// First line = header
+				var headers = lines[0].Split('^');
+
+				foreach (var line in lines.Skip(1))
+				{
+					var parts = line.Split('^');
+
+					var rowDict = new Dictionary<string, string>();
+
+					for (int i = 0; i < headers.Length; i++)
+					{
+						string header = headers[i];
+						string value = (i < parts.Length ? parts[i] : string.Empty);
+						rowDict[header] = value;
+					}
+
+					// add custom fields if you want
+					rowDict["UNITCOUNT_SIGN"] = "UNITCOUNT:";
+
+					result.Add(rowDict);
+				}
 			}
-			return sb.ToString();
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in BuildInventorySnapshot: {ex.Message}");
+			}
+
+			return result;
+		}
+
+
+
+		public async Task<string> Authenticate(
+			string prismAddress,
+			string prismUsername,
+			string prismPassword,
+			string workstationName)
+		{
+			try
+			{
+				// Step 1: Get Auth-Nonce
+				var nonceRequest = WebRequest.CreateHttp($"{prismAddress}/v1/rest/auth");
+				nonceRequest.Method = "GET";
+				nonceRequest.Accept = "application/json";
+				nonceRequest.ContentType = "application/json; charset=UTF-8";
+
+				long nonce;
+				using (var response = nonceRequest.GetResponse() as HttpWebResponse)
+				{
+					if (response.StatusCode != HttpStatusCode.OK)
+					{
+						Console.WriteLine($"[PrismHelper] Failed to get Auth-Nonce. Status: {response.StatusCode}");
+						return null;
+					}
+
+					nonce = long.Parse(response.Headers["Auth-Nonce"]);
+				}
+
+				// Step 2: Compute Nonce Response
+				long nonceResponse = nonce / 13L % 99999L * 17L;
+
+				// Step 3: Authenticate with credentials
+				var authUrl = $"{prismAddress}/v1/rest/auth?usr={prismUsername}&pwd={prismPassword}";
+				var loginRequest = WebRequest.CreateHttp(authUrl);
+				loginRequest.Method = "GET";
+				loginRequest.Accept = "application/json";
+				loginRequest.ContentType = "application/json; charset=UTF-8";
+				loginRequest.Headers.Add("Auth-Nonce", nonce.ToString());
+				loginRequest.Headers.Add("Auth-Nonce-Response", nonceResponse.ToString());
+
+				string authSession;
+				using (var response = loginRequest.GetResponse() as HttpWebResponse)
+				{
+					if (response.StatusCode != HttpStatusCode.OK)
+					{
+						Console.WriteLine($"[PrismHelper] Login failed. Status: {response.StatusCode}");
+						return null;
+					}
+
+					authSession = response.Headers["Auth-Session"];
+				}
+
+				// Step 4: Bind session to workstation
+				var sitUrl = $"{prismAddress}/v1/rest/sit?ws={workstationName}";
+				var sitRequest = WebRequest.CreateHttp(sitUrl);
+				sitRequest.Method = "GET";
+				sitRequest.Accept = "application/json";
+				sitRequest.ContentType = "application/json; charset=UTF-8";
+				sitRequest.Headers.Add("Auth-Session", authSession);
+
+				using (var response = sitRequest.GetResponse() as HttpWebResponse)
+				{
+					if (response.StatusCode != HttpStatusCode.OK)
+					{
+						Console.WriteLine($"[PrismHelper] Workstation bind failed. Status: {response.StatusCode}");
+						return null;
+					}
+				}
+
+				//logHelper.Log("[PrismHelper] Authentication successful.");
+				return authSession;
+			}
+			catch (WebException ex)
+			{
+				string errorMessage = "[PrismHelper] WebException occurred.";
+				if (ex.Response != null)
+				{
+					using (var reader = new StreamReader(ex.Response.GetResponseStream()))
+					{
+						var errorResponse = reader.ReadToEnd();
+						errorMessage += $" Response: {errorResponse}";
+						Console.WriteLine(errorMessage);
+						return errorResponse;
+					}
+				}
+
+				Console.WriteLine($"{errorMessage} Exception: {ex}");
+				return null;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[PrismHelper] Unexpected error: {ex}");
+				return null;
+			}
+		}
+		public static string CallPrismAPI(
+			string auth_session,
+			string TargetHost,
+			string endpoint,
+			string obj,
+			out bool issuccessful,
+			string Method)
+		{
+
+			Uri requestUri = new Uri(TargetHost + endpoint);
+			string responseContent = string.Empty;
+			issuccessful = false;
+
+			HttpWebRequest request = WebRequest.Create(requestUri) as HttpWebRequest;
+			request.KeepAlive = false;
+			request.Method = Method.ToUpper();
+			request.Headers.Add("Auth-Session", auth_session);
+			request.Accept = "application/json,text/plain,version=2";
+			request.ContentType = "application/json";
+
+			// Log basic info
+			Console.WriteLine("Calling Prism API...");
+			Console.WriteLine($"URL: {requestUri}");
+			Console.WriteLine($"Method: {request.Method}");
+
+			// Log headers
+			//logHelper.Log("Request Headers:");
+			foreach (string headerKey in request.Headers.AllKeys)
+			{
+				//logHelper.Log($"{headerKey}: {request.Headers[headerKey]}");
+			}
+
+			// Log payload if present
+			if (Method != "GET")
+			{
+				Console.WriteLine("Payload:");
+				Console.WriteLine(string.IsNullOrWhiteSpace(obj) ? "[Empty Body]" : obj);
+			}
+
+			try
+			{
+				if (Method != "GET" && !string.IsNullOrWhiteSpace(obj))
+				{
+					byte[] bytes = Encoding.UTF8.GetBytes(obj);
+					request.ContentLength = bytes.Length;
+
+					using (Stream requestStream = request.GetRequestStream())
+					{
+						requestStream.Write(bytes, 0, bytes.Length);
+					}
+				}
+
+				using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+				using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+				{
+					responseContent = reader.ReadToEnd();
+					issuccessful = true;
+				}
+			}
+			catch (WebException ex)
+			{
+				if (ex.Status == WebExceptionStatus.Timeout)
+				{
+					responseContent = "Timeout Error";
+				}
+				else if (ex.Response != null)
+				{
+					using (StreamReader reader = new StreamReader(ex.Response.GetResponseStream()))
+					{
+						responseContent = reader.ReadToEnd();
+					}
+				}
+				else
+				{
+					responseContent = "Unhandled WebException: " + ex.Message;
+				}
+
+				issuccessful = false;
+				Console.WriteLine($"API call failed: {ex.Message}");
+			}
+
+			//logHelper.Log("Response:");
+			//logHelper.Log(responseContent);
+
+			return responseContent;
 		}
 
 	}
+
 }

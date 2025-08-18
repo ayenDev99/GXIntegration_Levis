@@ -35,7 +35,7 @@ namespace GXIntegration_Levis.Views
 
 			tabDb.Controls.Add(new ConfigurationDBTab(config) { Dock = DockStyle.Fill });
 			tabSftp.Controls.Add(new ConfigurationSFTPTab(config) { Dock = DockStyle.Fill });
-			//tabApi.Controls.Add(new ConfigurationAPITab(config) { Dock = DockStyle.Fill });
+			tabApi.Controls.Add(new ConfigurationAPITab() { Dock = DockStyle.Fill });
 
 			this.Controls.Add(tabControl);
 			tabControl.TabPages.Add(tabDb);
