@@ -133,7 +133,7 @@ namespace GXIntegration_Levis.Views
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
-				Size = new Size(80, 30),
+				Size = new Size(80, 25),
 				Enabled = false
 			};
 			GlobalHelper.StyleGunaButton(btnEdit, Color.FromArgb(33, 150, 243));
@@ -153,7 +153,7 @@ namespace GXIntegration_Levis.Views
 			{
 				Text = "Test Connection",
 				Location = new Point(inputStartX, currentY),
-				Size = new Size(150, 35),
+				Size = new Size(150, 25),
 				Enabled = true
 			};
 			GlobalHelper.StyleGunaButton(btnTestConnection, Color.FromArgb(138, 43, 226));
