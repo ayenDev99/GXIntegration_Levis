@@ -107,6 +107,66 @@ namespace GXIntegration_Levis.Helpers
 
 			return button;
 		}
+
+		// ***************************************************
+		// Buttons Methods
+		// ***************************************************
+		public static void StyleGunaButton(GunaButton button, Color baseColor)
+		{
+			// Derived colors
+			Color hoverColor = Color.FromArgb(200, baseColor);   // More transparent
+			Color pressedColor = ControlPaint.Dark(baseColor);   // Slightly darker
+			Color borderColor = baseColor;
+
+			button.BaseColor = baseColor;
+			button.ForeColor = Color.White;
+			button.BorderColor = borderColor;
+			button.BorderSize = 1;
+			button.Radius = 1;
+			button.Font = new Font("Segoe UI", 10, FontStyle.Regular);
+			button.TextAlign = HorizontalAlignment.Center;
+			button.Image = null;
+
+			button.OnHoverBaseColor = hoverColor;
+			button.OnHoverForeColor = Color.White;
+			button.OnHoverBorderColor = borderColor;
+			button.OnPressedColor = pressedColor;
+
+			button.MouseEnter += (s, e) => { button.Cursor = Cursors.Hand; };
+			button.MouseLeave += (s, e) => { button.Cursor = Cursors.Default; };
+		}
+
+		public static void SetControlsEnabled(bool enabled, params Control[] controls)
+		{
+			foreach (var control in controls)
+			{
+				control.Enabled = enabled;
+			}
+		}
+
+		public static GunaLabel CreateLabel(string text, int x, int y, int width = 120)
+		{
+			return new GunaLabel
+			{
+				Text = text,
+				Location = new Point(x, y),
+				Width = width
+			};
+		}
+
+		public static GunaTextBox CreateTextBox(int x, int y, string defaultText = "", bool isPassword = false)
+		{
+			return new GunaTextBox
+			{
+				Location = new Point(x, y),
+				Width = 200,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
+				Text = defaultText,
+				PasswordChar = isPassword ? '*' : '\0'
+			};
+		}
+
 	}
 
 }

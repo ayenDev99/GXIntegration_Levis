@@ -1,6 +1,6 @@
 ﻿namespace GXIntegration_Levis.Views
 {
-	partial class ConfigurationPage
+	partial class ConfigurationAPITab
 	{
 		/// <summary> 
 		/// Required designer variable.
@@ -28,16 +28,8 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.SuspendLayout();
-			// 
-			// ConfigurationPage
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			components = new System.ComponentModel.Container();
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Name = "ConfigurationPage";
-			this.Size = new System.Drawing.Size(1108, 494);
-			this.ResumeLayout(false);
-
 		}
 
 		#endregion

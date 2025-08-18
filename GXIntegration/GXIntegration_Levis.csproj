@@ -139,6 +139,18 @@
     <Compile Include="Views\AboutPage.Designer.cs">
       <DependentUpon>AboutPage.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\ConfigurationAPITab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\ConfigurationAPITab.Designer.cs">
+      <DependentUpon>ConfigurationAPITab.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ConfigurationDBTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\ConfigurationDBTab.Designer.cs">
+      <DependentUpon>ConfigurationDBTab.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\ConfigurationPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -161,6 +173,12 @@
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ConfigurationSFTPTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\ConfigurationSFTPTab.Designer.cs">
+      <DependentUpon>ConfigurationSFTPTab.cs</DependentUpon>
     </Compile>
     <Compile Include="Views\HomePage.cs">
       <SubType>UserControl</SubType>
