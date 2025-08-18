@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Views
 		private InventoryRepository _inventoryRepository;
 		private InTransitRepository _inTransitRepository;
 		private PriceRepository _priceRepository;
-		private ASNRepository _asnRepository;
+		private StoreGoodsRepository _storeGoodsRepository;
 		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
 		private StoreSaleRepository _storeSaleRepository;
 		private StoreReturnRepository _storeReturnRepository;
@@ -35,7 +35,7 @@ namespace GXIntegration_Levis.Views
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
 			_priceRepository = new PriceRepository(config.MainDbConnection);
-			_asnRepository = new ASNRepository(config.MainDbConnection);
+			_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
 			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
 			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
 			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
@@ -177,7 +177,7 @@ namespace GXIntegration_Levis.Views
 				_inventoryRepository,
 				_inTransitRepository,
 				_priceRepository,
-				_asnRepository,
+				_storeGoodsRepository,
 				_storeGoodsReturnRepository,
 				_storeSaleRepository,
 				_storeReturnRepository,
@@ -199,7 +199,7 @@ namespace GXIntegration_Levis.Views
 		public InventoryRepository InventoryRepository { get; set; }
 		public InTransitRepository InTransitRepository { get; set; }
 		public PriceRepository PriceRepository { get; set; }
-		public ASNRepository ASNRepository { get; set; }
+		public StoreGoodsRepository StoreGoodsRepository { get; set; }
 		public StoreGoodsReturnRepository StoreGoodsReturnRepository { get; set; }
 		public StoreSaleRepository StoreSaleRepository { get; set; }
 		public StoreReturnRepository StoreReturnRepository { get; set; }
@@ -211,7 +211,7 @@ namespace GXIntegration_Levis.Views
 			InventoryRepository inventoryRepository,
 			InTransitRepository inTransitRepository,
 			PriceRepository priceRepository,
-			ASNRepository asnRepository,
+			StoreGoodsRepository storeGoodsRepository,
 			StoreGoodsReturnRepository storeGoodsReturnRepository,
 			StoreSaleRepository storeSaleRepository,
 			StoreReturnRepository storeReturnRepository,
@@ -222,7 +222,7 @@ namespace GXIntegration_Levis.Views
 			InventoryRepository = inventoryRepository;
 			InTransitRepository = inTransitRepository;
 			PriceRepository = priceRepository;
-			ASNRepository = asnRepository;
+			StoreGoodsRepository = storeGoodsRepository;
 			StoreGoodsReturnRepository = storeGoodsReturnRepository;
 			StoreSaleRepository = storeSaleRepository;
 			StoreReturnRepository = storeReturnRepository;

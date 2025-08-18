@@ -10,14 +10,14 @@ using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.Data.Access
 {
-	public class ASNRepository
+	public class StoreGoodsRepository
 	{
 		private readonly string _connectionString;
-		public ASNRepository(string connectionString)
+		public StoreGoodsRepository(string connectionString)
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<ASNModel>> GetASNAsync(DateTime date, List<int> vouType, List<int> vouClass)
+		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -26,7 +26,8 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								S.STORE_CODE                    AS StoreCode
+								VOU.SID							AS VouSid
+								, S.STORE_CODE                  AS StoreCode
 								, VOU.WORKSTATION               AS WorkstationNo
 								, VOU.VOU_NO			        AS SequenceNo
 								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
@@ -91,27 +92,29 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
 								TRUNC(VOU.CREATED_DATETIME) BETWEEN DATE '2020-08-01' AND DATE '2025-08-07'
-								AND VOU.VOU_TYPE IN :VoucherTypes
-								AND VOU.VOU_CLASS IN :VoucherClass
+								AND VOU.VOU_TYPE = 0
+								AND VOU.VOU_CLASS = 2
 							--  AND VOU.STATUS = 4
-							FETCH FIRST 1 ROWS ONLY
 					";
+
+
+					//FETCH FIRST 1 ROWS ONLY
+					//AND VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{
-						SaleDate = date.Date,
-						VoucherTypes = vouType,
-						VoucherClass = vouClass
+						FromDate = from_date,
+						ToDate = to_date
 					};
 
-					var sales = await connection.QueryAsync<ASNModel>(sql, parameters);
+					var sales = await connection.QueryAsync<StoreGoodsModel>(sql, parameters);
 					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching ASN - Receiving data: {ex.Message}");
-					Console.WriteLine($"Error fetching ASN - Receiving data: {ex.Message}");
-					return new List<ASNModel>();
+					Logger.Log($"Error fetching Store_Goods data: {ex.Message}");
+					Console.WriteLine($"Error fetching Store_Goods data: {ex.Message}");
+					return new List<StoreGoodsModel>();
 				}
 			}
 		}

@@ -124,8 +124,20 @@ namespace GXIntegration_Levis.Views
 			var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date);
 			var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, new List<int> { 1 });
 			var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, timeRange.to_date);
+			var storeGoodsItems = await _repositories.StoreGoodsRepository.GetStoreGoodsAsync(timeRange.from_date, timeRange.to_date);
 
 			// Send Store Goods Transactions
+			await SendOutboundDataAsync(
+				storeGoodsItems,
+				item => item.VouSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreGoods.GenerateXml(list, null, "template"),
+				"storegoods",
+				inventoryApiUrl,
+				username,
+				password
+			);
 
 			// Send Store Goods Return Transactions
 			await SendOutboundDataAsync(

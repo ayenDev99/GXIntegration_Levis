@@ -104,8 +104,8 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching Store Receiving data: {ex.Message}");
-					Console.WriteLine($"Error fetching ASN - Receiving data: {ex.Message}");
+					Logger.Log($"Error fetching Store_Receiving data: {ex.Message}");
+					Console.WriteLine($"Error fetching Store_Receiving data: {ex.Message}");
 					return new List<StoreReceivingModel>();
 				}
 			}
