@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime date)
+		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -25,7 +25,8 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								S.STORE_CODE                    AS StoreCode
+								VOU.SID							AS VouSid
+								, S.STORE_CODE                  AS StoreCode
 								, VOU.WORKSTATION               AS WorkstationNo
 								, VOU.VOU_NO			        AS SequenceNo
 								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
@@ -93,15 +94,24 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_CLASS = 0
 								AND VOU.VOU_TYPE = 1
 								AND VOU.STATUS = 4
-							FETCH FIRST 2 ROWS ONLY
 					";
 
-					return (await connection.QueryAsync<StoreGoodsReturnModel>(sql, new { CurrentDate = date })).ToList();
+					//FETCH FIRST 1 ROWS ONLY
+					//AND VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date
+					};
+
+					var sales = await connection.QueryAsync<StoreGoodsReturnModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching ASN - Receiving data: {ex.Message}");
-					Console.WriteLine($"Error fetching ASN - Receiving data: {ex.Message}");
+					Logger.Log($"Error fetching Store_Goods_Return data: {ex.Message}");
+					Console.WriteLine($"Error fetching Store_Goods_Return data: {ex.Message}");
 					return new List<StoreGoodsReturnModel>();
 				}
 			}

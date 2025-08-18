@@ -123,6 +123,22 @@ namespace GXIntegration_Levis.Views
 			var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date);
 			var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date);
 			var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, new List<int> { 1 });
+			var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, timeRange.to_date);
+
+			// Send Store Goods Transactions
+
+			// Send Store Goods Return Transactions
+			await SendOutboundDataAsync(
+				storeGoodsReturnItems,
+				item => item.VouSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreGoodsReturn.GenerateXml(list, null, "template"),
+				"storegoodsreturn",
+				inventoryApiUrl,
+				username,
+				password
+			);
 
 			// Send Store Sale Transactions
 			await SendOutboundDataAsync(
@@ -137,27 +153,14 @@ namespace GXIntegration_Levis.Views
 				password
 			);
 
-			// Send Store Shipping Transactions
-		   await SendOutboundDataAsync(
-			   storeShippingItems,
-			   item => item.VouSid,
-			   item => item.SequenceNo,
-			   item => item.BusinessDayDate.DateTime,
-			   list => OutboundStoreShipping.GenerateXml(list, null, "template"),
-			   "storeshipping",
-			   inventoryApiUrl,
-			   username,
-			   password
-		   );
-
-			// Send Store Receiving Transactions
+			// Send Store Return Transactions
 			await SendOutboundDataAsync(
-				storeReceivingItems,
-				item => item.VouSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreReceiving.GenerateXml(list, null, "template"),
-				"storereceiving",
+				storeReturnItems,
+				item => item.DocSid,
+				item => item.DocNo,
+				item => item.CreatedDateTime.DateTime,
+				list => OutboundStoreReturn.GenerateXml(list, null, "template"),
+				"storereturn",
 				saleApiUrl,
 				username,
 				password
@@ -171,20 +174,34 @@ namespace GXIntegration_Levis.Views
 				item => item.BusinessDayDate.DateTime,
 				list => OutboundStoreInventoryAdjustment.GenerateXml(list, null, "template"),
 				"storeinventoryadjustment",
-				saleApiUrl,
+				inventoryApiUrl,
 				username,
 				password
 			);
 
-			// Send Store Inventory Adjustment Transactions
+
+			// Send Store Shipping Transactions
 			await SendOutboundDataAsync(
-				storeReturnItems,
-				item => item.DocSid,
-				item => item.DocNo,
-				item => item.CreatedDateTime.DateTime,
-				list => OutboundStoreReturn.GenerateXml(list, null, "template"),
-				"storereturn",
-				saleApiUrl,
+				storeShippingItems,
+				item => item.VouSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreShipping.GenerateXml(list, null, "template"),
+				"storeshipping",
+				inventoryApiUrl,
+				username,
+				password
+			);
+
+			// Send Store Receiving Transactions
+			await SendOutboundDataAsync(
+				storeReceivingItems,
+				item => item.VouSid,
+				item => item.SequenceNo,
+				item => item.BusinessDayDate.DateTime,
+				list => OutboundStoreReceiving.GenerateXml(list, null, "template"),
+				"storereceiving",
+				inventoryApiUrl,
 				username,
 				password
 			);
