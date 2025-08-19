@@ -40,6 +40,7 @@ namespace GXIntegration_Levis.Helpers
 			}
 		}
 
+
 		public static void HandleCellMouseMove(DataGridView dataGridView, DataGridViewCellMouseEventArgs e, string actionColumnName = "Action")
 		{
 			if (dataGridView == null)
@@ -166,6 +167,20 @@ namespace GXIntegration_Levis.Helpers
 				PasswordChar = isPassword ? '*' : '\0'
 			};
 		}
+
+
+		// Prism error log
+		public class PrismErrorResponse
+		{
+			public List<PrismError> errors { get; set; }
+		}
+
+		public class PrismError
+		{
+			public string errorcode { get; set; }
+			public string errormsg { get; set; }
+		}
+
 
 	}
 

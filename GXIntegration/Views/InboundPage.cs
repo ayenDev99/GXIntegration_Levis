@@ -1,7 +1,6 @@
 ﻿using GXIntegration.Properties;
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
-using GXIntegration_Levis.Model;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,12 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
+using static GXIntegration_Levis.Helpers.GlobalHelper;
 using JsonFormatting = Newtonsoft.Json.Formatting;
-
 
 namespace GXIntegration_Levis.Views
 {
@@ -45,20 +42,26 @@ namespace GXIntegration_Levis.Views
 				string prismPassword = "sysadmin";
 				string workstationName = "rpro-levis_8080";
 
+				Logger.Log("Starting inventory sync...");
+
 				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
 
 				if (string.IsNullOrEmpty(session))
 				{
+					Logger.Log("Authentication failed.");
 					Console.WriteLine("Authentication failed.");
 					return;
 				}
 
+				Logger.Log("Authenticated. Session: " + session);
 				Console.WriteLine(session);
 
 				// *** Continue with snapshot
 				string filePath = @"C:\Users\GNX-RPRO.TEAM\Desktop\LSPI_ITEM_20250526100553_0.txt";
+				Logger.Log("Loading snapshot file: " + filePath);
 
 				var result = BuildInventorySnapshot(filePath);
+				Logger.Log($"Snapshot loaded. Rows found: {result.Count}");
 
 				foreach (var row in result)
 				{
@@ -81,10 +84,10 @@ namespace GXIntegration_Levis.Views
 								{
 									dcssid       = "556255621000149144",
 									vendsid      = (string)null,
-									description1 = row["PRODUCT_NM"],
-									description2 = (string)null,
-									attribute    = (string)null,
-									itemsize     = (string)null
+									description1 = row["PRODUCT_CD"],
+									description2 = row["STYLE_CD"],
+									attribute    = row["SIZE_DIM2"],	// INSEAM
+									itemsize     = row["SIZE_DIM1"]		// Size
 								},
 								InventoryItems = new[]
 								{
@@ -92,7 +95,32 @@ namespace GXIntegration_Levis.Views
 									{
 										sbssid          = "555356986000134257",
 										dcssid          = "556255621000149144",
-										description1    = row["PRODUCT_NM"],
+
+										description1		= row["PRODUCT_CD"],	// PRODUCT_CD	| description1
+										long_description    = row["PRODUCT_NM"],	// PRODUCT_NM	| long_description
+										description2		= row["STYLE_CD"],		// STYLE_CD		| description2
+										// STYLE_NAME
+										// BRAND_CD
+										// CONSUMER_CD
+										// PROD_CAT_CD
+										// CLASS_CD
+										// SUB_CLASS_CD
+										// SEASON_CD
+										alu					= row["PROD_SKU"],		// PROD_SKU		| alu
+										itemsize            = row["SIZE_DIM1"],		//	SIZE_DIM1	| Size
+										attribute           = row["SIZE_DIM2"],		//	SIZE_DIM2 	| INSEAM
+										upc					= row["PROD_GTIN"],		// PROD_GTIN
+										description4		= row["PROD_JAN"],		// PROD_JAN
+										// AFFILIATE
+										text1				= row["SAP_TAX_CD"],	// SAP_TAX_CD
+										udf5_string		    = row["DEMAND_NM"],		// DEMAND_NM
+										// BRAND_NM
+										// SUBCLASS
+										// PARTNER
+										// CONSUMER_NM
+										// PROD_CAT_NM
+										// CLASS_NM
+										// VENDOR_NM
 										cost            = 0,
 										spif            = 0,
 										taxcodesid      = "555538434000189911",
@@ -125,9 +153,11 @@ namespace GXIntegration_Levis.Views
 
 					Console.WriteLine("Payload:");
 					Console.WriteLine(json);
+					//Logger.Log("Payload built:\n" + json);
 
 					string responseJson = CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
 					Console.WriteLine("Response: " + responseJson);
+
 				}
 			}
 			catch (Exception ex)
@@ -176,13 +206,11 @@ namespace GXIntegration_Levis.Views
 			return result;
 		}
 
-
-
 		public async Task<string> Authenticate(
-			string prismAddress,
-			string prismUsername,
-			string prismPassword,
-			string workstationName)
+		string prismAddress,
+		string prismUsername,
+		string prismPassword,
+		string workstationName)
 		{
 			try
 			{
@@ -197,7 +225,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Console.WriteLine($"[PrismHelper] Failed to get Auth-Nonce. Status: {response.StatusCode}");
+						Logger.Log($"[PrismHelper] Failed to get Auth-Nonce. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -221,7 +249,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Console.WriteLine($"[PrismHelper] Login failed. Status: {response.StatusCode}");
+						Logger.Log($"[PrismHelper] Login failed. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -240,12 +268,12 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Console.WriteLine($"[PrismHelper] Workstation bind failed. Status: {response.StatusCode}");
+						Logger.Log($"[PrismHelper] Workstation bind failed. Status: {response.StatusCode}");
 						return null;
 					}
 				}
 
-				//logHelper.Log("[PrismHelper] Authentication successful.");
+				Logger.Log("[PrismHelper] Authentication successful.");
 				return authSession;
 			}
 			catch (WebException ex)
@@ -257,20 +285,21 @@ namespace GXIntegration_Levis.Views
 					{
 						var errorResponse = reader.ReadToEnd();
 						errorMessage += $" Response: {errorResponse}";
-						Console.WriteLine(errorMessage);
+						Logger.Log(errorMessage + ex);
 						return errorResponse;
 					}
 				}
 
-				Console.WriteLine($"{errorMessage} Exception: {ex}");
+				Logger.Log($"{errorMessage} Exception: {ex.Message}" + ex);
 				return null;
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"[PrismHelper] Unexpected error: {ex}");
+				Logger.Log($"[PrismHelper] Unexpected error: {ex.Message}" + ex);
 				return null;
 			}
 		}
+
 		public static string CallPrismAPI(
 			string auth_session,
 			string TargetHost,
@@ -279,7 +308,6 @@ namespace GXIntegration_Levis.Views
 			out bool issuccessful,
 			string Method)
 		{
-
 			Uri requestUri = new Uri(TargetHost + endpoint);
 			string responseContent = string.Empty;
 			issuccessful = false;
@@ -291,23 +319,15 @@ namespace GXIntegration_Levis.Views
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
 
-			// Log basic info
-			Console.WriteLine("Calling Prism API...");
-			Console.WriteLine($"URL: {requestUri}");
-			Console.WriteLine($"Method: {request.Method}");
+			Logger.Log("-------------------------------------------------------------------------------");
+			Logger.Log("Calling Prism API...");
+			Logger.Log($"URL: {requestUri}");
+			Logger.Log($"Method: {request.Method}");
 
-			// Log headers
-			//logHelper.Log("Request Headers:");
-			foreach (string headerKey in request.Headers.AllKeys)
-			{
-				//logHelper.Log($"{headerKey}: {request.Headers[headerKey]}");
-			}
-
-			// Log payload if present
 			if (Method != "GET")
 			{
-				Console.WriteLine("Payload:");
-				Console.WriteLine(string.IsNullOrWhiteSpace(obj) ? "[Empty Body]" : obj);
+				//Logger.Log("Payload:");
+				//Logger.Log(string.IsNullOrWhiteSpace(obj) ? "[Empty Body]" : obj);
 			}
 
 			try
@@ -349,14 +369,33 @@ namespace GXIntegration_Levis.Views
 				}
 
 				issuccessful = false;
-				Console.WriteLine($"API call failed: {ex.Message}");
+				Logger.Log("API call failed");
+				//Logger.Log("API call failed" + ex);
 			}
 
-			//logHelper.Log("Response:");
-			//logHelper.Log(responseContent);
+			// 🔎 Try to extract only the errormsg
+			try
+			{
+				var errorResponse = JsonConvert.DeserializeObject<PrismErrorResponse>(responseContent);
+				if (errorResponse?.errors != null && errorResponse.errors.Count > 0)
+				{
+					string errorMsg = errorResponse.errors[0].errormsg;
+					Logger.Log("Prism Error: " + errorMsg);
+				}
+				else
+				{
+					Logger.Log("Response: " + responseContent);
+				}
+			}
+			catch
+			{
+				// fallback: raw log if not valid JSON
+				Logger.Log("Response: " + responseContent);
+			}
 
 			return responseContent;
 		}
+
 
 	}
 

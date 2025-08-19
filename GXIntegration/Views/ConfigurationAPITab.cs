@@ -13,14 +13,14 @@ namespace GXIntegration_Levis.Views
 {
 	public partial class ConfigurationAPITab : UserControl
 	{
-		private GunaTextBox txtApiUrl;
+		private GunaTextBox txtApiUrl, txtApiUsername, txtApiPassword;
 		private GunaButton btnEdit, btnSave, btnTestApi;
 		private GunaLabel lblApiStatus;
 		private GunaDataGridView dgvApiUrls;
 
 		private Control[] ApiInputControls => new Control[]
 		{
-			txtApiUrl
+			txtApiUrl, txtApiUsername, txtApiPassword
 		};
 
 		public ConfigurationAPITab()
@@ -38,10 +38,23 @@ namespace GXIntegration_Levis.Views
 			int currentY = 20;
 			int spacingY = 40;
 
-			// === Input Field ===
+			// === API URL ===
 			Controls.Add(GlobalHelper.CreateLabel("API URL", labelX, currentY));
 			txtApiUrl = GlobalHelper.CreateTextBox(inputX, currentY, "400");
 			Controls.Add(txtApiUrl);
+			currentY += spacingY;
+
+			// === Username ===
+			Controls.Add(GlobalHelper.CreateLabel("Username", labelX, currentY));
+			txtApiUsername = GlobalHelper.CreateTextBox(inputX, currentY, "200");
+			Controls.Add(txtApiUsername);
+			currentY += spacingY;
+
+			// === Password ===
+			Controls.Add(GlobalHelper.CreateLabel("Password", labelX, currentY));
+			txtApiPassword = GlobalHelper.CreateTextBox(inputX, currentY, "200");
+			txtApiPassword.UseSystemPasswordChar = true;
+			Controls.Add(txtApiPassword);
 			currentY += spacingY;
 
 			// === Status Label ===
@@ -89,7 +102,7 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(btnSave);
 			Controls.Add(btnTestApi);
 
-			// === DataGridView for multiple API URLs ===
+			// === DataGridView ===
 			dgvApiUrls = new GunaDataGridView
 			{
 				Location = new Point(20, currentY + 40),
@@ -101,11 +114,14 @@ namespace GXIntegration_Levis.Views
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
 			};
 			dgvApiUrls.Columns.Add("Url", "API URL");
+			dgvApiUrls.Columns.Add("Username", "Username");
 			dgvApiUrls.CellClick += DgvApiUrls_CellClick;
 			Controls.Add(dgvApiUrls);
 
-			// Disable Save on edits
+			// === Events ===
 			txtApiUrl.TextChanged += DisableSaveOnEdit;
+			txtApiUsername.TextChanged += DisableSaveOnEdit;
+			txtApiPassword.TextChanged += DisableSaveOnEdit;
 		}
 
 		private void DisableSaveOnEdit(object sender, EventArgs e)
@@ -137,11 +153,20 @@ namespace GXIntegration_Levis.Views
 			if (!ValidateApiInputs()) return;
 
 			string apiUrl = txtApiUrl.Text.Trim();
+			string username = txtApiUsername.Text.Trim();
+			string password = txtApiPassword.Text.Trim();
 
 			try
 			{
-				using (var client = new HttpClient())
+				using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
 				{
+					if (!string.IsNullOrWhiteSpace(username))
+					{
+						var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
+						client.DefaultRequestHeaders.Authorization =
+							new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+					}
+
 					var response = await client.GetAsync(apiUrl);
 
 					if (response.IsSuccessStatusCode)
@@ -187,9 +212,10 @@ namespace GXIntegration_Levis.Views
 				return false;
 			}
 
-			if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+			if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) ||
+				!(uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
 			{
-				MessageBox.Show("API URL is not valid.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				MessageBox.Show("API URL is not valid or must start with http/https.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 				return false;
 			}
 
@@ -223,7 +249,8 @@ namespace GXIntegration_Levis.Views
 				foreach (XmlNode node in nodes)
 				{
 					string url = node["Url"]?.InnerText ?? "";
-					dgvApiUrls.Rows.Add(url);
+					string username = node["Username"]?.InnerText ?? "";
+					dgvApiUrls.Rows.Add(url, username);
 				}
 
 				lblApiStatus.Text = "Loaded API URLs.";
@@ -261,12 +288,19 @@ namespace GXIntegration_Levis.Views
 
 				apiConnectionsNode = doc.CreateElement("ApiConnections");
 
-				// Add current input as a new API connection
 				XmlElement apiNode = doc.CreateElement("ApiConnection");
 
 				XmlElement urlElem = doc.CreateElement("Url");
 				urlElem.InnerText = txtApiUrl.Text.Trim();
 				apiNode.AppendChild(urlElem);
+
+				XmlElement userElem = doc.CreateElement("Username");
+				userElem.InnerText = txtApiUsername.Text.Trim();
+				apiNode.AppendChild(userElem);
+
+				XmlElement passElem = doc.CreateElement("Password");
+				passElem.InnerText = txtApiPassword.Text.Trim();
+				apiNode.AppendChild(passElem);
 
 				apiConnectionsNode.AppendChild(apiNode);
 				root.AppendChild(apiConnectionsNode);
@@ -295,7 +329,25 @@ namespace GXIntegration_Levis.Views
 			if (e.RowIndex >= 0)
 			{
 				string selectedUrl = dgvApiUrls.Rows[e.RowIndex].Cells[0].Value?.ToString() ?? "";
+				string selectedUsername = dgvApiUrls.Rows[e.RowIndex].Cells[1].Value?.ToString() ?? "";
+
 				txtApiUrl.Text = selectedUrl;
+				txtApiUsername.Text = selectedUsername;
+
+				// Load password from config
+				string filePath = "config.xml";
+				XmlDocument doc = new XmlDocument();
+				doc.Load(filePath);
+				var nodes = doc.SelectNodes("/Configuration/ApiConnections/ApiConnection");
+
+				foreach (XmlNode node in nodes)
+				{
+					if (node["Url"]?.InnerText == selectedUrl)
+					{
+						txtApiPassword.Text = node["Password"]?.InnerText ?? "";
+						break;
+					}
+				}
 
 				GlobalHelper.SetControlsEnabled(false, ApiInputControls);
 				btnEdit.Enabled = true;
