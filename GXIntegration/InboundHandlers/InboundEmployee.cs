@@ -64,6 +64,12 @@ namespace GXIntegration_Levis.InboundHandlers
 				// Find all files that start with LSPI_ITEM_
 				string[] files = Directory.GetFiles(inboundDir, "LSPI_ITEM_*.*");
 
+				if (files.Length == 0)
+				{
+					Logger.Log("No LSPI_ITEM_ files found in: " + inboundDir);
+					return;
+				}
+
 				Logger.Log("Files to Processed--------------------------------------------------------");
 				foreach (string file in files)
 				{
@@ -98,65 +104,58 @@ namespace GXIntegration_Levis.InboundHandlers
 								{
 									dcssid       = "556255621000149144",
 									vendsid      = (string)null,
-									description1 = row["PRODUCT_CD"],
-									attribute    = row["SIZE_DIM2"],	// INSEAM
-									itemsize     = row["SIZE_DIM1"]		// Size
+									description1 = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
+									attribute    = row["SIZE_DIM2"],
+									itemsize     = row["SIZE_DIM1"]
 								},
 								InventoryItems = new[]
 								{
 									new
 									{
-										sbssid          = "555356986000134257",
-										dcssid          = "556255621000149144",
-
-										description1        = row["PRODUCT_CD"],	// PRODUCT_CD	| description1
-										description2		= row["PRODUCT_NM"],	// PRODUCT_NM	| long_description
-										description3        = row["STYLE_CD"],		// STYLE_CD		| description2
-										// STYLE_NAME
-									
+										sbssid              = "555356986000134257",
+										dcssid              = "556255621000149144",
+										description1        = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
+										description2        = row["PRODUCT_NM"]?.ToString(),
+										description3        = row["STYLE_CD"]?.ToString(),
+										alu                 = row["PROD_SKU"]?.ToString(),
+										itemsize            = row["SIZE_DIM1"]?.ToString(),
+										attribute           = row["SIZE_DIM2"]?.ToString(),
+										upc                 = row["PROD_GTIN"]?.ToString(),
+										description4        = row["PROD_JAN"]?.ToString(),
+										text1               = row["SAP_TAX_CD"]?.ToString(),
 										
-										udf2_string			= row["PROD_CAT_CD"],	// PROD_CAT_CD
-										
-										udf14_string        = row["SUB_CLASS_CD"],	// SUB_CLASS_CD
-										
-										alu                 = row["PROD_SKU"],		// PROD_SKU		| alu
-										itemsize            = row["SIZE_DIM1"],		// SIZE_DIM1	| Size
-										attribute           = row["SIZE_DIM2"],		// SIZE_DIM2 	| INSEAM
-										upc                 = row["PROD_GTIN"],		// PROD_GTIN
-										description4        = row["PROD_JAN"],		// PROD_JAN
-										
-										text1               = row["SAP_TAX_CD"],	// SAP_TAX_CD
-										udf5_string         = row["DEMAND_NM"],		// DEMAND_NM
-
-										cost            = 0,
-										spif            = 0,
-										taxcodesid      = "555538434000189911",
-										useqtydecimals  = 0,
-										regional        = false,
-										active          = true,
-										maxdiscperc1    = 100,
-										maxdiscperc2    = 100,
-										serialtype      = 0,
-										lottype         = 0,
-										kittype         = 0,
-										tradediscpercent= 0,
-										activestoresid  = "555444605000106428",
+										cost                = 0,
+										spif                = 0,
+										taxcodesid          = "555538434000189911",
+										useqtydecimals      = 0,
+										regional            = false,
+										active              = true,
+										maxdiscperc1        = 100,
+										maxdiscperc2        = 100,
+										serialtype          = 0,
+										lottype             = 0,
+										kittype             = 0,
+										tradediscpercent    = 0,
+										activestoresid      = "555444605000106428",
 										activepricelevelsid = "555357012000134500",
 										activeseasonsid     = "555357012000192512",
 										actstrprice         = 0,
 										actstrpricewt       = 0,
 										actstrohqty         = 0,
-										dcscode             = "1  1  1"
+										dcscode             = "1  1  1",
 
-										, data = new[]
+										invnextend = new[]
 										{
 											new
 											{
-													udf6_string         = row["STYLE_CD"],		// BRAND_CD
-													udf8_string         = row["SEASON_CD"],		// SEASON_CD
-													udf9_string         = row["AFFILIATE"],		// AFFILIATE
-													udf10_string        = row["CONSUMER_CD"],	// CONSUMER_CD
-													udf12_string        = row["CLASS_CD"],		// CLASS_CD
+												udf6string   = row["BRAND_CD"]?.ToString(),
+												udf10string  = row["CONSUMER_CD"]?.ToString(),
+												udf2string   = row["PROD_CAT_CD"]?.ToString(),
+												udf12string  = row["CLASS_CD"]?.ToString(),
+												udf14string  = row["SUB_CLASS_CD"]?.ToString(),
+												udf8string   = row["SEASON_CD"]?.ToString(),
+												udf9string   = row["AFFILIATE"]?.ToString(),
+												udf5_string  = row["DEMAND_NM"]?.ToString(),
 											}
 										}
 									}
