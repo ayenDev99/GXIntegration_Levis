@@ -1,0 +1,234 @@
+﻿using GXIntegration_Levis.Helpers;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using JsonFormatting = Newtonsoft.Json.Formatting;
+
+namespace GXIntegration_Levis.InboundHandlers
+{
+	public class InboundEmployee
+	{
+		private readonly GlobalInbound globalInbound = new GlobalInbound();
+
+		public async Task RunInventorySyncAsync()
+		{
+			try
+			{
+				// *** Call authentication first
+				var config = XDocument.Load("config.xml");
+
+				// Read Prism config values
+				string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
+				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
+				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
+				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
+
+				Logger.Log("Credentials : ...");
+				Logger.Log("Address : " + prismAddress);
+				Logger.Log("Username : " + prismUsername);
+				Logger.Log("Password : " + prismPassword);
+				Logger.Log("Workstation Name : " + workstationName);
+				Logger.Log("--------------------------------------------------------------------------");
+
+				Logger.Log("Starting inventory sync...");
+				
+				string session = await globalInbound.Authenticate(
+					prismAddress, prismUsername, prismPassword, workstationName);
+
+				if (string.IsNullOrEmpty(session))
+				{
+					Logger.Log("Authentication failed.");
+					Console.WriteLine("Authentication failed.");
+					return;
+				}
+
+				Logger.Log("Authenticated. Session: " + session);
+				Console.WriteLine(session);
+
+				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+				string today = DateTime.Now.ToString("yyyyMMdd");
+				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
+
+				// Create directory if it does not exist
+				if (!Directory.Exists(inboundDir))
+				{
+					Directory.CreateDirectory(inboundDir);
+					Logger.Log("INBOUND folder created : " + inboundDir);
+				}
+
+				// Find all files that start with LSPI_ITEM_
+				string[] files = Directory.GetFiles(inboundDir, "LSPI_ITEM_*.*");
+
+				Logger.Log("Files to Processed--------------------------------------------------------");
+				foreach (string file in files)
+				{
+					string fileName = Path.GetFileName(file); // extracts just the file name
+					Console.WriteLine(fileName);
+					Logger.Log(fileName);
+				}
+				Logger.Log("--------------------------------------------------------------------------");
+
+
+				foreach (string file in files)
+				{
+					var result = BuildInventorySnapshot(file);
+					Logger.Log($"Snapshot loaded. Rows found: {result.Count}");
+
+					foreach (var row in result)
+					{
+						foreach (var kv in row)
+						{
+							//Console.WriteLine($"{kv.Key}: {kv.Value}");
+						}
+
+						// Build payload for this specific row
+						var payload = new
+						{
+							data = new[]
+							{
+							new
+							{
+								OriginApplication = "RProPrismWeb",
+								PrimaryItemDefinition = new
+								{
+									dcssid       = "556255621000149144",
+									vendsid      = (string)null,
+									description1 = row["PRODUCT_CD"],
+									description2 = row["STYLE_CD"],
+									attribute    = row["SIZE_DIM2"],	// INSEAM
+									itemsize     = row["SIZE_DIM1"]		// Size
+								},
+								InventoryItems = new[]
+								{
+									new
+									{
+										sbssid          = "555356986000134257",
+										dcssid          = "556255621000149144",
+
+										description1        = row["PRODUCT_CD"],	// PRODUCT_CD	| description1
+										long_description    = row["PRODUCT_NM"],	// PRODUCT_NM	| long_description
+										description2        = row["STYLE_CD"],		// STYLE_CD		| description2
+										// STYLE_NAME
+										// BRAND_CD
+										// CONSUMER_CD
+										// PROD_CAT_CD
+										// CLASS_CD
+										// SUB_CLASS_CD
+										// SEASON_CD
+										alu                 = row["PROD_SKU"],		// PROD_SKU		| alu
+										itemsize            = row["SIZE_DIM1"],		//	SIZE_DIM1	| Size
+										attribute           = row["SIZE_DIM2"],		//	SIZE_DIM2 	| INSEAM
+										upc                 = row["PROD_GTIN"],		// PROD_GTIN
+										description4        = row["PROD_JAN"],		// PROD_JAN
+										// AFFILIATE
+										text1               = row["SAP_TAX_CD"],	// SAP_TAX_CD
+										udf5_string         = row["DEMAND_NM"],		// DEMAND_NM
+										// BRAND_NM
+										// SUBCLASS
+										// PARTNER
+										// CONSUMER_NM
+										// PROD_CAT_NM
+										// CLASS_NM
+										// VENDOR_NM
+										cost            = 0,
+										spif            = 0,
+										taxcodesid      = "555538434000189911",
+										useqtydecimals  = 0,
+										regional        = false,
+										active          = true,
+										maxdiscperc1    = 100,
+										maxdiscperc2    = 100,
+										serialtype      = 0,
+										lottype         = 0,
+										kittype         = 0,
+										tradediscpercent= 0,
+										activestoresid  = "555444605000106428",
+										activepricelevelsid = "555357012000134500",
+										activeseasonsid     = "555357012000192512",
+										actstrprice         = 0,
+										actstrpricewt       = 0,
+										actstrohqty         = 0,
+										dcscode             = "1  1  1"
+									}
+								},
+								UpdateStyleDefinition = false,
+								UpdateStyleCost       = false,
+								UpdateStylePrice      = false
+							}
+						}
+						};
+
+						var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+
+						Console.WriteLine("Payload:");
+						Console.WriteLine(json);
+						//Logger.Log("Payload built:\n" + json);
+
+						string responseJson = GlobalInbound.CallPrismAPI(
+												session,
+												prismAddress,
+												"/api/backoffice/inventory?action=InventorySaveItems",
+												json,
+												out bool issuccessful,
+												"POST");
+
+						//string responseJson = globalInbound.CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
+						Console.WriteLine("Response: " + responseJson);
+					}
+				}
+
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in RunInventorySyncAsync: {ex.Message}");
+				return;
+			}
+		}
+
+		private List<Dictionary<string, string>> BuildInventorySnapshot(string filePath)
+		{
+			var result = new List<Dictionary<string, string>>();
+
+			try
+			{
+				var lines = File.ReadAllLines(filePath);
+				if (lines.Length == 0) return result;
+
+				// First line = header
+				var headers = lines[0].Split('^');
+
+				foreach (var line in lines.Skip(1))
+				{
+					var parts = line.Split('^');
+
+					var rowDict = new Dictionary<string, string>();
+
+					for (int i = 0; i < headers.Length; i++)
+					{
+						string header = headers[i];
+						string value = (i < parts.Length ? parts[i] : string.Empty);
+						rowDict[header] = value;
+					}
+
+					// add custom fields if you want
+					rowDict["UNITCOUNT_SIGN"] = "UNITCOUNT:";
+
+					result.Add(rowDict);
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error in BuildInventorySnapshot: {ex.Message}");
+			}
+
+			return result;
+		}
+
+
+	}
+}

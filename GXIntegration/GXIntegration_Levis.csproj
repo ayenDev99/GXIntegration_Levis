@@ -136,6 +136,8 @@
   <ItemGroup>
     <Compile Include="Helpers\GlobalHelper.cs" />
     <Compile Include="Helpers\TimeHelper.cs" />
+    <Compile Include="InboundHandlers\GlobalInbound.cs" />
+    <Compile Include="InboundHandlers\InboundEmployee.cs" />
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
