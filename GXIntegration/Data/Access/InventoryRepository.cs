@@ -55,11 +55,14 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
 						LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
 						WHERE 
-							ISI.active = 1 AND
-							TRUNC(ISI.post_date) BETWEEN 
-							TO_DATE('01-MAR-25', 'DD-MON-YY') AND 
-							TO_DATE('31-MAR-25', 'DD-MON-YY')
+							TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
+							AND ISI.active = 1
 					";
+
+					//TRUNC(ISI.post_date) BETWEEN
+					//		TO_DATE('01-MAR-25', 'DD-MON-YY') AND
+					//		TO_DATE('31-MAR-25', 'DD-MON-YY')
+
 
 					return (await connection.QueryAsync<InventoryModel>(sql, new { CreatedDate = date })).ToList();
 				}

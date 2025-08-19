@@ -67,8 +67,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND D.STATUS = 4
 								AND D.RECEIPT_TYPE IN :ReceiptTypes
 								AND D.DOC_NO IS NOT NULL
-								AND TRUNC(D.CREATED_DATETIME) BETWEEN TO_DATE('2020-03-01', 'YYYY-MM-DD')
-								AND TO_DATE('2025-03-31', 'YYYY-MM-DD')
+								AND TRUNC(D.POST_DATE) BETWEEN DATE '2024-01-01' AND DATE '2024-02-17'
 							ORDER BY  
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
@@ -77,7 +76,7 @@ namespace GXIntegration_Levis.Data.Access
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{

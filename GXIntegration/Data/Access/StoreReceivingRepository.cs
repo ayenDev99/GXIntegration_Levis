@@ -33,7 +33,7 @@ namespace GXIntegration_Levis.Data.Access
 								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
 								, VOU.CREATED_DATETIME	        AS BeginDateTime
 								, VOU.POST_DATE                 AS EndDateTime
-								, VOU.CLERK_SID			        AS OperatorId
+								, EMPLOYEE.EMPL_NAME	        AS OperatorId
 								, C.ALPHABETIC_CODE             AS CurrencyCode
 								, REGION.REGION_NAME	        AS Region
 								, COUNTRY.COUNTRY_CODE          AS Country
@@ -60,7 +60,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ''							AS PostedCount
 								, ''							AS RecordCreationType
 								, ''							AS StatusCode
-								, VI.QTY							AS QuantityOrdered
+								, VI.QTY						AS QuantityOrdered
 								, ''							AS QuantityReceived
 								, ''							AS CartonNumber
 								, ''							AS Description
@@ -83,15 +83,15 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
-								TRUNC(VOU.CREATED_DATETIME) BETWEEN DATE '2020-08-01' AND DATE '2025-08-07'
+								TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
 								AND VOU.VOU_CLASS = 0
 								AND VOU.VOU_TYPE = 0
 								AND VOU.SLIP_FLAG = 1
-							--  AND VOU.STATUS = 4
+								AND VOU.STATUS = 4
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{

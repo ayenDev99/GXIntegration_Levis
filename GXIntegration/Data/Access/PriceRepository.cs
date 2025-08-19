@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = RPS.ADJ_ITEM.ITEM_SID
 						LEFT JOIN RPS.PRICE_LEVEL PLVL		ON PLVL.SID = ADJ.PRICE_LVL_SID
 						WHERE
-							TRUNC(ADJ.CREATED_DATETIME) BETWEEN DATE '2025-01-01' AND DATE '2025-08-07'
+							TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
 						";
 
 					return (await connection.QueryAsync<PriceModel>(sql, new { CreatedDate = date })).ToList();

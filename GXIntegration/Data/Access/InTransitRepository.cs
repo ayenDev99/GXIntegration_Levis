@@ -26,12 +26,12 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
 						SELECT
-							ISI.DESCRIPTION1 AS ProductCode
-							, ISI.ALU AS Sku
-							, ISI.ITEM_SIZE AS Waist
-							, ISI.ATTRIBUTE AS Inseam
-							, TO_CHAR(STORE.ADDRESS4) AS StoreCode
-							, VOU_ITEM.QTY AS Quantity
+							ISI.DESCRIPTION1			AS ProductCode
+							, ISI.ALU					AS Sku
+							, ISI.ITEM_SIZE				AS Waist
+							, ISI.ATTRIBUTE				AS Inseam
+							, TO_CHAR(STORE.ADDRESS4)	AS StoreCode
+							, VOU_ITEM.QTY				AS Quantity
 						FROM
 						  RPS.VOUCHER VOU
 						LEFT JOIN RPS.VOU_ITEM VOU_ITEM ON VOU.SID = RPS.VOU_ITEM.VOU_SID 
@@ -43,12 +43,14 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.REGION ON RPS.REGION.SID = RPS.REGION_SUBSIDIARY.REGION_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = RPS.VOU_ITEM.ITEM_SID
 						WHERE 
-							VOU.STATUS IN (1, 3)
+							TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
+							AND VOU.STATUS IN (1, 3)
 							AND ISI.active = 1
-							AND TRUNC(VOU.POST_DATE) BETWEEN 
-								TO_DATE('01-JAN-25', 'DD-MON-YY') AND 
-								TO_DATE('31-DEC-25', 'DD-MON-YY')
 					";
+
+					//AND TRUNC(VOU.POST_DATE) BETWEEN
+					//			TO_DATE('01-JAN-25', 'DD-MON-YY') AND
+					//			TO_DATE('31-DEC-25', 'DD-MON-YY')
 
 					return (await connection.QueryAsync<InTransitModel>(sql, new { CreatedDate = date })).ToList();
 				}
