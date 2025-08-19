@@ -129,7 +129,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 						GlobalOutbound.WriteCDataElement(writer, "DocumentStatus", vouItems.DocumentStatus);
 						GlobalOutbound.WriteCDataElement(writer, "DocumentID", vouItems.DocumentId);
-						writer.WriteElementString("RetailStoreID", string.Empty);
+						writer.WriteElementString("RetailStoreID", storeGroup.Key);
 						writer.WriteElementString("OriginatorID", string.Empty);
 						GlobalOutbound.WriteCDataElement(writer, "OriginatorName", vouItems.OriginatorName);
 						GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", "SHIPPING_RTV_FROM_DAMAGED");

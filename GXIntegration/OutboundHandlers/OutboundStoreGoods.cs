@@ -130,7 +130,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 						GlobalOutbound.WriteCDataElement(writer, "DocumentStatus", vouItems.DocumentStatus);
 						GlobalOutbound.WriteCDataElement(writer, "DocumentID", vouItems.DocumentId);
-						GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", "");
+						GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
 						GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", "RECEIVING_ASN");
 						GlobalOutbound.WriteCDataElement(writer, "DocumentType", "RECEIVING");
 						GlobalOutbound.WriteCDataElement(writer, "DocumentSubType", "ASN");

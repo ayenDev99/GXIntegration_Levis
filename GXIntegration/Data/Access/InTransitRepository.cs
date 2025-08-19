@@ -30,7 +30,7 @@ namespace GXIntegration_Levis.Data.Access
 							, ISI.ALU AS Sku
 							, ISI.ITEM_SIZE AS Waist
 							, ISI.ATTRIBUTE AS Inseam
-							, TO_CHAR(STORE.ADDRESS5) AS StoreCode
+							, TO_CHAR(STORE.ADDRESS4) AS StoreCode
 							, VOU_ITEM.QTY AS Quantity
 						FROM
 						  RPS.VOUCHER VOU

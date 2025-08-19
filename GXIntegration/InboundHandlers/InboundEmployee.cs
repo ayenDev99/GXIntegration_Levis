@@ -99,7 +99,6 @@ namespace GXIntegration_Levis.InboundHandlers
 									dcssid       = "556255621000149144",
 									vendsid      = (string)null,
 									description1 = row["PRODUCT_CD"],
-									description2 = row["STYLE_CD"],
 									attribute    = row["SIZE_DIM2"],	// INSEAM
 									itemsize     = row["SIZE_DIM1"]		// Size
 								},
@@ -111,30 +110,24 @@ namespace GXIntegration_Levis.InboundHandlers
 										dcssid          = "556255621000149144",
 
 										description1        = row["PRODUCT_CD"],	// PRODUCT_CD	| description1
-										long_description    = row["PRODUCT_NM"],	// PRODUCT_NM	| long_description
-										description2        = row["STYLE_CD"],		// STYLE_CD		| description2
+										description2		= row["PRODUCT_NM"],	// PRODUCT_NM	| long_description
+										description3        = row["STYLE_CD"],		// STYLE_CD		| description2
 										// STYLE_NAME
-										// BRAND_CD
-										// CONSUMER_CD
-										// PROD_CAT_CD
-										// CLASS_CD
-										// SUB_CLASS_CD
-										// SEASON_CD
+									
+										
+										udf2_string			= row["PROD_CAT_CD"],	// PROD_CAT_CD
+										
+										udf14_string        = row["SUB_CLASS_CD"],	// SUB_CLASS_CD
+										
 										alu                 = row["PROD_SKU"],		// PROD_SKU		| alu
-										itemsize            = row["SIZE_DIM1"],		//	SIZE_DIM1	| Size
-										attribute           = row["SIZE_DIM2"],		//	SIZE_DIM2 	| INSEAM
+										itemsize            = row["SIZE_DIM1"],		// SIZE_DIM1	| Size
+										attribute           = row["SIZE_DIM2"],		// SIZE_DIM2 	| INSEAM
 										upc                 = row["PROD_GTIN"],		// PROD_GTIN
 										description4        = row["PROD_JAN"],		// PROD_JAN
-										// AFFILIATE
+										
 										text1               = row["SAP_TAX_CD"],	// SAP_TAX_CD
 										udf5_string         = row["DEMAND_NM"],		// DEMAND_NM
-										// BRAND_NM
-										// SUBCLASS
-										// PARTNER
-										// CONSUMER_NM
-										// PROD_CAT_NM
-										// CLASS_NM
-										// VENDOR_NM
+
 										cost            = 0,
 										spif            = 0,
 										taxcodesid      = "555538434000189911",
@@ -154,6 +147,18 @@ namespace GXIntegration_Levis.InboundHandlers
 										actstrpricewt       = 0,
 										actstrohqty         = 0,
 										dcscode             = "1  1  1"
+
+										, data = new[]
+										{
+											new
+											{
+													udf6_string         = row["STYLE_CD"],		// BRAND_CD
+													udf8_string         = row["SEASON_CD"],		// SEASON_CD
+													udf9_string         = row["AFFILIATE"],		// AFFILIATE
+													udf10_string        = row["CONSUMER_CD"],	// CONSUMER_CD
+													udf12_string        = row["CLASS_CD"],		// CLASS_CD
+											}
+										}
 									}
 								},
 								UpdateStyleDefinition = false,

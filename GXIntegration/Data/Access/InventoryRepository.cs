@@ -30,22 +30,22 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
 						SELECT 
-							CT.COUNTRY_CODE AS CurrencyId
-							, TO_CHAR(S.ADDRESS5) AS StoreCode
-							, ISI.DESCRIPTION1 AS ProductCode
-							, ISI.ALU AS Sku
-							, ISI.ITEM_SIZE AS Waist
-							, ISI.ATTRIBUTE AS Inseam
-							, ISI.LAST_RCVD_DATE AS LastMovementDate
+							CT.COUNTRY_CODE						AS CurrencyId
+							, TO_CHAR(S.ADDRESS4)				AS StoreCode
+							, ISI.DESCRIPTION1					AS ProductCode
+							, ISI.ALU							AS Sku
+							, ISI.ITEM_SIZE						AS Waist
+							, ISI.ATTRIBUTE						AS Inseam
+							, ISI.LAST_RCVD_DATE				AS LastMovementDate
 							, CASE 
 								WHEN ISIQ.QTY >= 0 THEN 'P'
 								WHEN ISIQ.QTY < 0 THEN 'N'
-							  END AS QuantitySign
-							, ISIQ.QTY AS Quantity
-							, ISI.COST AS RetailPrice
-							, SUBSTR(CT.COUNTRY_CODE, 1, 2) AS CountryCode
-							, ISI.UPC AS ManufactureUpc
-							, ISI.UDF5_STRING AS Division
+							  END								AS QuantitySign
+							, ISIQ.QTY							AS Quantity
+							, ISI.COST							AS RetailPrice
+							, SUBSTR(CT.COUNTRY_CODE, 1, 2)		AS CountryCode
+							, ISI.UPC							AS ManufactureUpc
+							, ISI.UDF5_STRING					AS Division
 
 
 						FROM rps.INVN_SBS_ITEM ISI

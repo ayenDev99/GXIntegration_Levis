@@ -29,30 +29,22 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
 						SELECT
-						  '1' AS SalesOrg,
-						  ISB.DESCRIPTION1 AS PC9,
-						  PLVL.PRICE_LVL as PriceLevel,
-						  'REG' AS ConditionType,
-						  ADJ.CREATED_DATETIME AS PriceStartDate,
-						  '01-JAN-99' AS PriceEndDate,
-						  RPS.ADJ_ITEM.PRICE as Price,
-						  'REG' AS Flag
+						  '1'						AS SalesOrg
+						  , ISB.DESCRIPTION1		AS PC9
+						  , PLVL.PRICE_LVL			AS PriceLevel
+						  , 'REG'					AS ConditionType
+						  , ADJ.CREATED_DATETIME	AS PriceStartDate
+						  , '01-JAN-99'				AS PriceEndDate
+						  , RPS.ADJ_ITEM.PRICE		AS Price
+						  , 'REG'					AS Flag
 						FROM
 						  RPS.ADJUSTMENT ADJ
-						LEFT JOIN RPS.ADJ_ITEM
-						ON
-						  ADJ.SID = RPS.ADJ_ITEM.ADJ_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISB
-						ON
-						  ISB.SID = RPS.ADJ_ITEM.ITEM_SID
-						LEFT JOIN RPS.PRICE_LEVEL PLVL
-						ON
-						  PLVL.SID = ADJ.PRICE_LVL_SID
+						LEFT JOIN RPS.ADJ_ITEM				ON ADJ.SID = RPS.ADJ_ITEM.ADJ_SID
+						LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = RPS.ADJ_ITEM.ITEM_SID
+						LEFT JOIN RPS.PRICE_LEVEL PLVL		ON PLVL.SID = ADJ.PRICE_LVL_SID
 						WHERE
-						TRUNC(ADJ.CREATED_DATETIME) BETWEEN DATE '2025-01-01' AND DATE '2025-08-07'
+							TRUNC(ADJ.CREATED_DATETIME) BETWEEN DATE '2025-01-01' AND DATE '2025-08-07'
 						";
-
-
 
 					return (await connection.QueryAsync<PriceModel>(sql, new { CreatedDate = date })).ToList();
 				}

@@ -31,7 +31,7 @@ namespace GXIntegration_Levis.Data.Access
 					string sql = @"
 							SELECT 
 								D.SID					AS DocSid
-								, S.STORE_NO			AS StoreNo
+								, TO_CHAR(S.ADDRESS4)   AS StoreCode
 								, S.ADDRESS5			AS AlternateStoreId
 								, D.WORKSTATION_NO		AS WorkstationNo
 								, D.DOC_NO				AS DocNo

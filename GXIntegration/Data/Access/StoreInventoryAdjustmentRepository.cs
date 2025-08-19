@@ -27,7 +27,7 @@ namespace GXIntegration_Levis.Data.Access
 					string sql = @"
 							SELECT
 								ADJ.SID							AS AdjSid
-								, S.STORE_CODE                  AS StoreCode
+								, TO_CHAR(S.ADDRESS4)			AS StoreCode
 								, WS.WORKSTATION				AS WorkstationNo
 								, ADJ.ADJ_NO			        AS SequenceNo
 								, ADJ.CREATED_DATETIME			AS BusinessDayDate
