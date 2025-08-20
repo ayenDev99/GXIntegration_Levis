@@ -9,7 +9,7 @@ namespace GXIntegration_Levis.Model
 	public class StoreReturnModel
 	{
 		public string DocSid { get; set; }
-		public string StoreNo { get; set; }
+		public string StoreCode { get; set; }
 		public string AlternateStoreId { get; set; }
 		public string WorkstationNo { get; set; }
 		public string DocNo { get; set; }

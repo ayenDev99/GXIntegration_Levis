@@ -138,6 +138,8 @@
     <Compile Include="Helpers\TimeHelper.cs" />
     <Compile Include="InboundHandlers\GlobalInbound.cs" />
     <Compile Include="InboundHandlers\InboundEmployee.cs" />
+    <Compile Include="InboundHandlers\InboundItem.cs" />
+    <Compile Include="InboundHandlers\InboundHierarchy.cs" />
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>

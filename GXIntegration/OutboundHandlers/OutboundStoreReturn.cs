@@ -101,7 +101,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, "1");
 
 			// Group by store, workstation, transaction
-			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.StoreNo))
+			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.StoreCode))
 			{
 				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
 

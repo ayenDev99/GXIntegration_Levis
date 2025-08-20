@@ -85,9 +85,11 @@ namespace GXIntegration_Levis.Data.Access
 							WHERE
 								TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
 								AND VOU.VOU_CLASS = 0
-								AND VOU.VOU_TYPE = 0
+								-- AND VOU.VOU_TYPE = 0
 								AND VOU.SLIP_FLAG = 1
 								AND VOU.STATUS = 4
+								AND S.ACTIVE = 1
+
 					";
 
 					//FETCH FIRST 1 ROWS ONLY

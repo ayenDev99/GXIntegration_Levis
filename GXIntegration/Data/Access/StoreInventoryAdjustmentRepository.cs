@@ -34,7 +34,6 @@ namespace GXIntegration_Levis.Data.Access
 								, ADJ.CREATED_DATETIME	        AS BeginDateTime
 								, ADJ.POST_DATE                 AS EndDateTime
 								, EMP.EMPL_NAME			        AS OperatorId
-
 								, CURRENCY.ALPHABETIC_CODE      AS CurrencyCode
 								, REGION.REGION_NAME	        AS Region
 								, COUNTRY.COUNTRY_CODE          AS Country
@@ -71,10 +70,10 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.ADJ_COMMENT			ON ADJ.SID = ADJ_COMMENT.ADJ_SID
 							LEFT JOIN RPS.EMPLOYEE EMP			ON EMP.SID = ADJ.CLERK_SID
 							LEFT JOIN RPS.WORKSTATION WS		ON WS.SID = ADJ.WORKSTATION_SID
-
 							WHERE
-								TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
+								TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
 								AND ADJ.ADJ_TYPE = 0
+								AND S.ACTIVE = 1
 							ORDER BY 
 								ADJ.POST_DATE DESC
 					";

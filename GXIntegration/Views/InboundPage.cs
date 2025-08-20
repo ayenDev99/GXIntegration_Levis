@@ -26,7 +26,7 @@ namespace GXIntegration_Levis.Views
 		private GunaDataGridView guna1DataGridView1;
 		private GunaButton btnSaveToPrism;
 
-		// ✅ Fixed naming (singular)
+		private readonly InboundItem inboundItem = new InboundItem();
 		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
 
 		public InboundPage()
@@ -106,12 +106,25 @@ namespace GXIntegration_Levis.Views
 				text: "Save Data to Prism",
 				location: new Point(250, 250),
 
-				// ✅ Correct reference (singular)
-				clickAction: async () => await inboundEmployee.RunInventorySyncAsync()
+				clickAction: async () =>
+				{
+					try
+					{
+						//await inboundItem.RunItemSyncAsync();
+						await inboundEmployee.RunHierarchySyncAsync();
+						MessageBox.Show("All sync operations completed successfully!");
+					}
+					catch (Exception ex)
+					{
+						MessageBox.Show($"Error: {ex.Message}");
+					}
+				}
+
 			);
 
 			this.Controls.Add(btnSaveToPrism);
 		}
+
 
 		// ***************************************************
 		// Handlers/Helpers
