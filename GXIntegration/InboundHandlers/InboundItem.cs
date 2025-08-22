@@ -193,7 +193,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				return;
 			}
 		}
-
 		private List<Dictionary<string, string>> BuildItemCollection(string filePath)
 		{
 			var result = new List<Dictionary<string, string>>();

@@ -134,6 +134,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\Access\InboundHierarchyRepository.cs" />
     <Compile Include="Helpers\GlobalHelper.cs" />
     <Compile Include="Helpers\TimeHelper.cs" />
     <Compile Include="InboundHandlers\GlobalInbound.cs" />

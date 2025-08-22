@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunHierarchySyncAsync()
+		public async Task RunEmployeeSyncAsync()
 		{
 			try
 			{
@@ -190,7 +190,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in RunHierarchySyncAsync: {ex.Message}");
+				Console.WriteLine($"Error in RunEmployeeSyncAsync: {ex.Message}");
 				return;
 			}
 		}

@@ -26,13 +26,20 @@ namespace GXIntegration_Levis.Views
 		private GunaDataGridView guna1DataGridView1;
 		private GunaButton btnSaveToPrism;
 
-		private readonly InboundItem inboundItem = new InboundItem();
-		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
+		private InboundHierarchyRepository _inboundHierarchyRepository;
 
+
+		//private readonly InboundEmployee inboundEmployee = new InboundEmployee();
+		private readonly InboundItem inboundItem = new InboundItem();
+		private readonly InboundHierarchy inboundHierarchy = new InboundHierarchy();
+		
 		public InboundPage()
 		{
 			config = GXConfig.Load("config.xml");
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
+
+			_inboundHierarchyRepository = new InboundHierarchyRepository(config.MainDbConnection);
+
 
 			InitializeComponent();
 			InitializeGrid();
@@ -95,7 +102,7 @@ namespace GXIntegration_Levis.Views
 			AddRow("2", "ITEM DETAILS", "LSPI_ITEM_[yyyymmddhhmmss]", ".txt", "caret ( ^ )");
 			AddRow("3", "HIERARCHY DETAILS", "LSPI_HIERARCHY_[yyyymmddhhmmss]", ".txt", "caret ( ^ )");
 			AddRow("4", "ADVANCE SHIPPING NOTICE (ASN) DETAILS", "LSPI_PRTRDX_[yyyymmddhhmmss]", ".txt", "{^^}");
-			AddRow("5", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]", ".txt", "{^^}");
+			AddRow("5", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]",".txt", "{^^}");
 
 			this.Controls.Add(guna1DataGridView1);
 		}
@@ -110,8 +117,10 @@ namespace GXIntegration_Levis.Views
 				{
 					try
 					{
+						//await inboundEmployee.RunEmployeeSyncAsync();
 						//await inboundItem.RunItemSyncAsync();
-						await inboundEmployee.RunHierarchySyncAsync();
+						await inboundHierarchy.RunHierarchySyncAsync(_inboundHierarchyRepository);
+						
 						MessageBox.Show("All sync operations completed successfully!");
 					}
 					catch (Exception ex)
