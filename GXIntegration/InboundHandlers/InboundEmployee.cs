@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
-using JsonFormatting = Newtonsoft.Json.Formatting;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Xml.Linq;
-
+using JsonFormatting = Newtonsoft.Json.Formatting;
+using Microsoft.VisualBasic.FileIO;
 
 namespace GXIntegration_Levis.InboundHandlers
 {
@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunEmployeeSyncAsync()
+		public async Task RunEmployeeSyncAsync(PrismRepository repository)
 		{
 			try
 			{
@@ -80,112 +80,107 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 				Logger.Log("--------------------------------------------------------------------------");
 
+				foreach (string file in files)
+				{
+					var result = BuildItemCollection(file);
+					Logger.Log($"Snapshot loaded. Rows found: {result.Count}");
 
-				//foreach (string file in files)
-				//{
-				//	var result = BuildItemCollection(file);
-				//	Logger.Log($"Snapshot loaded. Rows found: {result.Count}");
+					foreach (var row in result)
+					{
+						foreach (var kv in row)
+						{
+							Console.WriteLine($"{kv.Key}: {kv.Value}");
+						}
 
-				//	foreach (var row in result)
-				//	{
-				//		foreach (var kv in row)
-				//		{
-				//			//Console.WriteLine($"{kv.Key}: {kv.Value}");
-				//		}
+						var prism_store = await repository.GetRpsStore(row["StoreCode"]?.ToString());
+						Console.WriteLine("SID :" + (prism_store ?? ""));
 
-				//		// Build payload for this specific row
-				//		var payload = new
-				//		{
-				//			data = new[]
-				//			{
-				//			new
-				//			{
-				//				OriginApplication = "RProPrismWeb",
-				//				PrimaryItemDefinition = new
-				//				{
-				//					dcssid       = "556255621000149144",
-				//					vendsid      = (string)null,
-				//					description1 = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
-				//					attribute    = row["SIZE_DIM2"],
-				//					itemsize     = row["SIZE_DIM1"]
-				//				},
-				//				InventoryItems = new[]
-				//				{
-				//					new
-				//					{
-				//						sbssid              = "555356986000134257",
-				//						dcssid              = "556255621000149144",
-				//						description1        = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
-				//						description2        = row["PRODUCT_NM"]?.ToString(),
-				//						description3        = row["STYLE_CD"]?.ToString(),
-				//						alu                 = row["PROD_SKU"]?.ToString(),
-				//						itemsize            = row["SIZE_DIM1"]?.ToString(),
-				//						attribute           = row["SIZE_DIM2"]?.ToString(),
-				//						upc                 = row["PROD_GTIN"]?.ToString(),
-				//						description4        = row["PROD_JAN"]?.ToString(),
-				//						text1               = row["SAP_TAX_CD"]?.ToString(),
+						var employeeData = new Dictionary<string, object>
+						{
+							["active"]						= Convert.ToBoolean(row["Active"])
+							, ["basestoresid"]				= prism_store?.SID.ToString() ?? null
+							, ["firstname"]					= row["Firstname"]?.ToString()
+							, ["lastname"]					= row["Lastname"]?.ToString()
+							, ["hiredate"]					= row["HireDate"]?.ToString()
+							, ["jobsid"]					= await repository.GetRpsJobSid(row["JobTitle"]?.ToString())
+							, ["jobtitle"]					= "Manager"
+							, ["originapplication"]			= "RProPrismWeb"
+							, ["origsbssid"]				= "555356986000134257"
+							, ["status"]					= 1
+							, ["useractive"]				= true
+							, ["username"]					= row["UserName"]?.ToString()
+							, ["employeesubsidiary"]		= new[]
+								{
+									new {
+										accessallstores		= true
+										, originapplication = "PrismWeb"
+										, sbssid			= "555356986000134257"
+									}
+								}
+							, ["empladdress"] = new[]
+								{
+									new {
+										active = true
+										, address1			= row["WorkAddress"]?.ToString()
+										, address2			= row["WorkCity"]?.ToString()
+										, address3			= row["WorkState"]?.ToString()
+										, address4			= row["WorkCountry"]?.ToString()
+										, postalcode		= row["WorkZipCode"]?.ToString()
+									}
+								}
+							, ["employeeextend"] = new[]
+								{
+									new {
+										udf6string			= row["EffectiveStartDate"]?.ToString()
+										, udf7string		= row["EmploymentStatus"]?.ToString()
+										, udf10string		= row["EmployeeID"]?.ToString()
+										, udf11string		= row["Gender"]?.ToString()
+										, udf12string		= row["Language"]?.ToString()
+									}
+								}
+						};
 
-				//						cost                = 0,
-				//						spif                = 0,
-				//						taxcodesid          = "555538434000189911",
-				//						useqtydecimals      = 0,
-				//						regional            = false,
-				//						active              = true,
-				//						maxdiscperc1        = 100,
-				//						maxdiscperc2        = 100,
-				//						serialtype          = 0,
-				//						lottype             = 0,
-				//						kittype             = 0,
-				//						tradediscpercent    = 0,
-				//						activestoresid      = "555444605000106428",
-				//						activepricelevelsid = "555357012000134500",
-				//						activeseasonsid     = "555357012000192512",
-				//						actstrprice         = 0,
-				//						actstrpricewt       = 0,
-				//						actstrohqty         = 0,
-				//						dcscode             = "1  1  1",
+						// Conditionally add 'emplemail'
+						string workerEmail = row["WorkerEmail"]?.ToString();
+						if (!string.IsNullOrWhiteSpace(workerEmail))
+						{
+							employeeData["emplemail"] = new[]
+							{
+								new {
+									emailaddress = workerEmail
+								}
+							};
+						}
 
-				//						invnextend = new[]
-				//						{
-				//							new
-				//							{
-				//								udf6string   = row["BRAND_CD"]?.ToString(),
-				//								udf10string  = row["CONSUMER_CD"]?.ToString(),
-				//								udf2string   = row["PROD_CAT_CD"]?.ToString(),
-				//								udf12string  = row["CLASS_CD"]?.ToString(),
-				//								udf14string  = row["SUB_CLASS_CD"]?.ToString(),
-				//								udf8string   = row["SEASON_CD"]?.ToString(),
-				//								udf9string   = row["AFFILIATE"]?.ToString(),
-				//								udf5_string  = row["DEMAND_NM"]?.ToString(),
-				//							}
-				//						}
-				//					}
-				//				},
-				//				UpdateStyleDefinition = false,
-				//				UpdateStyleCost       = false,
-				//				UpdateStylePrice      = false
-				//			}
-				//		}
-				//		};
+						// Conditionally add 'emplphone'
+						string phoneNumber = row["PhoneNumber"]?.ToString();
+						if (!string.IsNullOrWhiteSpace(phoneNumber))
+						{
+							employeeData["emplphone"] = new[]
+							{
+								new {
+									emailaddress = phoneNumber
+								}
+							};
+						}
 
-				//		var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+						var payload = new { data = new[] { employeeData } };
+						var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 
-				//		Console.WriteLine("Payload:");
-				//		Console.WriteLine(json);
-				//		//Logger.Log("Payload built:\n" + json);
+						Console.WriteLine("Payload:");
+						Console.WriteLine(json);
 
-				//		string responseJson = GlobalInbound.CallPrismAPI(
-				//								session,
-				//								prismAddress,
-				//								"/api/backoffice/inventory?action=InventorySaveItems",
-				//								json,
-				//								out bool issuccessful,
-				//								"POST");
+						string responseJson = GlobalInbound.CallPrismAPI(
+												session
+												, prismAddress
+												, "/api/common/employee"
+												, json
+												, out bool issuccessful
+												, "POST");
 
-				//		//string responseJson = globalInbound.CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
-				//		Console.WriteLine("Response: " + responseJson);
-				//	}
-				//}
+						Console.WriteLine("Response: " + responseJson);
+					}
+				}
 
 			}
 			catch (Exception ex)
@@ -201,26 +196,38 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			try
 			{
-				var lines = File.ReadAllLines(filePath);
-				if (lines.Length == 0) return result;
-
-				// First line = header
-				var headers = lines[0].Split('^');
-
-				foreach (var line in lines.Skip(1))
+				using (var parser = new TextFieldParser(filePath))
 				{
-					var parts = line.Split(',');
+					parser.TextFieldType = FieldType.Delimited;
+					parser.SetDelimiters(",");
+					parser.HasFieldsEnclosedInQuotes = true;
 
-					var rowDict = new Dictionary<string, string>();
-
-					for (int i = 0; i < headers.Length; i++)
+					// Read header
+					if (!parser.EndOfData)
 					{
-						string header = headers[i];
-						string value = (i < parts.Length ? parts[i] : string.Empty);
-						rowDict[header] = value;
-					}
+						string[] headers = parser.ReadFields();
 
-					result.Add(rowDict);
+						while (!parser.EndOfData)
+						{
+							string[] fields = parser.ReadFields();
+
+							var rowDict = new Dictionary<string, string>();
+
+							for (int i = 0; i < headers.Length; i++)
+							{
+								string header = headers[i];
+								string value = (i < fields.Length ? fields[i].Trim() : string.Empty);
+								rowDict[header] = value;
+							}
+
+							if (fields.Length > headers.Length)
+							{
+								Console.WriteLine("Warning: Extra values in line.");
+							}
+
+							result.Add(rowDict);
+						}
+					}
 				}
 			}
 			catch (Exception ex)
@@ -230,7 +237,6 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			return result;
 		}
-
 
 	}
 }

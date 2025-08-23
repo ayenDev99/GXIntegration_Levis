@@ -27,15 +27,17 @@ namespace GXIntegration_Levis.Views
 		private GunaButton btnSaveToPrism;
 
 		private InboundHierarchyRepository _inboundHierarchyRepository;
+		private PrismRepository _prismRepository;
 
 
-		//private readonly InboundEmployee inboundEmployee = new InboundEmployee();
+		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
 		private readonly InboundItem inboundItem = new InboundItem();
 		private readonly InboundHierarchy inboundHierarchy = new InboundHierarchy();
 		
 		public InboundPage()
 		{
 			config = GXConfig.Load("config.xml");
+			_prismRepository = new PrismRepository(config.MainDbConnection);
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 
 			_inboundHierarchyRepository = new InboundHierarchyRepository(config.MainDbConnection);
@@ -117,10 +119,10 @@ namespace GXIntegration_Levis.Views
 				{
 					try
 					{
-						//await inboundEmployee.RunEmployeeSyncAsync();
+						await inboundEmployee.RunEmployeeSyncAsync(_prismRepository);
 						//await inboundItem.RunItemSyncAsync();
-						await inboundHierarchy.RunHierarchySyncAsync(_inboundHierarchyRepository);
-						
+						//await inboundHierarchy.RunHierarchySyncAsync(_inboundHierarchyRepository);
+
 						MessageBox.Show("All sync operations completed successfully!");
 					}
 					catch (Exception ex)
