@@ -4,9 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using JsonFormatting = Newtonsoft.Json.Formatting;
 
 namespace GXIntegration_Levis.InboundHandlers
@@ -15,70 +13,19 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunItemSyncAsync()
+		public async Task RunItemSyncAsync(string session, string inboundDir)
 		{
 			try
 			{
-				// *** Call authentication first
-				var config = XDocument.Load("config.xml");
+				Logger.Log("");
+				Logger.Log("**************************************************************************");
+				Logger.Log(">>> Starting INBOUND ITEM Sync Process...");
+				Logger.Log("**************************************************************************");
 
-				// Read Prism config values
-				string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
-				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
-				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
-				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
+				string fileNameFormat = "LSPI_ITEM_*.*";
 
-				Logger.Log("Credentials : ...");
-				Logger.Log("Address : " + prismAddress);
-				Logger.Log("Username : " + prismUsername);
-				Logger.Log("Password : " + prismPassword);
-				Logger.Log("Workstation Name : " + workstationName);
-				Logger.Log("--------------------------------------------------------------------------");
-
-				Logger.Log("Starting ITEM sync...");
-
-				string session = await globalInbound.Authenticate(
-					prismAddress, prismUsername, prismPassword, workstationName);
-
-				if (string.IsNullOrEmpty(session))
-				{
-					Logger.Log("Authentication failed.");
-					Console.WriteLine("Authentication failed.");
-					return;
-				}
-
-				Logger.Log("Authenticated. Session: " + session);
-				Console.WriteLine(session);
-
-				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string today = DateTime.Now.ToString("yyyyMMdd");
-				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
-
-				// Create directory if it does not exist
-				if (!Directory.Exists(inboundDir))
-				{
-					Directory.CreateDirectory(inboundDir);
-					Logger.Log("INBOUND folder created : " + inboundDir);
-				}
-
-				// Find all files that start with LSPI_ITEM_
-				string[] files = Directory.GetFiles(inboundDir, "LSPI_ITEM_*.*");
-
-				if (files.Length == 0)
-				{
-					Logger.Log("No LSPI_ITEM_ files found in: " + inboundDir);
-					return;
-				}
-
-				Logger.Log("Files to Processed--------------------------------------------------------");
-				foreach (string file in files)
-				{
-					string fileName = Path.GetFileName(file); // extracts just the file name
-					Console.WriteLine(fileName);
-					Logger.Log(fileName);
-				}
-				Logger.Log("--------------------------------------------------------------------------");
-
+				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
+				if (files.Count == 0) return;
 
 				foreach (string file in files)
 				{
@@ -123,7 +70,6 @@ namespace GXIntegration_Levis.InboundHandlers
 										upc                 = row["PROD_GTIN"]?.ToString(),
 										description4        = row["PROD_JAN"]?.ToString(),
 										text1               = row["SAP_TAX_CD"]?.ToString(),
-
 										cost                = 0,
 										spif                = 0,
 										taxcodesid          = "555538434000189911",
@@ -143,7 +89,6 @@ namespace GXIntegration_Levis.InboundHandlers
 										actstrpricewt       = 0,
 										actstrohqty         = 0,
 										dcscode             = "1  1  1",
-
 										invnextend = new[]
 										{
 											new
@@ -171,17 +116,15 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						Console.WriteLine("Payload:");
 						Console.WriteLine(json);
-						//Logger.Log("Payload built:\n" + json);
+						Logger.Log("Payload built:\n" + json);
 
 						string responseJson = GlobalInbound.CallPrismAPI(
 												session,
-												prismAddress,
 												"/api/backoffice/inventory?action=InventorySaveItems",
 												json,
 												out bool issuccessful,
 												"POST");
 
-						//string responseJson = globalInbound.CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
 						Console.WriteLine("Response: " + responseJson);
 					}
 				}
@@ -193,6 +136,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				return;
 			}
 		}
+		
 		private List<Dictionary<string, string>> BuildItemCollection(string filePath)
 		{
 			var result = new List<Dictionary<string, string>>();
@@ -231,8 +175,6 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			return result;
 		}
-
-
-
+	
 	}
 }

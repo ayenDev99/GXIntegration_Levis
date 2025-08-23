@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static GXIntegration_Levis.Helpers.GlobalHelper;
 
 namespace GXIntegration_Levis.InboundHandlers
@@ -14,11 +15,7 @@ namespace GXIntegration_Levis.InboundHandlers
 	
 	public class GlobalInbound
 	{
-		public async Task<string> Authenticate(
-		string prismAddress,
-		string prismUsername,
-		string prismPassword,
-		string workstationName)
+		public async Task<string> Authenticate(string prismAddress, string prismUsername, string prismPassword, string workstationName)
 		{
 			try
 			{
@@ -33,7 +30,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"[PrismHelper] Failed to get Auth-Nonce. Status: {response.StatusCode}");
+						Logger.Log($"Failed to get Auth-Nonce. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -57,7 +54,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"[PrismHelper] Login failed. Status: {response.StatusCode}");
+						Logger.Log($"Login failed. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -76,17 +73,16 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"[PrismHelper] Workstation bind failed. Status: {response.StatusCode}");
+						Logger.Log($"Workstation bind failed. Status: {response.StatusCode}");
 						return null;
 					}
 				}
 
-				Logger.Log("[PrismHelper] Authentication successful.");
 				return authSession;
 			}
 			catch (WebException ex)
 			{
-				string errorMessage = "[PrismHelper] WebException occurred.";
+				string errorMessage = "WebException occurred.";
 				if (ex.Response != null)
 				{
 					using (var reader = new StreamReader(ex.Response.GetResponseStream()))
@@ -103,20 +99,54 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[PrismHelper] Unexpected error: {ex.Message}" + ex);
+				Logger.Log($"Unexpected error: {ex.Message}" + ex);
 				return null;
 			}
 		}
 
-		public static string CallPrismAPI(
-		string auth_session,
-		string TargetHost,
-		string endpoint,
-		string obj,
-		out bool issuccessful,
-		string Method)
+		public async Task<string> AuthenticateFromConfigAsync()
 		{
-			Uri requestUri = new Uri(TargetHost + endpoint);
+			try
+			{
+				var config = XDocument.Load("config.xml");
+
+				string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
+				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
+				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
+				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
+
+				Logger.Log("Address : " + prismAddress);
+				Logger.Log("Username : " + prismUsername);
+				Logger.Log("Password : [REDACTED]");
+				Logger.Log("Workstation Name : " + workstationName);
+				Logger.Log("--------------------------------------------------------------------------");
+				Logger.Log("Starting Prism authentication...");
+
+				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
+
+				if (string.IsNullOrEmpty(session))
+				{
+					Logger.Log("❌ Authentication failed.");
+					Console.WriteLine("❌ Authentication failed.");
+					return null;
+				}
+
+				Logger.Log("Authentication successful. Session: " + session);
+				return session;
+			}
+			catch (Exception ex)
+			{
+				Logger.Log($"❌ Error during AuthenticateFromConfigAsync: {ex}");
+				return null;
+			}
+		}
+
+		public static string CallPrismAPI(string auth_session, string endpoint, string obj, out bool issuccessful, string Method)
+		{
+			var config = XDocument.Load("config.xml");
+			string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
+
+			Uri requestUri = new Uri(prismAddress + endpoint);
 			string responseContent = string.Empty;
 			issuccessful = false;
 
@@ -127,7 +157,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
 
-			Logger.Log("-------------------------------------------------------------------------------");
+			Logger.Log("--------------------------------------------------------------------------");
 			Logger.Log("Calling Prism API...");
 			Logger.Log($"URL: {requestUri}");
 			Logger.Log($"Method: {request.Method}");
@@ -203,6 +233,70 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			return responseContent;
 		}
+
+		public string EnsureInboundDirectory()
+		{
+			try
+			{
+				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+				string today = DateTime.Now.ToString("yyyyMMdd");
+				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
+
+				if (!Directory.Exists(inboundDir))
+				{
+					Directory.CreateDirectory(inboundDir);
+					Logger.Log("INBOUND folder created: " + inboundDir);
+					Console.WriteLine("Created INBOUND directory: " + inboundDir);
+				}
+				else
+				{
+					Logger.Log("INBOUND folder already exists: " + inboundDir);
+				}
+
+				return inboundDir;
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("❌ Failed to ensure INBOUND directory: " + ex);
+				Console.WriteLine("❌ Failed to create/check INBOUND directory: " + ex.Message);
+				throw;
+			}
+		}
+
+		public List<string> GetInboundFiles(string inboundDir, string filePattern)
+		{
+			try
+			{
+				string[] files = Directory.GetFiles(inboundDir, filePattern);
+
+				if (files.Length == 0)
+				{
+					Logger.Log($"No '{filePattern}' files found in: {inboundDir}");
+					Console.WriteLine($"No '{filePattern}' files found.");
+					return new List<string>();
+				}
+
+				Logger.Log("Files to be processed --------------------------------------------------------");
+				var fileList = new List<string>();
+				foreach (string file in files)
+				{
+					string fileName = Path.GetFileName(file);
+					Console.WriteLine(" - " + fileName);
+					Logger.Log(fileName);
+					fileList.Add(file);
+				}
+				Logger.Log("-------------------------------------------------------------------------------");
+
+				return fileList;
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("❌ Error retrieving inbound files: " + ex);
+				Console.WriteLine("❌ Error retrieving inbound files: " + ex.Message);
+				return new List<string>();
+			}
+		}
+
 
 	}
 }

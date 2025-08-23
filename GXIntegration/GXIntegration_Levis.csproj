@@ -143,6 +143,7 @@
     <Compile Include="InboundHandlers\InboundEmployee.cs" />
     <Compile Include="InboundHandlers\InboundItem.cs" />
     <Compile Include="InboundHandlers\InboundHierarchy.cs" />
+    <Compile Include="InboundHandlers\InboundPrice.cs" />
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -5,10 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
-using JsonFormatting = Newtonsoft.Json.Formatting;
 
 namespace GXIntegration_Levis.InboundHandlers
 {
@@ -31,70 +28,19 @@ namespace GXIntegration_Levis.InboundHandlers
 			{ "SUB_CLASS_NM", "UDF3" }
 		};
 
-		public async Task RunHierarchySyncAsync(InboundHierarchyRepository repository)
+		public async Task RunHierarchySyncAsync(string session, string inboundDir, InboundHierarchyRepository repository)
 		{
 			try
 			{
-				Console.WriteLine(">>> Starting Hierarchy Sync Process...");
+				Logger.Log("");
+				Logger.Log("**************************************************************************");
+				Logger.Log(">>> Starting INBOUND HIERARCHY Sync Process...");
+				Logger.Log("**************************************************************************");
 
-				var config = XDocument.Load("config.xml");
+				string fileNameFormat = "LSPI_HIERARCHY_*.*";
 
-				string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
-				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
-				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
-				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
-
-				Logger.Log("Credentials : ...");
-				Logger.Log("Address : " + prismAddress);
-				Logger.Log("Username : " + prismUsername);
-				Logger.Log("Password : [REDACTED]");
-				Logger.Log("Workstation Name : " + workstationName);
-				Logger.Log("--------------------------------------------------------------------------");
-
-				Console.WriteLine("Authenticating with Prism...");
-				string session = await globalInbound.Authenticate(
-					prismAddress, prismUsername, prismPassword, workstationName);
-
-				if (string.IsNullOrEmpty(session))
-				{
-					Logger.Log("Authentication failed.");
-					Console.WriteLine("❌ Authentication failed.");
-					return;
-				}
-
-				Logger.Log("Authenticated. Session: " + session);
-				Console.WriteLine("✅ Authentication successful. Session: " + session);
-
-				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string today = DateTime.Now.ToString("yyyyMMdd");
-				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
-
-				if (!Directory.Exists(inboundDir))
-				{
-					Directory.CreateDirectory(inboundDir);
-					Logger.Log("INBOUND folder created : " + inboundDir);
-					Console.WriteLine("📁 Created INBOUND directory: " + inboundDir);
-				}
-
-				Console.WriteLine("Looking for files in directory: " + inboundDir);
-				string[] files = Directory.GetFiles(inboundDir, "LSPI_HIERARCHY_*.*");
-
-				if (files.Length == 0)
-				{
-					Logger.Log("No LSPI_HIERARCHY_ files found in: " + inboundDir);
-					Console.WriteLine("⚠️ No LSPI_HIERARCHY_ files found.");
-					return;
-				}
-
-				Console.WriteLine($"📄 {files.Length} file(s) found:");
-				foreach (string file in files)
-				{
-					string fileName = Path.GetFileName(file);
-					Console.WriteLine(" - " + fileName);
-					Logger.Log(fileName);
-				}
-
-				Console.WriteLine("--------------------------------------------------------------------------");
+				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
+				if (files.Count == 0) return;
 
 				foreach (string file in files)
 				{
@@ -180,7 +126,6 @@ namespace GXIntegration_Levis.InboundHandlers
 
 									string responseJson = GlobalInbound.CallPrismAPI(
 										session,
-										prismAddress,
 										"/api/backoffice/invnudfoption",
 										json,
 										out bool isSuccessful,
@@ -225,9 +170,6 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 		}
 
-		/// <summary>
-		/// Reads file and maps columns to UDF codes with corresponding values.
-		/// </summary>
 		private Dictionary<string, List<string>> BuildHierarchyByUdf(string filePath)
 		{
 			var result = new Dictionary<string, List<string>>();

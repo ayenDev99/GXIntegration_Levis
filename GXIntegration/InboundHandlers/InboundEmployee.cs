@@ -3,10 +3,7 @@ using GXIntegration_Levis.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using JsonFormatting = Newtonsoft.Json.Formatting;
 using Microsoft.VisualBasic.FileIO;
 
@@ -16,69 +13,19 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunEmployeeSyncAsync(PrismRepository repository)
+		public async Task RunEmployeeSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
 			{
-				// *** Call authentication first
-				var config = XDocument.Load("config.xml");
+				Logger.Log("");
+				Logger.Log("**************************************************************************");
+				Logger.Log(">>> Starting INBOUND EMPLOYEE Sync Process...");
+				Logger.Log("**************************************************************************");
 
-				// Read Prism config values
-				string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
-				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
-				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
-				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
+				string fileNameFormat = "LSPI_WD_*.*";
 
-				Logger.Log("Credentials : ...");
-				Logger.Log("Address : " + prismAddress);
-				Logger.Log("Username : " + prismUsername);
-				Logger.Log("Password : " + prismPassword);
-				Logger.Log("Workstation Name : " + workstationName);
-				Logger.Log("--------------------------------------------------------------------------");
-
-				Logger.Log("Starting E sync...");
-
-				string session = await globalInbound.Authenticate(
-					prismAddress, prismUsername, prismPassword, workstationName);
-
-				if (string.IsNullOrEmpty(session))
-				{
-					Logger.Log("Authentication failed.");
-					Console.WriteLine("Authentication failed.");
-					return;
-				}
-
-				Logger.Log("Authenticated. Session: " + session);
-				Console.WriteLine(session);
-
-				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string today = DateTime.Now.ToString("yyyyMMdd");
-				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
-
-				// Create directory if it does not exist
-				if (!Directory.Exists(inboundDir))
-				{
-					Directory.CreateDirectory(inboundDir);
-					Logger.Log("INBOUND folder created : " + inboundDir);
-				}
-
-				// Find all files that start with LSPI_WD_
-				string[] files = Directory.GetFiles(inboundDir, "LSPI_WD_*.*");
-
-				if (files.Length == 0)
-				{
-					Logger.Log("No LSPI_WD_ files found in: " + inboundDir);
-					return;
-				}
-
-				Logger.Log("Files to Processed--------------------------------------------------------");
-				foreach (string file in files)
-				{
-					string fileName = Path.GetFileName(file); // extracts just the file name
-					Console.WriteLine(fileName);
-					Logger.Log(fileName);
-				}
-				Logger.Log("--------------------------------------------------------------------------");
+				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
+				if (files.Count == 0) return;
 
 				foreach (string file in files)
 				{
@@ -172,7 +119,6 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						string responseJson = GlobalInbound.CallPrismAPI(
 												session
-												, prismAddress
 												, "/api/common/employee"
 												, json
 												, out bool issuccessful

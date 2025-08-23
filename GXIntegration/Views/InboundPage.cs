@@ -4,44 +4,31 @@ using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.InboundHandlers;
 using GXIntegration_Levis.Properties;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using static GXIntegration_Levis.Helpers.GlobalHelper;
-using JsonFormatting = Newtonsoft.Json.Formatting;
 
 namespace GXIntegration_Levis.Views
 {
 	public partial class InboundPage : UserControl
 	{
 		static GXConfig config;
-		private InventoryRepository _inventoryRepository;
 		private GunaDataGridView guna1DataGridView1;
 		private GunaButton btnSaveToPrism;
 
 		private InboundHierarchyRepository _inboundHierarchyRepository;
 		private PrismRepository _prismRepository;
 
-
 		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
 		private readonly InboundItem inboundItem = new InboundItem();
 		private readonly InboundHierarchy inboundHierarchy = new InboundHierarchy();
-		
+		private readonly InboundPrice inboundPrice = new InboundPrice();
+
 		public InboundPage()
 		{
 			config = GXConfig.Load("config.xml");
 			_prismRepository = new PrismRepository(config.MainDbConnection);
-			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
-
 			_inboundHierarchyRepository = new InboundHierarchyRepository(config.MainDbConnection);
-
 
 			InitializeComponent();
 			InitializeGrid();
@@ -119,9 +106,17 @@ namespace GXIntegration_Levis.Views
 				{
 					try
 					{
-						await inboundEmployee.RunEmployeeSyncAsync(_prismRepository);
-						//await inboundItem.RunItemSyncAsync();
-						//await inboundHierarchy.RunHierarchySyncAsync(_inboundHierarchyRepository);
+						var globalInbound = new GlobalInbound();
+
+						string session = await globalInbound.AuthenticateFromConfigAsync();
+						if (session == null) return;
+
+						string inboundDir = globalInbound.EnsureInboundDirectory();
+
+						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+						await inboundItem.RunItemSyncAsync(session, inboundDir);
+						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
+						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 
 						MessageBox.Show("All sync operations completed successfully!");
 					}
@@ -135,7 +130,6 @@ namespace GXIntegration_Levis.Views
 
 			this.Controls.Add(btnSaveToPrism);
 		}
-
 
 		// ***************************************************
 		// Handlers/Helpers
