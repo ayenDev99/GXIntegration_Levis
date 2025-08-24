@@ -36,7 +36,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					{
 						foreach (var kv in row)
 						{
-							//Console.WriteLine($"{kv.Key}: {kv.Value}");
+							Console.WriteLine($"{kv.Key}: {kv.Value}");
 						}
 
 						// Build payload for this specific row
@@ -46,93 +46,91 @@ namespace GXIntegration_Levis.InboundHandlers
 							{
 							new
 							{
-								OriginApplication = "RProPrismWeb",
-								PrimaryItemDefinition = new
+								OriginApplication		= "RProPrismWeb"
+								, PrimaryItemDefinition = new
 								{
-									dcssid       = "556255621000149144",
-									vendsid      = (string)null,
-									description1 = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
-									attribute    = row["SIZE_DIM2"],
-									itemsize     = row["SIZE_DIM1"]
-								},
-								InventoryItems = new[]
+									dcssid			= "556255621000149144"
+									, vendsid		= (string)null
+									, description1	= row["PRODUCT_CD"]?.ToString().Replace("-", "")
+									, attribute		= row["SIZE_DIM2"]
+									, itemsize		= row["SIZE_DIM1"]
+								}
+								, InventoryItems = new[]
 								{
 									new
 									{
-										sbssid              = "555356986000134257",
-										dcssid              = "556255621000149144",
-										description1        = row["PRODUCT_CD"]?.ToString().Replace("-", ""),
-										description2        = row["PRODUCT_NM"]?.ToString(),
-										description3        = row["STYLE_CD"]?.ToString(),
-										alu                 = row["PROD_SKU"]?.ToString(),
-										itemsize            = row["SIZE_DIM1"]?.ToString(),
-										attribute           = row["SIZE_DIM2"]?.ToString(),
-										upc                 = row["PROD_GTIN"]?.ToString(),
-										description4        = row["PROD_JAN"]?.ToString(),
-										text1               = row["SAP_TAX_CD"]?.ToString(),
-										cost                = 0,
-										spif                = 0,
-										taxcodesid          = "555538434000189911",
-										useqtydecimals      = 0,
-										regional            = false,
-										active              = true,
-										maxdiscperc1        = 100,
-										maxdiscperc2        = 100,
-										serialtype          = 0,
-										lottype             = 0,
-										kittype             = 0,
-										tradediscpercent    = 0,
-										activestoresid      = "555444605000106428",
-										activepricelevelsid = "555357012000134500",
-										activeseasonsid     = "555357012000192512",
-										actstrprice         = 0,
-										actstrpricewt       = 0,
-										actstrohqty         = 0,
-										dcscode             = "1  1  1",
-										invnextend = new[]
+										sbssid					= "555356986000134257"
+										, dcssid				= "556255621000149144"
+										, description1			= row["PRODUCT_CD"]?.ToString().Replace("-", "")
+										, description2			= row["PRODUCT_NM"]?.ToString()
+										, description3			= row["STYLE_CD"]?.ToString()
+										, alu					= row["PROD_SKU"]?.ToString()
+										, itemsize				= row["SIZE_DIM1"]?.ToString()
+										, attribute				= row["SIZE_DIM2"]?.ToString()
+										, upc					= row["PROD_GTIN"]?.ToString()
+										, description4			= row["PROD_JAN"]?.ToString()
+										, text1					= row["SAP_TAX_CD"]?.ToString()
+										, cost					= 0
+										, spif					= 0
+										, taxcodesid			= "555538434000189911"
+										, useqtydecimals		= 0
+										, regional				= false
+										, active				= true
+										, maxdiscperc1			= 100
+										, maxdiscperc2			= 100
+										, serialtype			= 0
+										, lottype				= 0
+										, kittype				= 0
+										, tradediscpercent		= 0
+										, activestoresid		= "555444605000106428"
+										, activepricelevelsid	= "555357012000134500"
+										, activeseasonsid		= "555357012000192512"
+										, actstrprice			= 0
+										, actstrpricewt			= 0
+										, actstrohqty			= 0
+										, dcscode				= "1  1  1"
+										, invnextend = new[]
 										{
 											new
 											{
-												udf6string   = row["BRAND_CD"]?.ToString(),
-												udf10string  = row["CONSUMER_CD"]?.ToString(),
-												udf2string   = row["PROD_CAT_CD"]?.ToString(),
-												udf12string  = row["CLASS_CD"]?.ToString(),
-												udf14string  = row["SUB_CLASS_CD"]?.ToString(),
-												udf8string   = row["SEASON_CD"]?.ToString(),
-												udf9string   = row["AFFILIATE"]?.ToString(),
-												udf5_string  = row["DEMAND_NM"]?.ToString(),
+												udf6string		= row["BRAND_CD"]?.ToString()
+												, udf10string	= row["CONSUMER_CD"]?.ToString()
+												, udf2string	= row["PROD_CAT_CD"]?.ToString()
+												, udf12string	= row["CLASS_CD"]?.ToString()
+												, udf14string	= row["SUB_CLASS_CD"]?.ToString()
+												, udf8string	= row["SEASON_CD"]?.ToString()
+												, udf9string	= row["AFFILIATE"]?.ToString()
+												, udf5_string	= row["DEMAND_NM"]?.ToString()
 											}
 										}
 									}
-								},
-								UpdateStyleDefinition = false,
-								UpdateStyleCost       = false,
-								UpdateStylePrice      = false
+								}
+								, UpdateStyleDefinition	= false
+								, UpdateStyleCost       = false
+								, UpdateStylePrice      = false
 							}
 						}
 						};
 
 						var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-
-						Console.WriteLine("Payload:");
-						Console.WriteLine(json);
-						Logger.Log("Payload built:\n" + json);
+						Logger.Log("Payload:\n" + json);
 
 						string responseJson = GlobalInbound.CallPrismAPI(
-												session,
-												"/api/backoffice/inventory?action=InventorySaveItems",
-												json,
-												out bool issuccessful,
-												"POST");
+												session
+												, "/api/backoffice/inventory?action=InventorySaveItems"
+												, json
+												, out bool issuccessful
+												, "POST");
 
-						Console.WriteLine("Response: " + responseJson);
+						Logger.Log("Response: " + responseJson);
 					}
 				}
 
+				Logger.Log("Item sync process completed.");
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}");
 				return;
 			}
 		}
@@ -170,7 +168,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in BuildItemCollection: {ex.Message}");
+				Logger.Log($"Error in BuildItemCollection: {ex.Message}");
 			}
 
 			return result;

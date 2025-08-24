@@ -40,7 +40,6 @@ namespace GXIntegration_Levis.InboundHandlers
 						}
 
 						var prism_store = await repository.GetRpsStore(row["StoreCode"]?.ToString());
-						Console.WriteLine("SID :" + (prism_store ?? ""));
 
 						var employeeData = new Dictionary<string, object>
 						{
@@ -113,9 +112,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						var payload = new { data = new[] { employeeData } };
 						var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-
-						Console.WriteLine("Payload:");
-						Console.WriteLine(json);
+						Logger.Log("Payload:\n" + json);
 
 						string responseJson = GlobalInbound.CallPrismAPI(
 												session
@@ -124,10 +121,12 @@ namespace GXIntegration_Levis.InboundHandlers
 												, out bool issuccessful
 												, "POST");
 
-						Console.WriteLine("Response: " + responseJson);
+						Logger.Log($"API Response: {responseJson}");
+
+						continue;
 					}
 				}
-
+				Logger.Log("Employee sync process completed.");
 			}
 			catch (Exception ex)
 			{
@@ -168,7 +167,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							if (fields.Length > headers.Length)
 							{
-								Console.WriteLine("Warning: Extra values in line.");
+								Logger.Log("Warning: Extra values in line.");
 							}
 
 							result.Add(rowDict);
@@ -178,7 +177,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in BuildItemCollection: {ex.Message}");
+				Logger.Log($"Error in BuildItemCollection: {ex.Message}");
 			}
 
 			return result;

@@ -37,7 +37,17 @@ namespace GXIntegration_Levis.InboundHandlers
 							Console.WriteLine($"{kv.Key}: {kv.Value}");
 						}
 
-					
+						//var payload = new
+						//{
+						//	data = new[]
+						//				{
+						//					new
+						//					{
+						//						OriginApplication = "RProPrismWeb",
+						//					}
+						//				}
+						//};
+
 						//var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 
 						//Console.WriteLine("Payload:");
@@ -60,7 +70,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log("Error in RunItemSyncAsync: {ex.Message}");
 				return;
 			}
 		}
@@ -104,7 +114,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Error in BuildPriceCollection: {ex.Message}");
+				Logger.Log($"Error in BuildPriceCollection: {ex.Message}");
 			}
 
 			return result;

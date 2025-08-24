@@ -44,7 +44,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				foreach (string file in files)
 				{
-					Console.WriteLine($"\n📁 Starting processing for file: {Path.GetFileName(file)}");
+					Logger.Log($"\n📁 Starting processing for file: {Path.GetFileName(file)}");
 
 					var udfData = BuildHierarchyByUdf(file);
 
@@ -76,37 +76,25 @@ namespace GXIntegration_Levis.InboundHandlers
 
 					var SBS_result = await repository.GetSbsListAsync();
 
-					Console.WriteLine("📜 Retrieved SBS List");
+					Logger.Log("Retrieved SBS List");
 
 					foreach (var sbsItem in SBS_result)
 					{
-						Console.WriteLine($"\n🏬 Checking SBS: {sbsItem.SBS_NAME} (SID: {sbsItem.SID})");
+						Logger.Log($"\nChecking SBS: {sbsItem.SBS_NAME} (SID: {sbsItem.SID})");
 
 						foreach (var udfType in filteredUdfValues)
 						{
-							Console.WriteLine($"\n🔎 Checking UDF Type: UDF{udfType.Key} with {udfType.Value.Count} values");
+							Logger.Log($"\nChecking UDF Type: UDF{udfType.Key} with {udfType.Value.Count} values");
 
 							foreach (var udfValue in udfType.Value)
 							{
-								Console.WriteLine($"   ➤ Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
+								Logger.Log($"Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
 
 								var udf_result = await repository.GetUdfDetailsAsync(udfType.Key, udfValue, sbsItem.SID.ToString());
-								Console.WriteLine(udf_result.Count);
+								Logger.Log(udf_result.Count);
 								if (udf_result == null || udf_result.Count == 0)
 								{
-										var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
-
-									//	if (invn_udf_res == null)
-									//	{
-									//		Console.WriteLine($"   ⚠️ invn_udf_res is empty for UDF{udfType.Key} / SBS SID {sbsItem.SID}");
-									//		continue; // or handle as needed
-									//	}
-
-									//	// Safe access
-									//	var udfSid = invn_udf_res.SID.ToString();
-
-
-
+									var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
 
 									var payload = new
 									{
@@ -122,17 +110,17 @@ namespace GXIntegration_Levis.InboundHandlers
 									};
 
 									var json = JsonConvert.SerializeObject(payload, Formatting.Indented);
-									Console.WriteLine("   📦 Payload:\n" + json);
+									Logger.Log("Payload:\n" + json);
 
 									string responseJson = GlobalInbound.CallPrismAPI(
-										session,
-										"/api/backoffice/invnudfoption",
-										json,
-										out bool isSuccessful,
-										"POST"
-									);
+															session
+															, "/api/backoffice/invnudfoption"
+															, json
+															, out bool isSuccessful
+															, "POST"
+														);
 
-									Console.WriteLine($"   📬 API Response: {responseJson}");
+									Logger.Log($"API Response: {responseJson}");
 
 									continue;
 								}
@@ -143,13 +131,13 @@ namespace GXIntegration_Levis.InboundHandlers
 									{
 										var udfSid = udf_res.UDF_SID;
 
-										Console.WriteLine($"   ➕ Missing value detected: '{udfValue}' (UDF_SID: {udfSid})");
-										Console.WriteLine("   ⏳ Preparing payload to insert...");
+										Logger.Log($"Missing value detected: '{udfValue}' (UDF_SID: {udfSid})");
+										Logger.Log("Preparing payload to insert...");
 
 									}
 									else
 									{
-										Console.WriteLine($"   ✅ UDF value '{udfValue}' already exists.");
+										Logger.Log("UDF value '{udfValue}' already exists.");
 									}
 								}
 							}
@@ -157,15 +145,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 				}
 
-				Console.WriteLine("\n✅ Hierarchy sync process completed.");
-
-
-
+				Logger.Log("Hierarchy sync process completed.");
 
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"❌ Error in RunHierarchySyncAsync: {ex}");
 				Logger.Log($"Error in RunHierarchySyncAsync: {ex}");
 			}
 		}
@@ -179,7 +163,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				var lines = File.ReadAllLines(filePath);
 				if (lines.Length == 0)
 				{
-					Console.WriteLine("⚠️ File is empty: " + filePath);
+					Console.WriteLine("File is empty: " + filePath);
 					return result;
 				}
 
@@ -208,15 +192,15 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 				}
 
-				Console.WriteLine($"✅ Parsed {result.Count} UDF-mapped columns from file: {Path.GetFileName(filePath)}");
+				Logger.Log($"Parsed {result.Count} UDF-mapped columns from file: {Path.GetFileName(filePath)}");
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"❌ Error in BuildHierarchyByUdf: {ex.Message}");
 				Logger.Log($"Error in BuildHierarchyByUdf: {ex}");
 			}
 
 			return result;
 		}
+	
 	}
 }
