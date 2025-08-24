@@ -3,21 +3,23 @@ using GXIntegration_Levis.Helpers;
 using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.InboundHandlers
 {
-	public class InboundPrice
+	public class InboundASN
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunPriceSyncAsync(string session, string inboundDir, PrismRepository repository)
+		public async Task RunASNSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
 			{
 				Logger.Log("");
 				Logger.Log("**************************************************************************");
-				Logger.Log(">>> Starting INBOUND PRICE Sync Process...");
+				Logger.Log(">>> Starting INBOUND ASN Sync Process...");
 				Logger.Log("**************************************************************************");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
@@ -27,8 +29,8 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				foreach (string file in files)
 				{
-					var result = BuildPriceCollection(file);
-					Logger.Log($"Price file loaded. Rows found: {result.Count}");
+					var result = BuildASNCollection(file);
+					Logger.Log($"ASN file loaded. Rows found: {result.Count}");
 
 					foreach (var row in result)
 					{
@@ -70,12 +72,12 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log("Error in RunASNSyncAsync: {ex.Message}");
 				return;
 			}
 		}
 
-		private List<Dictionary<string, string>> BuildPriceCollection(string filePath)
+		private List<Dictionary<string, string>> BuildASNCollection(string filePath)
 		{
 			var result = new List<Dictionary<string, string>>();
 
@@ -91,21 +93,24 @@ namespace GXIntegration_Levis.InboundHandlers
 					{
 						string[] fields = parser.ReadFields();
 
-						if (fields == null || fields.Length == 0)
+						if (fields == null || fields.Length == 0 || fields.All(f => string.IsNullOrWhiteSpace(f)))
 							continue;
+
+						// Trim all fields
+						fields = fields.Select(f => f.Trim()).ToArray();
 
 						var rowDict = new Dictionary<string, string>();
 
-						// Map only relevant indices
-						if (fields.Length > 0) rowDict["CountryCode"] = fields[0].Trim();
-						if (fields.Length > 2) rowDict["ItemCode"] = fields[2].Trim();
-						if (fields.Length > 6) rowDict["UOM"] = fields[6].Trim();
-						if (fields.Length > 7) rowDict["Currency"] = fields[7].Trim();
-						if (fields.Length > 8) rowDict["Price"] = fields[8].Trim();
-						if (fields.Length > 9) rowDict["StartDate"] = fields[9].Trim();
-						if (fields.Length > 10) rowDict["Brand"] = fields[10].Trim();
-						if (fields.Length > 11) rowDict["Division"] = fields[11].Trim();
-						if (fields.Length > 15) rowDict["System"] = fields[15].Trim();
+						// Corrected field indices based on sample data
+						if (fields.Length > 0) rowDict["CountryCode"] = fields[0];
+						if (fields.Length > 2) rowDict["ItemCode"] = fields[2];
+						if (fields.Length > 16) rowDict["Currency"] = fields[16];
+						if (fields.Length > 17) rowDict["UOM"] = fields[17];
+						if (fields.Length > 18) rowDict["Price"] = fields[18];
+						if (fields.Length > 23) rowDict["StartDate"] = fields[23];
+						if (fields.Length > 10) rowDict["Brand"] = fields[10];
+						if (fields.Length > 11) rowDict["Division"] = fields[11];
+						if (fields.Length > 15) rowDict["System"] = fields[15];
 
 						result.Add(rowDict);
 					}
@@ -113,11 +118,12 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildPriceCollection: {ex.Message}");
+				Logger.Log($"Error in BuildPriceCollection for file '{filePath}': {ex}");
 			}
 
 			return result;
 		}
+
 
 	}
 }

@@ -22,6 +22,7 @@ namespace GXIntegration_Levis.Views
 		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
 		private readonly InboundItem inboundItem = new InboundItem();
 		private readonly InboundHierarchy inboundHierarchy = new InboundHierarchy();
+		private readonly InboundASN inboundAsn = new InboundASN();
 		private readonly InboundPrice inboundPrice = new InboundPrice();
 
 		public InboundPage()
@@ -116,6 +117,7 @@ namespace GXIntegration_Levis.Views
 						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
 						await inboundItem.RunItemSyncAsync(session, inboundDir);
 						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
+						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
 						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 
 						MessageBox.Show("All sync operations completed successfully!");

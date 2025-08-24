@@ -44,7 +44,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				foreach (string file in files)
 				{
-					Logger.Log($"\n📁 Starting processing for file: {Path.GetFileName(file)}");
+					Logger.Log($"\nStarting processing for file: {Path.GetFileName(file)}");
 
 					var udfData = BuildHierarchyByUdf(file);
 
@@ -91,7 +91,7 @@ namespace GXIntegration_Levis.InboundHandlers
 								Logger.Log($"Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
 
 								var udf_result = await repository.GetUdfDetailsAsync(udfType.Key, udfValue, sbsItem.SID.ToString());
-								Logger.Log(udf_result.Count);
+								Logger.Log($"Found {udf_result?.Count ?? 0} existing UDF entries.");
 								if (udf_result == null || udf_result.Count == 0)
 								{
 									var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
