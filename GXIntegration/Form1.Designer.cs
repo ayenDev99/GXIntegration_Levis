@@ -329,7 +329,7 @@ namespace GXIntegration
 			// 
 			// MainContentPanel
 			// 
-			this.MainContentPanel.AutoSize = true;
+			this.MainContentPanel.AutoSize = false;
 			this.MainContentPanel.BackColor = System.Drawing.Color.White;
 			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);

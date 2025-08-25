@@ -1,91 +1,85 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
+﻿using GXIntegration;
+using GXIntegration.Properties;
+using GXIntegration_Levis.Helpers;
+using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace GXIntegration
+class Program
 {
-	static class Program
+	static void Main()
 	{
-		[STAThread]
-		static void Main()
+		var thread = new Thread(() =>
 		{
-			//// 🔧 Create AppData folder inside bin\Debug or bin\Release
-			//string folderPath = Path.Combine(Application.StartupPath, "AppData");
+			MainAsync().GetAwaiter().GetResult();
+		});
 
-			//// Make sure the directory exists
-			//if (!Directory.Exists(folderPath))
-			//{
-			//	Directory.CreateDirectory(folderPath);
-			//}
-
-			//// 🗃️ Full path to the SQLite database
-			//string dbPath = Path.Combine(folderPath, "APISender.db");
-
-			//// Create the database file if it doesn't exist
-			//if (!File.Exists(dbPath))
-			//{
-			//	SQLiteConnection.CreateFile(dbPath);
-			//	Console.WriteLine($"✅ Database created at: {dbPath}");
-			//}
-
-			//// Connect and create table
-			//string connectionString = $"Data Source={dbPath};Version=3;";
-			//using (SQLiteConnection conn = new SQLiteConnection(connectionString))
-			//{
-			//	conn.Open();
-
-			//	string createTableQuery = @"
-   //                 CREATE TABLE IF NOT EXISTS APISender (
-   //                     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-   //                     SID TEXT NOT NULL,
-			//			TYPE TEXT,
-			//			DATE TEXT,
-			//			STATUS TEXT NOT NULL
-   //                 );";
-
-			//	using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
-			//	{
-			//		cmd.ExecuteNonQuery();
-			//		Console.WriteLine("✅ Table created successfully.");
-			//	}
-
-			//	// Insert fake data if table is empty
-			//	string countQuery = "SELECT COUNT(*) FROM APISender;";
-			//	using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
-			//	{
-			//		long count = (long)countCmd.ExecuteScalar();
-			//		if (count == 0)
-			//		{
-			//			string insertQuery = @"
-			//				INSERT INTO APISender (SID, TYPE, DATE, STATUS) VALUES
-			//				('SID001', 'storesale', '25-JUN-24 11.41.26.000000000 PM +08:00', 'Active'),
-			//				('SID002', 'storeshipping', '25-JUN-24 11.41.26.000000000 PM +08:00', 'Inactive'),
-			//				('SID003', 'storereturn', '25-JUN-24 11.41.26.000000000 PM +08:00', 'Pending');
-			//			";
-
-			//			using (SQLiteCommand insertCmd = new SQLiteCommand(insertQuery, conn))
-			//			{
-			//				int rowsInserted = insertCmd.ExecuteNonQuery();
-			//				Console.WriteLine($"✅ Inserted {rowsInserted} fake records into APISender.");
-			//			}
-			//		}
-			//		else
-			//		{
-			//			Console.WriteLine("⚠️ Fake data already exists, skipping insert.");
-			//		}
-			//	}
-			//}
-
-			
-
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-			Application.Run(new Form1());
-		}
-
-
+		thread.SetApartmentState(ApartmentState.STA);
+		thread.Start();
+		thread.Join();
 	}
-	
+
+	static GXConfig config;
+	static Form1 form;
+	public static string CurrentTime => DateTime.Now.ToString("HH:mm");
+
+	static async Task MainAsync()
+	{
+		string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+		config = GXConfig.Load(configPath);
+
+		var tcsApp = new TaskCompletionSource<bool>();
+
+		var formThread = new Thread(() =>
+		{
+			form = new GXIntegration.Form1();
+
+			form.Load += async (sender, e) =>
+			{
+				//Logger.Log(">>> Form loaded");
+				await RunIterationLoop();
+			};
+
+			Application.Run(form);
+			tcsApp.SetResult(true);
+		});
+
+		formThread.SetApartmentState(ApartmentState.STA);
+		formThread.Start();
+
+		await tcsApp.Task;
+	}
+
+	static async Task RunIterationLoop()
+	{
+		int iteration = 0;
+
+		while (true)
+		{
+			iteration++;
+			try
+			{
+				Logger.Log("**************************************************************************");
+				Logger.Log($">>> START iteration {iteration} at {CurrentTime}");
+				Logger.Log("**************************************************************************");
+
+				Logger.Log($">>> ReprocessMinutes = {config.ReprocessMinutes}");
+
+				Logger.Log(">>> Starting OUTBOUND Process...");
+				await form.OutboundTab.TriggerDownloadAsync();
+				Logger.Log(">>> OUTBOUND completed");
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("ERROR : " + ex.ToString());
+			}
+
+			Logger.Log($">>> Waiting {config.ReprocessMinutes} minute(s) before next iteration...");
+			await Task.Delay(TimeSpan.FromMinutes(config.ReprocessMinutes));
+		}
+	}
+
+
 }

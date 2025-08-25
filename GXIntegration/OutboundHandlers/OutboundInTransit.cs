@@ -34,6 +34,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 					string fileName = $"LS{countryCode}_AMA_INTRANSIT_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
+					Logger.Log($"EOD InTransit downloaded successfully | Items Count: {Items.Count} | File Name: {fileName}");
+
 					string output = Format(group.ToList(), config.Delimiter ?? "|");
 					
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

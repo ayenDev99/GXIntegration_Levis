@@ -23,8 +23,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
 				var items = await repository.GetStoreShippingAsync(from_date, to_date);
 
-				Logger.Log($"Items count: {items.Count}");
-
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
 
@@ -32,6 +30,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"StoreShipping_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
+				Logger.Log($"EOD StoreShipping downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)

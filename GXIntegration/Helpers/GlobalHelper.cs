@@ -1,9 +1,11 @@
 ﻿using Guna.UI.WinForms;
+using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GXIntegration_Levis.Helpers
 {
@@ -107,6 +109,37 @@ namespace GXIntegration_Levis.Helpers
 			};
 
 			return button;
+		}
+
+		// ***************************************************
+		// Dates Methods
+		// ***************************************************
+		public static (DateTime from, DateTime to) GetProcessingTimeWindow(GXConfig config)
+		{
+			string timeStr = Program.CurrentTime;
+			int processMinutes = config.ReprocessMinutes;
+
+			// TO = selected time of day + 59s 999ms (end of that minute)
+			DateTime to_date = DateTime.Today
+				.Add(TimeSpan.Parse(timeStr))
+				.AddSeconds(59)
+				.AddMilliseconds(999);
+
+			// FROM = start of N minutes ago (reset to 00.000)
+			DateTime from_date = to_date
+				.AddMinutes(-processMinutes)
+				.AddSeconds(-59)
+				.AddMilliseconds(-999);
+
+			Logger.Log($">>> Processing Time Window: FROM = {from_date:yyyy-MM-dd HH:mm}, TO = {to_date:yyyy-MM-dd HH:mm}");
+
+			return (from_date, to_date);
+		}
+
+		public static string ToOracleTimestampTZLiteral(DateTime dt, string timezoneOffset = "+08:00")
+		{
+			// Format example: 20-AUG-25 09.59.20.123456 AM +08:00
+			return dt.ToString("dd-MMM-yy hh.mm.ss.ffffff tt").ToUpper() + " " + timezoneOffset;
 		}
 
 		// ***************************************************

@@ -25,14 +25,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 				var receipt_type = new List<int> { 0, 2 };
 				var items = await repository.GetStoreSaleAsync(from_date, to_date, receipt_type);
 
-				Logger.Log($"Items count: {items.Count}");
-
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
 
 				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 				string fileName = $"StoreSale_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
+
+				Logger.Log($"EOD StoreSale downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				GenerateXml(items, filePath, generate_type);
 

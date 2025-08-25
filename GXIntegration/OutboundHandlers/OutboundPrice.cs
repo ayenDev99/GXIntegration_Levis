@@ -27,6 +27,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_PH_PRICING_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
+				Logger.Log($"EOD Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+
 				string output = Format(items, ",");
 
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

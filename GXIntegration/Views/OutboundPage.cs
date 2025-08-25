@@ -30,7 +30,10 @@ namespace GXIntegration_Levis.Views
 
 		public OutboundPage()
 		{
-			config = GXConfig.Load("config.xml");
+			Logger.Log(">>> Stat Outbound Process...");
+
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+			config = GXConfig.Load(configPath);
 
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 			_inTransitRepository = new InTransitRepository(config.MainDbConnection);

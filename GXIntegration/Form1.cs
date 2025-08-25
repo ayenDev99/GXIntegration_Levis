@@ -1,13 +1,12 @@
 ﻿using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Views;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Data.SQLite;
-using GXIntegration_Levis.Views;
-using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration
 {
@@ -24,31 +23,59 @@ namespace GXIntegration
 
 		static GXConfig config;
 		private ConfigurationPage _configurationPage;
+		private InventoryRepository _inventoryRepository;
+		private InTransitRepository _inTransitRepository;
+		private PriceRepository _priceRepository;
+		private StoreGoodsRepository _storeGoodsRepository;
+		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
+		private StoreSaleRepository _storeSaleRepository;
+		private StoreReturnRepository _storeReturnRepository;
+		private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
+		private StoreShippingRepository _storeShippingRepository;
+		private StoreReceivingRepository _storeReceivingRepository;
 
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
 
-		// Declare lstSIDs as a class-level field
-		//private ListBox lstSIDs;
+		public OutboundEODTab OutboundTab { get; private set; }
 
 		public Form1()
 		{
 			InitializeComponent();
-
-			//// Initialize lstSIDs and add to MainContentPanel
-			//lstSIDs = new ListBox()
-			//{
-			//	Dock = DockStyle.Fill
-			//};
-			//MainContentPanel.Controls.Add(lstSIDs);
-
-			//// Now safe to load SIDs into the ListBox
-			//LoadSIDs();
-
 			EnableDrag(SideBar);
 
-			config = GXConfig.Load("config.xml");
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+			config = GXConfig.Load(configPath);
+
 			MainContentPanel.Dock = DockStyle.Fill;
+
+			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
+			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
+			_priceRepository = new PriceRepository(config.MainDbConnection);
+			_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
+			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
+			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
+			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
+			_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
+			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
+			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
+
+			var repositories = new OutboundRepositories(
+			_inventoryRepository,
+			_inTransitRepository,
+			_priceRepository,
+			_storeGoodsRepository,
+			_storeGoodsReturnRepository,
+			_storeSaleRepository,
+			_storeReturnRepository,
+			_storeInventoryAdjustmentRepository,
+			_storeShippingRepository,
+			_storeReceivingRepository);
+
+
+			//Logger.Log(">>> Start FORM Process...");
+			OutboundTab = new OutboundEODTab(config, repositories);
+			this.Controls.Add(OutboundTab);
 		}
 
 		private void EnableDrag(Control control)
@@ -75,6 +102,12 @@ namespace GXIntegration
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
+			this.WindowState = FormWindowState.Normal;
+			this.StartPosition = FormStartPosition.CenterScreen;
+			this.ShowInTaskbar = true;
+			this.Show();
+			this.BringToFront();
+
 			SetActiveSidebarButton(Home_Button);
 			LoadPage(new HomePage());
 			EnableDrag(this);
@@ -194,61 +227,6 @@ namespace GXIntegration
 		{
 
 		}
-
-		//private void LoadSIDs()
-		//{
-		//	string[] sids = GetAllSIDs();
-		//	string sidListString = sids.Length > 0 ? string.Join(", ", sids) : "No SID records found";
-
-		//	Logger.Log($"SIDs loaded: {sidListString}");
-		//	lstSIDs.Items.Clear();
-
-		//	if (sids.Length == 0)
-		//	{
-		//		lstSIDs.Items.Add("No SID records found.");
-		//		Logger.Log("No SID records found.");
-		//	}
-		//	else
-		//	{
-		//		lstSIDs.Items.AddRange(sids);
-		//	}
-		//}
-
-		//public static string[] GetAllSIDs()
-		//{
-		//	string folderPath = Path.Combine(Application.StartupPath, "AppData");
-		//	string dbPath = Path.Combine(folderPath, "APISender.db");
-
-		//	Logger.Log($"GetAllSIDs: Application.StartupPath = {Application.StartupPath}");
-		//	Logger.Log($"GetAllSIDs: Database path = {dbPath}");
-
-		//	if (!File.Exists(dbPath))
-		//	{
-		//		Logger.Log("Database file does not exist at the specified path.");
-		//		return new string[0];
-		//	}
-
-		//	string connectionString = $"Data Source={dbPath};Version=3;";
-		//	var sidList = new List<string>();
-
-		//	using (var conn = new SQLiteConnection(connectionString))
-		//	{
-		//		conn.Open();
-
-		//		string query = "SELECT SID FROM APISender;";
-		//		using (var cmd = new SQLiteCommand(query, conn))
-		//		using (var reader = cmd.ExecuteReader())
-		//		{
-		//			while (reader.Read())
-		//			{
-		//				sidList.Add(reader["SID"].ToString());
-		//			}
-		//		}
-		//	}
-
-		//	Logger.Log($"GetAllSIDs: Retrieved {sidList.Count} SIDs from the database.");
-		//	return sidList.ToArray();
-		//}
 	
 	}
 }

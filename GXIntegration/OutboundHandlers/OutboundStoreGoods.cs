@@ -19,11 +19,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				DateTime from_date = DateTime.Today; // 00:00:00
-				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
-				var items = await repository.GetStoreGoodsAsync(from_date, to_date);
+				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var items = await repository.GetStoreGoodsAsync(fromDate, toDate);
 
-				Logger.Log($"Items count: {items.Count}");
+				if (items.Count == 0)
+				{
+					Logger.Log("No StoreGoods items found for the given date range. Exiting execution.");
+					return;
+				}
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
@@ -31,6 +34,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 				string fileName = $"StoreGoods_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
+
+				Logger.Log($"EOD StoreGoods downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				GenerateXml(items, filePath, generate_type);
 			}

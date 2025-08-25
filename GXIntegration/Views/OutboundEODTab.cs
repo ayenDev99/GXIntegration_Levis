@@ -36,6 +36,11 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		// Initialization Methods
 		// ***************************************************
+		public async Task TriggerDownloadAsync()
+		{
+			await ProcessAllDownloads();
+		}
+
 		private void InitializeGrid()
 		{
 			guna1DataGridView1 = new GunaDataGridView
@@ -144,11 +149,13 @@ namespace GXIntegration_Levis.Views
 					}
 					catch (Exception ex)
 					{
-						MessageBox.Show($"Failed to process {action.Key}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						Logger.Log($"Failed to process {action.Key}: {ex.Message}");
+						//MessageBox.Show($"Failed to process {action.Key}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
 				}
 
-				MessageBox.Show("All downloads processed. Starting SFTP upload...", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				Logger.Log("All EOD Outbound downloads processed. Starting SFTP upload...");
+				//MessageBox.Show("All downloads processed. Starting SFTP upload...", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				await UploadToSftpAsync();
 			}
 			finally
@@ -180,7 +187,8 @@ namespace GXIntegration_Levis.Views
 
 						if (!Directory.Exists(localDirectory))
 						{
-							MessageBox.Show($"Local directory does not exist:\n{localDirectory}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+							Logger.Log("Local directory does not exist: " + localDirectory);
+							//MessageBox.Show($"Local directory does not exist:\n{localDirectory}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 							return;
 						}
 
@@ -200,17 +208,21 @@ namespace GXIntegration_Levis.Views
 							}
 							catch (Exception ex)
 							{
-								MessageBox.Show($"Failed to upload {Path.GetFileName(filePath)}:\n{ex.Message}", "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+								Logger.Log("Failed to upload " + Path.GetFileName(filePath) + ": " + ex.Message);
+								//MessageBox.Show($"Failed to upload {Path.GetFileName(filePath)}:\n{ex.Message}", "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 							}
 						}
 
 						sftp.Disconnect();
-						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+						Logger.Log("Upload to SFTP completed successfully.");
+						//MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}
 				catch (Exception ex)
 				{
-					MessageBox.Show($"SFTP Upload failed:\n{ex.Message}", "SFTP Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					Logger.Log("\"SFTP Upload failed.");
+					//MessageBox.Show($"SFTP Upload failed:\n{ex.Message}", "SFTP Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			});
 		}

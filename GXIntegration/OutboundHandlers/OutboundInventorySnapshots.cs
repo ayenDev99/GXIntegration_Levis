@@ -34,6 +34,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 					string fileName = $"LSPH_AMA_PSSTKR_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
+					Logger.Log($"EOD InventorySnapshots downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+
 					string output = Format(group.ToList(), config.Delimiter ?? "|");
 
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
