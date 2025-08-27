@@ -6,6 +6,7 @@ using GXIntegration_Levis.InboundHandlers;
 using GXIntegration_Levis.Properties;
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace GXIntegration_Levis.Views
@@ -27,7 +28,9 @@ namespace GXIntegration_Levis.Views
 
 		public InboundPage()
 		{
-			config = GXConfig.Load("config.xml");
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+			config = GXConfig.Load(configPath);
+
 			_prismRepository = new PrismRepository(config.MainDbConnection);
 			_inboundHierarchyRepository = new InboundHierarchyRepository(config.MainDbConnection);
 
@@ -115,7 +118,7 @@ namespace GXIntegration_Levis.Views
 						string inboundDir = globalInbound.EnsureInboundDirectory();
 
 						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
-						await inboundItem.RunItemSyncAsync(session, inboundDir);
+						await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
 						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
 						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
 						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);

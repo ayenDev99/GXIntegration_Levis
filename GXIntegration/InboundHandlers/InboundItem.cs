@@ -1,4 +1,5 @@
-﻿using GXIntegration_Levis.Helpers;
+﻿using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Helpers;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunItemSyncAsync(string session, string inboundDir)
+		public async Task RunItemSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
 			{
@@ -39,8 +40,24 @@ namespace GXIntegration_Levis.InboundHandlers
 							Console.WriteLine($"{kv.Key}: {kv.Value}");
 						}
 
-						// Build payload for this specific row
-						var payload = new
+						var alu = row["PROD_SKU"]?.ToString();
+						var upc = row["PROD_GTIN"]?.ToString();
+						var rps_isi_collection = await repository.GetRpsInvnSbsItem(upc);
+						Logger.Log($"RPS.INVN_SBS_ITEM Collection: {rps_isi_collection}");
+						if (rps_isi_collection != null)
+						{
+							// UPDATE
+						}
+						else
+						{
+							// CREATE
+						}
+
+						
+
+						//Build payload for this specific row
+		
+					   var payload = new
 						{
 							data = new[]
 							{
@@ -64,10 +81,10 @@ namespace GXIntegration_Levis.InboundHandlers
 										, description1			= row["PRODUCT_CD"]?.ToString().Replace("-", "")
 										, description2			= row["PRODUCT_NM"]?.ToString()
 										, description3			= row["STYLE_CD"]?.ToString()
-										, alu					= row["PROD_SKU"]?.ToString()
+										, alu					= row["PROD_SKU"]?.ToString()	// remove for update
 										, itemsize				= row["SIZE_DIM1"]?.ToString()
 										, attribute				= row["SIZE_DIM2"]?.ToString()
-										, upc					= row["PROD_GTIN"]?.ToString()
+										, upc					= row["PROD_GTIN"]?.ToString()	// remove for update
 										, description4			= row["PROD_JAN"]?.ToString()
 										, text1					= row["SAP_TAX_CD"]?.ToString()
 										, cost					= 0

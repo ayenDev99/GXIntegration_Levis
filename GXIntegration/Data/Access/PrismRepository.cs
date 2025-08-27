@@ -79,6 +79,38 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
+		public async Task<dynamic> GetRpsInvnSbsItem(string upc)
+		{
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+
+					string sql = @"
+						SELECT 
+							*
+						FROM 
+							RPS.INVN_SBS_ITEM ISI
+						WHERE 
+							ISI.UPC = :Upc
+					";
+
+					var result = await connection.QueryFirstOrDefaultAsync(sql, new
+					{
+						Upc = upc
+					});
+
+					return result;
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching RPS job SID: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS job SID: {ex.Message}");
+					return null;
+				}
+			}
+		}
 
 	}
 }

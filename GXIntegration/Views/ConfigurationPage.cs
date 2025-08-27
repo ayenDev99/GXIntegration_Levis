@@ -1,5 +1,7 @@
 ﻿using GXIntegration.Properties;
+using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace GXIntegration_Levis.Views
@@ -13,7 +15,8 @@ namespace GXIntegration_Levis.Views
 
 		public ConfigurationPage()
 		{
-			config = GXConfig.Load("config.xml");
+			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+			config = GXConfig.Load(configPath);
 
 			InitializeComponent();
 			InitializeTabs();
