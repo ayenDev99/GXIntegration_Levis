@@ -1,13 +1,14 @@
-﻿using GXIntegration_Levis.Data.Access;
+﻿using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
+using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
-using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.OutboundHandlers
 {
@@ -23,8 +24,16 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
 
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-				string fileName = $"AMA_PH_PRICING_{timestamp}.txt";
+				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+				var existingFiles = Directory.GetFiles(outboundDir, "AMA_PH_PRICING_*.txt")
+									.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+									.ToList();
+
+				int nextSequence = existingFiles.Count + 1;
+				string sequenceStr = nextSequence.ToString("D3");
+
+				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
 				Logger.Log($"EOD Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");

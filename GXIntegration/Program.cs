@@ -67,9 +67,9 @@ class Program
 
 				Logger.Log($">>> ReprocessMinutes = {config.ReprocessMinutes}");
 
-				Logger.Log(">>> Starting OUTBOUND Process...");
-				await form.OutboundTab.TriggerDownloadAsync();
-				Logger.Log(">>> OUTBOUND completed");
+				//Logger.Log(">>> Starting OUTBOUND Process...");
+				//await form.OutboundTab.TriggerDownloadAsync();
+				//Logger.Log(">>> OUTBOUND completed");
 			}
 			catch (Exception ex)
 			{

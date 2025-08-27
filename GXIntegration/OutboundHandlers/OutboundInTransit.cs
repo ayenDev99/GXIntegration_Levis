@@ -20,27 +20,30 @@ namespace GXIntegration_Levis.OutboundHandlers
 			try
 			{
 				DateTime date = DateTime.Today;
-				var Items = await repository.GetInventoryAsync(date);
+				var items = await repository.GetInventoryAsync(date);
+				string countryCode = config.CountryCode ?? "XX";
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
 
-				var grouped = Items.GroupBy(i => i.CurrencyId ?? "UNKNOWN");
+				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+				var existingFiles = Directory.GetFiles(outboundDir, $"AMA_{countryCode}_INTRANSIT_*.txt")
+									.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+									.ToList();
 
-				foreach (var group in grouped)
-				{
-					string countryCode = config.CountryCode ?? "XX";
-					string fileName = $"LS{countryCode}_AMA_INTRANSIT_{timestamp}.txt";
-					string filePath = Path.Combine(outboundDir, fileName);
+				int nextSequence = existingFiles.Count + 1;
+				string sequenceStr = nextSequence.ToString("D3");
 
-					Logger.Log($"EOD InTransit downloaded successfully | Items Count: {Items.Count} | File Name: {fileName}");
+				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+				string fileName = $"AMA_{countryCode}_INTRANSIT_{sequenceStr}_{timestamp}.txt";
+				string filePath = Path.Combine(outboundDir, fileName);
 
-					string output = Format(group.ToList(), config.Delimiter ?? "|");
-					
-					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-				}
+				Logger.Log($"EOD InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+
+				string output = Format(items, "|");
+
+				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 
 				//MessageBox.Show($"Intransit synced.\n{grouped.Count()} file(s) created.");
 			}

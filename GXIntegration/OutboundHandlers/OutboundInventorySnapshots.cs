@@ -24,19 +24,30 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
 
-				var grouped = items.GroupBy(i => i.CurrencyId ?? "UNKNOWN");
+				// Grouped by StoreCode
+				var grouped = items.GroupBy(i => (i.StoreCode ?? "UNKNOWN").Trim());
 
 				foreach (var group in grouped)
 				{
-					string currencyCode = group.Key.Substring(0, 2);
-					string fileName = $"LSPH_AMA_PSSTKR_{timestamp}.txt";
+					string storeCode = group.Key ?? "XX";
+
+					string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+					var existingFiles = Directory.GetFiles(outboundDir, $"AMA_PH_{storeCode}_*.txt")
+										.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+										.ToList();
+
+					int nextSequence = existingFiles.Count + 1;
+					string sequenceStr = nextSequence.ToString("D3");
+
+					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
-					Logger.Log($"EOD InventorySnapshots downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+					Logger.Log($"EOD InventorySnapshots downloaded successfully | Items Count: {group.Count()} | File Name: {fileName}");
 
 					string output = Format(group.ToList(), config.Delimiter ?? "|");
+					//Logger.Log($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
 
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
