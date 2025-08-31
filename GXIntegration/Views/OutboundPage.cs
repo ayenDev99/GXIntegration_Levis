@@ -24,6 +24,7 @@ namespace GXIntegration_Levis.Views
 		private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
 		private StoreShippingRepository _storeShippingRepository;
 		private StoreReceivingRepository _storeReceivingRepository;
+		private StoreInventoryCountRepository _storeInventoryCountRepository;
 
 		private TabControl tabControl;
 		private TabPage tabEod, tabApi;
@@ -45,6 +46,7 @@ namespace GXIntegration_Levis.Views
 			_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
 			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
 			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
+			_storeInventoryCountRepository = new StoreInventoryCountRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitialCreateDatabase();
@@ -186,7 +188,9 @@ namespace GXIntegration_Levis.Views
 				_storeReturnRepository,
 				_storeInventoryAdjustmentRepository,
 				_storeShippingRepository,
-				_storeReceivingRepository);
+				_storeReceivingRepository,
+				_storeInventoryCountRepository
+				);
 
 			tabEod.Controls.Add(new OutboundEODTab(config, repositories) { Dock = DockStyle.Fill });
 			tabApi.Controls.Add(new OutboundAPITab(config, repositories) { Dock = DockStyle.Fill });
@@ -209,6 +213,7 @@ namespace GXIntegration_Levis.Views
 		public StoreInventoryAdjustmentRepository StoreInventoryAdjustmentRepository { get; set; }
 		public StoreShippingRepository StoreShippingRepository { get; set; }
 		public StoreReceivingRepository StoreReceivingRepository { get; set; }
+		public StoreInventoryCountRepository StoreInventoryCountRepository { get; set; }
 
 		public OutboundRepositories(
 			InventoryRepository inventoryRepository,
@@ -220,7 +225,8 @@ namespace GXIntegration_Levis.Views
 			StoreReturnRepository storeReturnRepository,
 			StoreInventoryAdjustmentRepository storeInventoryAdjustmentRepository,
 			StoreShippingRepository storeShippingRepository,
-			StoreReceivingRepository storeReceivingRepository)
+			StoreReceivingRepository storeReceivingRepository,
+			StoreInventoryCountRepository storeInventoryCountRepository)
 		{
 			InventoryRepository = inventoryRepository;
 			InTransitRepository = inTransitRepository;
@@ -232,6 +238,7 @@ namespace GXIntegration_Levis.Views
 			StoreInventoryAdjustmentRepository = storeInventoryAdjustmentRepository;
 			StoreShippingRepository = storeShippingRepository;
 			StoreReceivingRepository = storeReceivingRepository;
+			StoreInventoryCountRepository = storeInventoryCountRepository;
 		}
 	}
 }

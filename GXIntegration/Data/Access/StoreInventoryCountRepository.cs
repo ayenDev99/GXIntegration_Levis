@@ -9,14 +9,14 @@ using GXIntegration_Levis.Helpers;
 
 namespace GXIntegration_Levis.Data.Access
 {
-	public class StoreInventoryAdjustmentRepository
+	public class StoreInventoryCountRepository
 	{
 		private readonly string _connectionString;
-		public StoreInventoryAdjustmentRepository(string connectionString)
+		public StoreInventoryCountRepository(string connectionString)
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreInventoryAdjustmentModel>> GetStoreInventoryAdjustmentAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<StoreInventoryCountModel>> GetStoreInventoryCountAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -86,14 +86,14 @@ namespace GXIntegration_Levis.Data.Access
 						ToDate = to_date
 					};
 
-					var sales = await connection.QueryAsync<StoreInventoryAdjustmentModel>(sql, parameters);
+					var sales = await connection.QueryAsync<StoreInventoryCountModel>(sql, parameters);
 					return sales.ToList();
 				}
 				catch (Exception ex)
 				{
 					Logger.Log($"Error fetching Store Inventory Adjustment data: {ex.Message}");
 					Console.WriteLine($"Error fetching Store Inventory Adjustment data: {ex.Message}");
-					return new List<StoreInventoryAdjustmentModel>();
+					return new List<StoreInventoryCountModel>();
 				}
 			}
 		}

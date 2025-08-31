@@ -3,7 +3,6 @@ using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
-using Microsoft.VisualBasic;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
@@ -52,7 +51,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1 = new GunaDataGridView
 			{
 				Location = new Point(20, 20),
-				Size = new Size(704, 220),
+				Size = new Size(704, 230),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -74,7 +73,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.Columns[3].Name = "File Type";
 
 			guna1DataGridView1.Columns[0].Width = 30;
-			guna1DataGridView1.Columns[1].Width = 200;
+			guna1DataGridView1.Columns[1].Width = 250;
 			guna1DataGridView1.Columns[2].Width = 455;
 			guna1DataGridView1.Columns[3].Width = 85;
 
@@ -104,9 +103,10 @@ namespace GXIntegration_Levis.Views
 			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
 			AddRow("6", "STORE_TRANSFER - SHIPPING", "StoreShipping_[yyyymmddhhmmss]", ".xml");
 			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
-			AddRow("8", "INVENTORY SNAPSHOTS", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
-			AddRow("9", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
-			AddRow("10", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
+			AddRow("8", "INVENTORY_COUNT", "StoreInventoryCount_[yyyymmddhhmmss]", ".xml");
+			AddRow("9", "INVENTORY SNAPSHOTS", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
+			AddRow("10", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
+			AddRow("11", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
 
 			this.Controls.Add(guna1DataGridView1);
 		}
@@ -122,10 +122,6 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 
-
-		// ***************************************************
-		// Process Methods
-		// ***************************************************
 		private void InitializeDownloadActions()
 		{
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
@@ -137,11 +133,16 @@ namespace GXIntegration_Levis.Views
 				["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(repositories.StoreInventoryAdjustmentRepository, config, "xml"),
 				["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(repositories.StoreShippingRepository, config, "xml"),
 				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
+				["INVENTORY_COUNT"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
 				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config),
 				["INTRANSIT"] = () => OutboundInTransit.Execute(repositories.InTransitRepository, config),
 				["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)
 			};
 		}
+
+		// ***************************************************
+		// Process Methods
+		// ***************************************************
 		private async Task ProcessAllDownloads()
 		{
 			Logger.Log($"--------------------------------------------------------------------------");
@@ -151,17 +152,17 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
-				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				await OutboundPrice.Execute(repositories.PriceRepository, config);
-				Logger.Log($"Downloaded successfully.");
+				//Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				//await OutboundPrice.Execute(repositories.PriceRepository, config);
+				//Logger.Log($"Downloaded successfully.");
 
 				Logger.Log("--- Outbound EOD .XML : Starting executing all .XML files in single xml file...");
 				await ExecuteAllAndSaveToSingleXmlAsync();
 
-				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
-				await UploadToSftpAsync();
+				//Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
+				//await UploadToSftpAsync();
 			}
 			finally
 			{
@@ -169,7 +170,6 @@ namespace GXIntegration_Levis.Views
 				Cursor.Current = Cursors.Default;
 			}
 		}
-
 
 		private async Task ExecuteAllAndSaveToSingleXmlAsync(CancellationToken cancellationToken = default)
 		{
@@ -186,6 +186,7 @@ namespace GXIntegration_Levis.Views
 				var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, new List<int> { 1 });
 				var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate);
 				var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate);
+				var storeInventoryCount = await repositories.StoreInventoryCountRepository.GetStoreInventoryCountAsync(fromDate, toDate);
 
 				var xmlFragments = new[]
 				{
@@ -195,7 +196,8 @@ namespace GXIntegration_Levis.Views
 					OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
 					OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 					OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
-					OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template")
+					OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
+					OutboundStoreInventoryCount.GenerateXml(storeInventoryCount, null, "template")
 				};
 
 				string[] xmlTypes = new[]
@@ -206,7 +208,8 @@ namespace GXIntegration_Levis.Views
 					"StoreInventoryAdjustment",
 					"StoreReturn",
 					"StoreGoodsReturn",
-					"StoreGoods"
+					"StoreGoods",
+					"StoreInventoryCount"
 				};
 
 				for (int i = 0; i < xmlFragments.Length; i++)
@@ -277,7 +280,6 @@ namespace GXIntegration_Levis.Views
 			return;
 
 		}
-
 
 		private async Task UploadToSftpAsync()
 		{

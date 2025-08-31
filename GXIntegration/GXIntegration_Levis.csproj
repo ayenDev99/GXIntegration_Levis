@@ -137,6 +137,7 @@
   <ItemGroup>
     <Compile Include="Data\Access\InboundHierarchyRepository.cs" />
     <Compile Include="Data\Access\PrismRepository.cs" />
+    <Compile Include="Data\Access\StoreInventoryCountRepository.cs" />
     <Compile Include="Helpers\GlobalHelper.cs" />
     <Compile Include="Helpers\TimeHelper.cs" />
     <Compile Include="InboundHandlers\GlobalInbound.cs" />
@@ -145,6 +146,8 @@
     <Compile Include="InboundHandlers\InboundItem.cs" />
     <Compile Include="InboundHandlers\InboundHierarchy.cs" />
     <Compile Include="InboundHandlers\InboundPrice.cs" />
+    <Compile Include="Model\StoreInventoryCountModel.cs" />
+    <Compile Include="OutboundHandlers\OutboundStoreInventoryCount.cs" />
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
