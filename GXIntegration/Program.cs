@@ -38,7 +38,6 @@ class Program
 
 			form.Load += async (sender, e) =>
 			{
-				//Logger.Log(">>> Form loaded");
 				await RunIterationLoop();
 			};
 
@@ -51,6 +50,7 @@ class Program
 
 		await tcsApp.Task;
 	}
+
 
 	static async Task RunIterationLoop()
 	{

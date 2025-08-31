@@ -3,14 +3,20 @@ using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
+using Microsoft.VisualBasic;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
+
 
 namespace GXIntegration_Levis.Views
 {
@@ -80,7 +86,9 @@ namespace GXIntegration_Levis.Views
 				Width = 50,
 				ImageLayout = DataGridViewImageCellLayout.Zoom
 			};
-			guna1DataGridView1.Columns.Add(imageColumn);
+
+			// ! Note: Uncomment if testing output per EOD files
+			//guna1DataGridView1.Columns.Add(imageColumn);
 
 			guna1DataGridView1.CellContentClick += CellContentClick;
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
@@ -114,6 +122,10 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 
+
+		// ***************************************************
+		// Process Methods
+		// ***************************************************
 		private void InitializeDownloadActions()
 		{
 			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
@@ -130,32 +142,25 @@ namespace GXIntegration_Levis.Views
 				["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)
 			};
 		}
-
-		// ***************************************************
-		// Process Methods
-		// ***************************************************
 		private async Task ProcessAllDownloads()
 		{
+			Logger.Log($"--------------------------------------------------------------------------");
+
 			btnSendXml.Enabled = false;
 			Cursor.Current = Cursors.WaitCursor;
 
 			try
 			{
-				foreach (var action in downloadActions)
-				{
-					try
-					{
-						await action.Value.Invoke();
-					}
-					catch (Exception ex)
-					{
-						Logger.Log($"Failed to process {action.Key}: {ex.Message}");
-						//MessageBox.Show($"Failed to process {action.Key}:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					}
-				}
+				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
+				Logger.Log($"Downloaded successfully.");
 
-				Logger.Log("All EOD Outbound downloads processed. Starting SFTP upload...");
-				//MessageBox.Show("All downloads processed. Starting SFTP upload...", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				Logger.Log("--- Outbound EOD .XML : Starting executing all .XML files in single xml file...");
+				await ExecuteAllAndSaveToSingleXmlAsync();
+
+				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
 				await UploadToSftpAsync();
 			}
 			finally
@@ -164,6 +169,115 @@ namespace GXIntegration_Levis.Views
 				Cursor.Current = Cursors.Default;
 			}
 		}
+
+
+		private async Task ExecuteAllAndSaveToSingleXmlAsync(CancellationToken cancellationToken = default)
+		{
+			var root = new XElement("OutboundData");
+
+			try
+			{
+				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+
+				var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, new List<int> { 0, 2 });
+				var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate);
+				var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate);
+				var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate);
+				var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, new List<int> { 1 });
+				var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate);
+				var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate);
+
+				var xmlFragments = new[]
+				{
+					OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
+					OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
+					OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
+					OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
+					OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
+					OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
+					OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template")
+				};
+
+				string[] xmlTypes = new[]
+				{
+					"StoreSale",
+					"StoreShipping",
+					"StoreReceiving",
+					"StoreInventoryAdjustment",
+					"StoreReturn",
+					"StoreGoodsReturn",
+					"StoreGoods"
+				};
+
+				for (int i = 0; i < xmlFragments.Length; i++)
+				{
+					var fragment = xmlFragments[i];
+					var xmlType = xmlTypes[i];
+
+					if (!string.IsNullOrWhiteSpace(fragment))
+					{
+						try
+						{
+							root.Add(XElement.Parse(fragment));
+							Logger.Log($"[XML] Successfully generated {xmlType} XML template.");
+						}
+						catch (Exception ex)
+						{
+							Logger.Log($"[XML] Failed to parse {xmlType} XML template: {ex.Message}");
+							continue;
+						}
+					}
+					else
+					{
+						Logger.Log($"[XML] {xmlType} XML template is empty or null. Skipping.");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("Failed to build combined XML: " + ex.ToString());
+				throw;
+			}
+
+			var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), root);
+
+			var settings = new XmlWriterSettings
+			{
+				Indent = true,
+				Encoding = Encoding.UTF8,
+				OmitXmlDeclaration = false,
+				Async = true
+			};
+
+			DateTime date = DateTime.Today;
+			string countryCode = config.CountryCode ?? "XX";
+
+			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+			Directory.CreateDirectory(outboundDir);
+
+			string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+			var existingFiles = Directory.GetFiles(outboundDir, $"AMA_{countryCode}_POSLOG_*.xml")
+				.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+				.ToList();
+
+			int nextSequence = existingFiles.Count + 1;
+			string sequenceStr = nextSequence.ToString("D3");
+			string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+
+			string fileName = $"AMA_{countryCode}_POSLOG_{sequenceStr}_{timestamp}.xml";
+			string filePath = Path.Combine(outboundDir, fileName);
+
+			using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+			using (var writer = XmlWriter.Create(stream, settings))
+			{
+				document.Save(writer);
+				await writer.FlushAsync();
+			}
+
+			return;
+
+		}
+
 
 		private async Task UploadToSftpAsync()
 		{
@@ -174,7 +288,7 @@ namespace GXIntegration_Levis.Views
 				string username = "TestRetailPro";
 				string password = "X67zZkTTAkIC";
 				string remoteDirectory = "/IN/";
-				string localDirectory = @"C:\GXIntegration_Levis\GXIntegration\bin\Debug\OUTBOUND\";
+				string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND"); ;
 
 				try
 				{
@@ -205,18 +319,32 @@ namespace GXIntegration_Levis.Views
 									string remotePath = remoteDirectory + Path.GetFileName(filePath);
 									sftp.UploadFile(fileStream, remotePath, true);
 								}
+
+								string archiveRootDir = Path.Combine(localDirectory, "ARCHIVE");
+								string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+								Directory.CreateDirectory(archiveDateDir);
+
+								string archivedPath = Path.Combine(archiveDateDir, Path.GetFileName(filePath));
+
+								if (File.Exists(archivedPath))
+								{
+									File.Delete(archivedPath);
+									Logger.Log($"Overwriting archived file: {archivedPath}");
+								}
+
+								File.Move(filePath, archivedPath);
+								Logger.Log($"Uploaded and archived: {archivedPath}");
 							}
 							catch (Exception ex)
 							{
-								Logger.Log("Failed to upload " + Path.GetFileName(filePath) + ": " + ex.Message);
-								//MessageBox.Show($"Failed to upload {Path.GetFileName(filePath)}:\n{ex.Message}", "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+								Logger.Log($"Error handling file '{Path.GetFileName(filePath)}': {ex}");
 							}
 						}
 
 						sftp.Disconnect();
 
 						Logger.Log("Upload to SFTP completed successfully.");
-						//MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
+						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}
 				catch (Exception ex)

@@ -36,19 +36,22 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"EOD Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[TXT] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				string output = Format(items, ",");
 
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-		
+
+				return;
 				//MessageBox.Show($"✅ Price synced file(s) created.");
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Logger.Log("❌ Error: " + ex.Message);
+
+				return;
 			}
 		}
 		private static string Format(List<PriceModel> items, string d)

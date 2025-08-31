@@ -23,21 +23,21 @@ namespace GXIntegration
 
 		static GXConfig config;
 		private ConfigurationPage _configurationPage;
-		private InventoryRepository _inventoryRepository;
-		private InTransitRepository _inTransitRepository;
-		private PriceRepository _priceRepository;
-		private StoreGoodsRepository _storeGoodsRepository;
-		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
-		private StoreSaleRepository _storeSaleRepository;
-		private StoreReturnRepository _storeReturnRepository;
-		private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
-		private StoreShippingRepository _storeShippingRepository;
-		private StoreReceivingRepository _storeReceivingRepository;
+		//private InventoryRepository _inventoryRepository;
+		//private InTransitRepository _inTransitRepository;
+		//private PriceRepository _priceRepository;
+		//private StoreGoodsRepository _storeGoodsRepository;
+		//private StoreGoodsReturnRepository _storeGoodsReturnRepository;
+		//private StoreSaleRepository _storeSaleRepository;
+		//private StoreReturnRepository _storeReturnRepository;
+		//private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
+		//private StoreShippingRepository _storeShippingRepository;
+		//private StoreReceivingRepository _storeReceivingRepository;
 
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
 
-		public OutboundEODTab OutboundTab { get; private set; }
+		//public OutboundEODTab OutboundTab { get; private set; }
 
 		public Form1()
 		{
@@ -49,33 +49,33 @@ namespace GXIntegration
 
 			MainContentPanel.Dock = DockStyle.Fill;
 
-			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
-			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
-			_priceRepository = new PriceRepository(config.MainDbConnection);
-			_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
-			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
-			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
-			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
-			_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
-			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
-			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
+			//_inventoryRepository = new InventoryRepository(config.MainDbConnection);
+			//_inTransitRepository = new InTransitRepository(config.MainDbConnection);
+			//_priceRepository = new PriceRepository(config.MainDbConnection);
+			//_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
+			//_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
+			//_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
+			//_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
+			//_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
+			//_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
+			//_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
 
-			var repositories = new OutboundRepositories(
-			_inventoryRepository,
-			_inTransitRepository,
-			_priceRepository,
-			_storeGoodsRepository,
-			_storeGoodsReturnRepository,
-			_storeSaleRepository,
-			_storeReturnRepository,
-			_storeInventoryAdjustmentRepository,
-			_storeShippingRepository,
-			_storeReceivingRepository);
+			//var repositories = new OutboundRepositories(
+			//_inventoryRepository,
+			//_inTransitRepository,
+			//_priceRepository,
+			//_storeGoodsRepository,
+			//_storeGoodsReturnRepository,
+			//_storeSaleRepository,
+			//_storeReturnRepository,
+			//_storeInventoryAdjustmentRepository,
+			//_storeShippingRepository,
+			//_storeReceivingRepository);
 
 
-			//Logger.Log(">>> Start FORM Process...");
-			OutboundTab = new OutboundEODTab(config, repositories);
-			this.Controls.Add(OutboundTab);
+			////Logger.Log(">>> Start FORM Process...");
+			//OutboundTab = new OutboundEODTab(config, repositories);
+			//this.Controls.Add(OutboundTab);
 		}
 
 		private void EnableDrag(Control control)

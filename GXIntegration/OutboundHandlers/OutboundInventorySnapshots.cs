@@ -44,7 +44,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
-					Logger.Log($"EOD InventorySnapshots downloaded successfully | Items Count: {group.Count()} | File Name: {fileName}");
+					Logger.Log($"[TXT] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {group.Count()} | File Name: {fileName}");
 
 					string output = Format(group.ToList(), config.Delimiter ?? "|");
 					//Logger.Log($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
