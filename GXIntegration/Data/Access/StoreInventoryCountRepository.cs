@@ -24,57 +24,46 @@ namespace GXIntegration_Levis.Data.Access
 				{
 					await connection.OpenAsync();
 					string sql = @"
-							SELECT
-								ADJ.SID							AS AdjSid
-								, TO_CHAR(S.ADDRESS4)			AS StoreCode
-								, WS.WORKSTATION				AS WorkstationNo
-								, ADJ.ADJ_NO			        AS SequenceNo
-								, ADJ.CREATED_DATETIME			AS BusinessDayDate
-								, ADJ.CREATED_DATETIME	        AS BeginDateTime
-								, ADJ.POST_DATE                 AS EndDateTime
-								, EMP.EMPL_NAME			        AS OperatorId
-								, CURRENCY.ALPHABETIC_CODE      AS CurrencyCode
-								, REGION.REGION_NAME	        AS Region
-								, COUNTRY.COUNTRY_CODE          AS Country
-								, S.ADDRESS5			        AS AlternateStoreId
-								, ''							AS CountID
-								, 'ADJUSTMENT'					AS CountType
-								, CASE WHEN ADJ.STATUS = 4 
-									THEN 'CLOSED' 
-										WHEN ADJ.STATUS = 2 
-										THEN 'CANCELLED' 
-										ELSE 'PENDING' 
-									END							AS CountStatus
-								, PREF_REASON.NAME				AS ReasonCode
-								, ADJ_COMMENT.COMMENTS			AS Comments
-								, ISB.DESCRIPTION1				AS ItemId
-								, ADJ_ITEM.ADJ_VALUE			AS QuantityShipped
-								, 'ON_HAND'						AS InventoryBucketId
-								, ''							AS PTDIM1
-								, ''							AS PTDIM2
-								, ISB.DESCRIPTION1				AS PTStyle
-								, ISB.ALU						AS PTEAN
-
-							FROM
-								RPS.ADJUSTMENT ADJ
-							LEFT JOIN RPS.ADJ_ITEM ADJ_ITEM		ON ADJ.SID = ADJ_ITEM.ADJ_SID
-							LEFT JOIN RPS.PREF_REASON			ON PREF_REASON.SID = ADJ.ADJ_REASON_SID
-							LEFT JOIN RPS.STORE	S				ON S.SID = ADJ.STORE_SID
-							LEFT JOIN RPS.SUBSIDIARY			ON ADJ.SBS_SID = SUBSIDIARY.SID
-							LEFT JOIN RPS.REGION_SUBSIDIARY		ON SUBSIDIARY.SID = REGION_SUBSIDIARY.SBS_SID
-							LEFT JOIN RPS.REGION				ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
-							LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = ADJ_ITEM.ITEM_SID
-							LEFT JOIN RPS.COUNTRY				ON COUNTRY.SID = SUBSIDIARY.COUNTRY_SID
-							LEFT JOIN RPS.CURRENCY				ON CURRENCY.SID = SUBSIDIARY.BASE_CURRENCY_SID
-							LEFT JOIN RPS.ADJ_COMMENT			ON ADJ.SID = ADJ_COMMENT.ADJ_SID
-							LEFT JOIN RPS.EMPLOYEE EMP			ON EMP.SID = ADJ.CLERK_SID
-							LEFT JOIN RPS.WORKSTATION WS		ON WS.SID = ADJ.WORKSTATION_SID
-							WHERE
-								TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
-								AND ADJ.ADJ_TYPE = 0
-								AND S.ACTIVE = 1
-							ORDER BY 
-								ADJ.POST_DATE DESC
+							SELECT 
+								'1'							AS OrganizationID
+								, S.ADDRESS4				AS StoreID
+								, '1'						AS WorkstationID
+								, S.ADDRESS4 
+									|| '001' 
+									|| '000100'				AS TillID
+								, ''						AS SequenceNo
+								, TO_CHAR(TRUNC
+									(ISIQ.CREATED_DATETIME) 
+									, 'YYYY-MM-DD')			AS BusinessDayDate
+								, ISIQ.CREATED_DATETIME		AS BeginDateTime
+								, ISIQ.CREATED_DATETIME		AS EndDateTime
+								, '1'						AS OperatorID
+								, 'PHP'						AS CurrencyCode
+								, 'AMA'						AS Region
+								, 'PHL'						AS Country
+								, S.ADDRESS5				AS AlternateStoreID
+								, ''						AS CountID
+								,  TO_CHAR(TRUNC
+									(ISIQ.CREATED_DATETIME) 
+									, 'YYYY-MM-DD')			AS DueDate
+								, ''						AS CountType
+								, ''						AS CountStatus
+								, ''						AS VarianceAdj
+								, ISI.ALU					AS ItemID
+								, ISI.UPC					AS ScannedBarcodeID
+								, ISI.ITEM_SIZE				AS DIM1
+								, ISI.ATTRIBUTE				AS DIM2
+								, ISIQ.QTY					AS Quantity
+								, ISIQ.QTY					AS SnapshotQty
+								, ''						AS UnitVariance
+								, 'ON_HAND'					AS InventoryBucketID
+								FROM 
+									RPS.INVN_SBS_ITEM_QTY ISIQ
+								LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = ISIQ.INVN_SBS_ITEM_SID
+								LEFT JOIN RPS.STORE S ON S.SID = ISIQ.STORE_SID
+								WHERE 
+									TRUNC(ISIQ.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
+									AND ISI.ACTIVE = 1
 					";
 
 					//FETCH FIRST 1 ROWS ONLY

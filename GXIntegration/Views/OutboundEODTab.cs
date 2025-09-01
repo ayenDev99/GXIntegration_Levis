@@ -152,17 +152,17 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				//Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
-				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				//await OutboundPrice.Execute(repositories.PriceRepository, config);
-				//Logger.Log($"Downloaded successfully.");
+				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
+				Logger.Log($"Downloaded successfully.");
 
 				Logger.Log("--- Outbound EOD .XML : Starting executing all .XML files in single xml file...");
 				await ExecuteAllAndSaveToSingleXmlAsync();
 
-				//Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
-				//await UploadToSftpAsync();
+				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
+				await UploadToSftpAsync();
 			}
 			finally
 			{

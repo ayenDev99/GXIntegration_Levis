@@ -1,37 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Model
 {
 	public class StoreInventoryCountModel
 	{
-		public string AdjSid { get; set; }
-		public string StoreCode { get; set; }
-		public string WorkstationNo { get; set; }
+		public string OrganizationID { get; set; }
+		public string StoreID { get; set; }
+		public string WorkstationID { get; set; }
+		public string TillID { get; set; }
 		public string SequenceNo { get; set; }
-		public DateTimeOffset BusinessDayDate { get; set; }
+		public string BusinessDayDate { get; set; }
 		public DateTimeOffset? BeginDateTime { get; set; }
 		public DateTimeOffset? EndDateTime { get; set; }
-		public string OperatorId { get; set; }
+		public string OperatorID { get; set; }
 		public string CurrencyCode { get; set; }
 		public string Region { get; set; }
 		public string Country { get; set; }
-		public string AlternateStoreId { get; set; }
+		public string AlternateStoreID { get; set; }
 		public string CountID { get; set; }
+		public string DueDate { get; set; }
 		public string CountType { get; set; }
 		public string CountStatus { get; set; }
-		public string ReasonCode { get; set; }
-		public string Comments { get; set; }
-		public string ItemId { get; set; }
-		public string QuantityShipped { get; set; }
-		public string InventoryBucketId { get; set; }
-		public string PTDIM1 { get; set; }
-		public string PTDIM2 { get; set; }
-		public string PTStyle { get; set; }
-		public string PTEAN { get; set; }
+		public string VarianceAdj { get; set; }
+		public string ItemID { get; set; }
+		public string ScannedBarcodeID { get; set; }
+		public string DIM1 { get; set; }
+		public string DIM2 { get; set; }
+		public string Quantity { get; set; }
+		public string SnapshotQty { get; set; }
+		public string UnitVariance { get; set; }
+		public string InventoryBucketID { get; set; }
 
 	}
 }
