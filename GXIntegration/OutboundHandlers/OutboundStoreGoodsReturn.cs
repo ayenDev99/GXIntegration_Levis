@@ -190,12 +190,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 						
 
 					}
-					writer.WriteEndElement(); // Transaction
-					writer.WriteEndElement(); // POSLog
-					writer.WriteEndDocument();
 				}
 			}
+
+			writer.WriteEndElement(); // Transaction
+			writer.WriteEndElement(); // POSLog
+			writer.WriteEndDocument();
 		}
-		
+
 	}
 }

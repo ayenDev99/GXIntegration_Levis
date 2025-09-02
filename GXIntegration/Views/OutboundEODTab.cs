@@ -7,7 +7,6 @@ using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -153,17 +152,17 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
-				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				await OutboundPrice.Execute(repositories.PriceRepository, config);
-				Logger.Log($"Downloaded successfully.");
+				//Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				//await OutboundPrice.Execute(repositories.PriceRepository, config);
+				//Logger.Log($"Downloaded successfully.");
 
 				Logger.Log("--- Outbound EOD .XML : Starting executing all .XML files in single xml file...");
 				await ExecuteAllAndSaveToSingleXmlAsync();
 
-				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
-				await UploadToSftpAsync();
+				//Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
+				//await UploadToSftpAsync();
 			}
 			finally
 			{
@@ -188,7 +187,7 @@ namespace GXIntegration_Levis.Views
 			foreach (var store in prismStores)
 			{
 				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
-				Logger.Log($"Processing store: {storeCode}");
+				Logger.Log($"[XML] >> STORE CODE : {storeCode} <<");
 
 				try
 				{
@@ -227,6 +226,20 @@ namespace GXIntegration_Levis.Views
 						"StoreInventoryCount"
 					};
 
+					var dataModules = new List<(string Label, IEnumerable<object> Items)>
+					{
+						("StoreSale", storeSaleItems as IEnumerable<object>),
+						("StoreShipping", storeShippingItems as IEnumerable<object>),
+						("StoreReceiving", storeReceivingItems as IEnumerable<object>),
+						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
+						("StoreReturn", storeReturnItems as IEnumerable<object>),
+						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
+						("StoreGoods", storeGoodsItems as IEnumerable<object>),
+						("StoreInventoryCount", storeInventoryCount as IEnumerable<object>)
+					};
+
+
+
 					var storeRoot = new XElement("OutboundData");
 
 					for (int i = 0; i < xmlFragments.Length; i++)
@@ -234,12 +247,17 @@ namespace GXIntegration_Levis.Views
 						string fragment = xmlFragments[i];
 						string xmlType = xmlTypes[i];
 
+						var countsByType = dataModules.ToDictionary(dm => dm.Label, dm => dm.Items?.Count() ?? 0);
+
 						if (!string.IsNullOrWhiteSpace(fragment))
 						{
 							try
 							{
 								storeRoot.Add(XElement.Parse(fragment));
-								Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}.");
+
+								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
+								Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}. Item count: {count}");
+								//Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}.");
 							}
 							catch (Exception ex)
 							{
