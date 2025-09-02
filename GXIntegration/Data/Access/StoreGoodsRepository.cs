@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			//var fromDateLiteral = GlobalHelper.ToOracleTimestampTZLiteral(from_date);
 			//var toDateLiteral = GlobalHelper.ToOracleTimestampTZLiteral(to_date);
@@ -81,8 +81,7 @@ namespace GXIntegration_Levis.Data.Access
 								, S.ADDRESS5					AS DestinationPartyID
 								, S.ZIP							AS ShipmentPostalCode
 								, COUNTRY.COUNTRY_CODE			AS ShipmentCountry
-								, VI.QTY 					AS QuantityShipped
-	
+								, VI.QTY 						AS QuantityShipped
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -101,7 +100,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_TYPE = 0
 								AND VOU.VOU_CLASS = 0
 								AND VOU.STATUS = 4
-								AND S.ACTIVE = 1
+								AND S.ADDRESS4 = :StoreCode
 					";
 
 					// TO CONFIRM STATUS
@@ -114,7 +113,8 @@ namespace GXIntegration_Levis.Data.Access
 					var parameters = new
 					{
 						FromDate = from_date,
-						ToDate = to_date
+						ToDate = to_date,
+						StoreCode = storeCode
 					};
 
 					var sales = await connection.QueryAsync<StoreGoodsModel>(sql, parameters);

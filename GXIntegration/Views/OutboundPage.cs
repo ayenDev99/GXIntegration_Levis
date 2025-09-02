@@ -14,6 +14,7 @@ namespace GXIntegration_Levis.Views
 	{
 		private static GXConfig config;
 
+		private PrismRepository _prismRepository;
 		private InventoryRepository _inventoryRepository;
 		private InTransitRepository _inTransitRepository;
 		private PriceRepository _priceRepository;
@@ -36,6 +37,7 @@ namespace GXIntegration_Levis.Views
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
+			_prismRepository = new PrismRepository(config.MainDbConnection);
 			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
 			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
 			_priceRepository = new PriceRepository(config.MainDbConnection);
@@ -165,7 +167,6 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-
 		private void InitializeTabs()
 		{
 			tabControl = new TabControl
@@ -179,6 +180,7 @@ namespace GXIntegration_Levis.Views
 			tabApi = new TabPage("API");
 
 			var repositories = new OutboundRepositories(
+				_prismRepository,
 				_inventoryRepository,
 				_inTransitRepository,
 				_priceRepository,
@@ -203,6 +205,7 @@ namespace GXIntegration_Levis.Views
 	}
 	public class OutboundRepositories
 	{
+		public PrismRepository PrismRepository { get; set; }
 		public InventoryRepository InventoryRepository { get; set; }
 		public InTransitRepository InTransitRepository { get; set; }
 		public PriceRepository PriceRepository { get; set; }
@@ -216,6 +219,7 @@ namespace GXIntegration_Levis.Views
 		public StoreInventoryCountRepository StoreInventoryCountRepository { get; set; }
 
 		public OutboundRepositories(
+			PrismRepository prismRepository,
 			InventoryRepository inventoryRepository,
 			InTransitRepository inTransitRepository,
 			PriceRepository priceRepository,
@@ -228,6 +232,7 @@ namespace GXIntegration_Levis.Views
 			StoreReceivingRepository storeReceivingRepository,
 			StoreInventoryCountRepository storeInventoryCountRepository)
 		{
+			PrismRepository = prismRepository;
 			InventoryRepository = inventoryRepository;
 			InTransitRepository = inTransitRepository;
 			PriceRepository = priceRepository;

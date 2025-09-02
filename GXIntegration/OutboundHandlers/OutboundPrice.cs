@@ -21,18 +21,24 @@ namespace GXIntegration_Levis.OutboundHandlers
 				DateTime date = DateTime.Today;
 				var items = await repository.GetPriceAsync(date);
 
+				// Outbound directory setup
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
+				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+
+				// Archive directory setup
+				string archiveRootDir = Path.Combine(outboundDir, "ARCHIVE");
+				string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+				Directory.CreateDirectory(archiveDateDir);
 
 				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
-				var existingFiles = Directory.GetFiles(outboundDir, "AMA_PH_PRICING_*.txt")
+				var existingFiles = Directory.GetFiles(archiveDateDir, "AMA_PH_PRICING_*.txt")
 									.Where(f => Path.GetFileName(f).Contains(todayPrefix))
 									.ToList();
 
 				int nextSequence = existingFiles.Count + 1;
 				string sequenceStr = nextSequence.ToString("D3");
 
-				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
 				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 

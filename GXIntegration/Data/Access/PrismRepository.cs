@@ -2,6 +2,7 @@
 using GXIntegration_Levis.Helpers;
 using Oracle.ManagedDataAccess.Client;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Data.Access
@@ -46,29 +47,35 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-		public async Task<dynamic> GetRpsStore(string storeCode)
+		public async Task<dynamic> GetRpsStore(string columnName, string columnValue)
 		{
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> {"ADDRESS5", "ACTIVE"};
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
 
-					string sql = @"
+					string sql = $@"
 						SELECT 
 							*
 						FROM 
 							RPS.STORE STORE
 						WHERE 
-							STORE.ADDRESS5 = :StoreCode
+							STORE.{columnName} = :ColumnValue
 					";
 
-					var result = await connection.QueryFirstOrDefaultAsync(sql, new
-					{
-						StoreCode = storeCode
-					});
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
 
-					return result;
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
 				}
 				catch (Exception ex)
 				{

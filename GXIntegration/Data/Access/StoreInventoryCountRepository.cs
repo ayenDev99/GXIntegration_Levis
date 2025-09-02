@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreInventoryCountModel>> GetStoreInventoryCountAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<StoreInventoryCountModel>> GetStoreInventoryCountAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -64,6 +64,7 @@ namespace GXIntegration_Levis.Data.Access
 								WHERE 
 									TRUNC(ISIQ.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
 									AND ISI.ACTIVE = 1
+									AND S.ADDRESS4 = :StoreCode
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
@@ -72,7 +73,8 @@ namespace GXIntegration_Levis.Data.Access
 					var parameters = new
 					{
 						FromDate = from_date,
-						ToDate = to_date
+						ToDate = to_date,
+						StoreCode = storeCode
 					};
 
 					var sales = await connection.QueryAsync<StoreInventoryCountModel>(sql, parameters);

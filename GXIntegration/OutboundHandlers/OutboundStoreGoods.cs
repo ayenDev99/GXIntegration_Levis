@@ -15,18 +15,12 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundStoreGoods
 	{
-		public static async Task<string> Execute(StoreGoodsRepository repository, GXConfig config, string generate_type)
+		public static async Task Execute(StoreGoodsRepository repository, GXConfig config, string generate_type)
 		{
 			try
 			{
 				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
-				var items = await repository.GetStoreGoodsAsync(fromDate, toDate);
-
-				if (items.Count == 0)
-				{
-					Logger.Log("No StoreGoods items found for the given date range. Exiting execution.");
-					return string.Empty; ;
-				}
+				//var items = await repository.GetStoreGoodsAsync(fromDate, toDate);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
@@ -35,16 +29,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"StoreGoods_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"EOD StoreGoods downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
-
-				return GenerateXml(items, filePath, generate_type);
+				//Logger.Log($"EOD StoreGoods downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				//return GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Logger.Log($"Error: {ex.Message}");
-
-				return string.Empty;
 			}
 		}
 

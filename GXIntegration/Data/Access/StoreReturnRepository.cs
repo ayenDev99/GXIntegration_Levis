@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, List<int> receiptTypes)
+		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -59,10 +59,10 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.COUNTRY CTRY		ON CTRY.SID = SBS.COUNTRY_SID
 							WHERE 
 								D.STATUS = 4
-								AND D.RECEIPT_TYPE IN :ReceiptTypes
+								AND D.RECEIPT_TYPE IN (1)
 								AND D.DOC_NO IS NOT NULL
-								AND TRUNC(D.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
-								AND S.ACTIVE = 1
+								AND TRUNC(D.POST_DATE) BETWEEN DATE '2025-01-20' AND DATE '2025-08-20'
+								AND S.ADDRESS4 = :StoreCode
 							ORDER BY  
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
@@ -77,7 +77,7 @@ namespace GXIntegration_Levis.Data.Access
 					{
 						FromDate = from_date,
 						ToDate = to_date,
-						ReceiptTypes = receiptTypes
+						StoreCode = storeCode
 					};
 
 					var sales = await connection.QueryAsync<StoreReturnModel>(sql, parameters);

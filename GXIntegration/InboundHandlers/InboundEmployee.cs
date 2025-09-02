@@ -39,7 +39,8 @@ namespace GXIntegration_Levis.InboundHandlers
 							Console.WriteLine($"{kv.Key}: {kv.Value}");
 						}
 
-						var prism_store = await repository.GetRpsStore(row["StoreCode"]?.ToString());
+						var storeCode = row["StoreCode"]?.ToString();
+						var prism_store = await repository.GetRpsStore("ADDRESS5", storeCode);
 
 						var employeeData = new Dictionary<string, object>
 						{

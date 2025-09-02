@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreShippingModel>> GetStoreShippingAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<StoreShippingModel>> GetStoreShippingAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -64,7 +64,6 @@ namespace GXIntegration_Levis.Data.Access
 								, VI.QTY 						AS QuantityShipped
 								, VI.ITEM_POS					AS LineNumber
 								, ISB.DESCRIPTION2				AS Description
-	
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -79,7 +78,7 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
 								TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
-								AND S.ACTIVE = 1
+								AND S.ADDRESS4 = :StoreCode
 								AND VOU.VOU_CLASS = 2
 								AND VOU.SLIP_FLAG = 1
 								AND VOU.STATUS = 3
@@ -91,7 +90,8 @@ namespace GXIntegration_Levis.Data.Access
 					var parameters = new
 					{
 						FromDate = from_date,
-						ToDate = to_date
+						ToDate = to_date,
+						StoreCode = storeCode
 					};
 
 					var sales = await connection.QueryAsync<StoreShippingModel>(sql, parameters);

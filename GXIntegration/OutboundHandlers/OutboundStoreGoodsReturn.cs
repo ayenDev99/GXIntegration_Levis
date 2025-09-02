@@ -21,7 +21,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				DateTime from_date = DateTime.Today; // 00:00:00
 				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
-				var items = await repository.GetStoreGoodsReturnAsync(from_date, to_date);
+				//var items = await repository.GetStoreGoodsReturnAsync(from_date, to_date);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
@@ -30,9 +30,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"StoreGoodsReturn_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"EOD StoreGoodsReturn downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
-
-				GenerateXml(items, filePath, generate_type);
+				//Logger.Log($"EOD StoreGoodsReturn downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				//GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)
 			{

@@ -7,6 +7,7 @@ using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -173,112 +174,129 @@ namespace GXIntegration_Levis.Views
 
 		private async Task ExecuteAllAndSaveToSingleXmlAsync(CancellationToken cancellationToken = default)
 		{
-			var root = new XElement("OutboundData");
+			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+			var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+			string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
 
-			try
+			Directory.CreateDirectory(outboundDir);
+			Directory.CreateDirectory(archiveDir);
+
+			string countryCode = config.CountryCode ?? "XX";
+			string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+
+			foreach (var store in prismStores)
 			{
-				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
+				Logger.Log($"Processing store: {storeCode}");
 
-				var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, new List<int> { 0, 2 });
-				var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate);
-				var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate);
-				var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate);
-				var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, new List<int> { 1 });
-				var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate);
-				var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate);
-				var storeInventoryCount = await repositories.StoreInventoryCountRepository.GetStoreInventoryCountAsync(fromDate, toDate);
-
-				var xmlFragments = new[]
+				try
 				{
-					OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
-					OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
-					OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
-					OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
-					OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
-					OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
-					OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
-					OutboundStoreInventoryCount.GenerateXml(storeInventoryCount, null, "template")
-				};
+					// Fetch data per store
+					var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode);
+					var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate, storeCode);
+					var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate, storeCode);
+					var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode);
+					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
+					var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode);
+					var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate, storeCode);
+					var storeInventoryCount = await repositories.StoreInventoryCountRepository.GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
 
-				string[] xmlTypes = new[]
-				{
-					"StoreSale",
-					"StoreShipping",
-					"StoreReceiving",
-					"StoreInventoryAdjustment",
-					"StoreReturn",
-					"StoreGoodsReturn",
-					"StoreGoods",
-					"StoreInventoryCount"
-				};
-
-				for (int i = 0; i < xmlFragments.Length; i++)
-				{
-					var fragment = xmlFragments[i];
-					var xmlType = xmlTypes[i];
-
-					if (!string.IsNullOrWhiteSpace(fragment))
+					// Generate XML fragments
+					var xmlFragments = new[]
 					{
-						try
+						OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
+						OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
+						OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
+						OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
+						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
+						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
+						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
+						OutboundStoreInventoryCount.GenerateXml(storeInventoryCount, null, "template")
+					};
+
+					string[] xmlTypes = new[]
+					{
+						"StoreSale",
+						"StoreShipping",
+						"StoreReceiving",
+						"StoreInventoryAdjustment",
+						"StoreReturn",
+						"StoreGoodsReturn",
+						"StoreGoods",
+						"StoreInventoryCount"
+					};
+
+					var storeRoot = new XElement("OutboundData");
+
+					for (int i = 0; i < xmlFragments.Length; i++)
+					{
+						string fragment = xmlFragments[i];
+						string xmlType = xmlTypes[i];
+
+						if (!string.IsNullOrWhiteSpace(fragment))
 						{
-							root.Add(XElement.Parse(fragment));
-							Logger.Log($"[XML] Successfully generated {xmlType} XML template.");
+							try
+							{
+								storeRoot.Add(XElement.Parse(fragment));
+								Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}.");
+							}
+							catch (Exception ex)
+							{
+								Logger.Log($"[XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
+							}
 						}
-						catch (Exception ex)
+						else
 						{
-							Logger.Log($"[XML] Failed to parse {xmlType} XML template: {ex.Message}");
-							continue;
+							Logger.Log($"[XML] {xmlType} data for store {storeCode} is empty. Skipping.");
 						}
 					}
-					else
+
+					// Skip file generation if no data at all
+					if (!storeRoot.HasElements)
 					{
-						Logger.Log($"[XML] {xmlType} XML template is empty or null. Skipping.");
+						Logger.Log($"[INFO] No outbound data generated for store {storeCode}. File will not be created.");
+						continue;
 					}
+
+					// Prepare output XML document
+					var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), storeRoot);
+
+					var settings = new XmlWriterSettings
+					{
+						Indent = true,
+						Encoding = Encoding.UTF8,
+						OmitXmlDeclaration = false,
+						Async = true
+					};
+
+					// Sequence logic
+					var existingFiles = Directory.GetFiles(archiveDir, $"AMA_{countryCode}_{storeCode}_POSLOG_*.xml")
+						.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+						.ToList();
+
+					int nextSequence = existingFiles.Count + 1;
+					string sequenceStr = nextSequence.ToString("D3");
+					string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+
+					string fileName = $"AMA_{countryCode}_{storeCode}_POSLOG_{sequenceStr}_{timestamp}.xml";
+					string filePath = Path.Combine(outboundDir, fileName);
+
+					// Write to file
+					using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+					using (var writer = XmlWriter.Create(stream, settings))
+					{
+						await Task.Run(() => document.Save(writer), cancellationToken);
+						await writer.FlushAsync();
+					}
+
+					Logger.Log($"[FILE] XML file created: {fileName}");
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"[ERROR] Failed to process store {storeCode}: {ex}");
 				}
 			}
-			catch (Exception ex)
-			{
-				Logger.Log("Failed to build combined XML: " + ex.ToString());
-				throw;
-			}
-
-			var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), root);
-
-			var settings = new XmlWriterSettings
-			{
-				Indent = true,
-				Encoding = Encoding.UTF8,
-				OmitXmlDeclaration = false,
-				Async = true
-			};
-
-			DateTime date = DateTime.Today;
-			string countryCode = config.CountryCode ?? "XX";
-
-			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-			Directory.CreateDirectory(outboundDir);
-
-			string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
-			var existingFiles = Directory.GetFiles(outboundDir, $"AMA_{countryCode}_POSLOG_*.xml")
-				.Where(f => Path.GetFileName(f).Contains(todayPrefix))
-				.ToList();
-
-			int nextSequence = existingFiles.Count + 1;
-			string sequenceStr = nextSequence.ToString("D3");
-			string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
-
-			string fileName = $"AMA_{countryCode}_POSLOG_{sequenceStr}_{timestamp}.xml";
-			string filePath = Path.Combine(outboundDir, fileName);
-
-			using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-			using (var writer = XmlWriter.Create(stream, settings))
-			{
-				document.Save(writer);
-				await writer.FlushAsync();
-			}
-
-			return;
-
 		}
 
 		private async Task UploadToSftpAsync()
@@ -290,7 +308,7 @@ namespace GXIntegration_Levis.Views
 				string username = "TestRetailPro";
 				string password = "X67zZkTTAkIC";
 				string remoteDirectory = "/IN/";
-				string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND"); ;
+				string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 
 				try
 				{

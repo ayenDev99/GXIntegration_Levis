@@ -116,108 +116,116 @@ namespace GXIntegration_Levis.Views
 			string inventoryApiUrl = "https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory";
 
 			var timeRange = TimeHelper.GetPhilippineTimeRange(10);
+			var prism_store = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
-			// Fetch data
-			var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, new List<int> { 0, 2 });
-			var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date);
-			var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date);
-			var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date);
-			var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, new List<int> { 1 });
-			var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, timeRange.to_date);
-			var storeGoodsItems = await _repositories.StoreGoodsRepository.GetStoreGoodsAsync(timeRange.from_date, timeRange.to_date);
+			foreach (var store in prism_store)
+			{
+				var storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
+				Logger.Log($"STORE_CODE: {storeCode}");
 
-			// Send Store Goods Transactions
-			await SendOutboundDataAsync(
-				storeGoodsItems,
-				item => item.VouSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreGoods.GenerateXml(list, null, "template"),
-				"storegoods",
-				inventoryApiUrl,
-				username,
-				password
-			);
+				// Fetch data
+				var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeInventoryAdjusmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, timeRange.to_date, storeCode);
+				var storeGoodsItems = await _repositories.StoreGoodsRepository.GetStoreGoodsAsync(timeRange.from_date, timeRange.to_date, storeCode);
 
-			// Send Store Goods Return Transactions
-			await SendOutboundDataAsync(
-				storeGoodsReturnItems,
-				item => item.VouSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreGoodsReturn.GenerateXml(list, null, "template"),
-				"storegoodsreturn",
-				inventoryApiUrl,
-				username,
-				password
-			);
+				// Send Store Goods Transactions
+				await SendOutboundDataAsync(
+					storeGoodsItems,
+					item => item.VouSid,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
+					list => OutboundStoreGoods.GenerateXml(list, null, "template"),
+					"storegoods",
+					inventoryApiUrl,
+					username,
+					password
+				);
 
-			// Send Store Sale Transactions
-			await SendOutboundDataAsync(
-				storeSaleItems,
-				item => item.DocSid,
-				item => item.DocNo,
-				item => item.CreatedDateTime.DateTime,
-				list => OutboundStoreSale.GenerateXml(list, null, "template"),
-				"storesale",
-				saleApiUrl,
-				username,
-				password
-			);
+				// Send Store Goods Return Transactions
+				await SendOutboundDataAsync(
+					storeGoodsReturnItems,
+					item => item.VouSid,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
+					list => OutboundStoreGoodsReturn.GenerateXml(list, null, "template"),
+					"storegoodsreturn",
+					inventoryApiUrl,
+					username,
+					password
+				);
 
-			// Send Store Return Transactions
-			await SendOutboundDataAsync(
-				storeReturnItems,
-				item => item.DocSid,
-				item => item.DocNo,
-				item => item.CreatedDateTime.DateTime,
-				list => OutboundStoreReturn.GenerateXml(list, null, "template"),
-				"storereturn",
-				saleApiUrl,
-				username,
-				password
-			);
+				// Send Store Sale Transactions
+				await SendOutboundDataAsync(
+					storeSaleItems,
+					item => item.DocSid,
+					item => item.DocNo,
+					item => item.CreatedDateTime.DateTime,
+					list => OutboundStoreSale.GenerateXml(list, null, "template"),
+					"storesale",
+					saleApiUrl,
+					username,
+					password
+				);
 
-			// Send Store Inventory Adjustment Transactions
-			await SendOutboundDataAsync(
-				storeInventoryAdjusmentItems,
-				item => item.AdjSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreInventoryAdjustment.GenerateXml(list, null, "template"),
-				"storeinventoryadjustment",
-				inventoryApiUrl,
-				username,
-				password
-			);
+				// Send Store Return Transactions
+				await SendOutboundDataAsync(
+					storeReturnItems,
+					item => item.DocSid,
+					item => item.DocNo,
+					item => item.CreatedDateTime.DateTime,
+					list => OutboundStoreReturn.GenerateXml(list, null, "template"),
+					"storereturn",
+					saleApiUrl,
+					username,
+					password
+				);
+
+				// Send Store Inventory Adjustment Transactions
+				await SendOutboundDataAsync(
+					storeInventoryAdjusmentItems,
+					item => item.AdjSid,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
+					list => OutboundStoreInventoryAdjustment.GenerateXml(list, null, "template"),
+					"storeinventoryadjustment",
+					inventoryApiUrl,
+					username,
+					password
+				);
 
 
-			// Send Store Shipping Transactions
-			await SendOutboundDataAsync(
-				storeShippingItems,
-				item => item.VouSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreShipping.GenerateXml(list, null, "template"),
-				"storeshipping",
-				inventoryApiUrl,
-				username,
-				password
-			);
+				// Send Store Shipping Transactions
+				await SendOutboundDataAsync(
+					storeShippingItems,
+					item => item.VouSid,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
+					list => OutboundStoreShipping.GenerateXml(list, null, "template"),
+					"storeshipping",
+					inventoryApiUrl,
+					username,
+					password
+				);
 
-			// Send Store Receiving Transactions
-			await SendOutboundDataAsync(
-				storeReceivingItems,
-				item => item.VouSid,
-				item => item.SequenceNo,
-				item => item.BusinessDayDate.DateTime,
-				list => OutboundStoreReceiving.GenerateXml(list, null, "template"),
-				"storereceiving",
-				inventoryApiUrl,
-				username,
-				password
-			);
+				// Send Store Receiving Transactions
+				await SendOutboundDataAsync(
+					storeReceivingItems,
+					item => item.VouSid,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
+					list => OutboundStoreReceiving.GenerateXml(list, null, "template"),
+					"storereceiving",
+					inventoryApiUrl,
+					username,
+					password
+				);
 
+				return;
+			}
 		}
 
 		private async Task SendOutboundDataAsync<T>(

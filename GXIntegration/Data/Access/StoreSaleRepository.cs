@@ -4,13 +4,8 @@ using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Data.SQLite;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -21,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, List<int> receiptTypes)
+		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -53,7 +48,6 @@ namespace GXIntegration_Levis.Data.Access
 								, DI.ORIG_PRICE			AS ActualPrice
 								, DI.PRICE * DI.QTY		AS ExtendedAmount
 								, DI.QTY				AS Quantity
-
 							FROM 
 								RPS.DOCUMENT D
 							LEFT JOIN RPS.STORE S			ON S.SID = D.STORE_SID
@@ -64,15 +58,14 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.COUNTRY CTRY		ON CTRY.SID = SBS.COUNTRY_SID
 							WHERE 
 								D.STATUS = 4
-								AND D.RECEIPT_TYPE IN :ReceiptTypes
+								AND D.RECEIPT_TYPE IN (0,2)
 								AND D.DOC_NO IS NOT NULL
 								AND TRUNC(D.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
-								AND S.ACTIVE = 1
+								AND S.ADDRESS4 = :StoreCode
 							ORDER BY  
 								S.STORE_NO ASC
 								, D.WORKSTATION_NO ASC
 								, D.DOC_NO ASC
-							
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
@@ -82,7 +75,7 @@ namespace GXIntegration_Levis.Data.Access
 					{
 						FromDate = from_date,
 						ToDate = to_date,
-						ReceiptTypes = receiptTypes
+						StoreCode = storeCode
 					};
 
 					var sales = await connection.QueryAsync<StoreSaleModel>(sql, parameters);
@@ -96,8 +89,6 @@ namespace GXIntegration_Levis.Data.Access
 				}
 			}
 		}
-
-		
 
 	}
 }
