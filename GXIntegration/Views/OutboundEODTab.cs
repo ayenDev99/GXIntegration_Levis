@@ -1,5 +1,6 @@
 ﻿using Guna.UI.WinForms;
 using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
@@ -15,6 +16,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 
 namespace GXIntegration_Levis.Views
@@ -152,17 +154,18 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				//Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
-				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				//await OutboundPrice.Execute(repositories.PriceRepository, config);
-				//Logger.Log($"Downloaded successfully.");
+				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
+				Logger.Log($"Downloaded successfully.");
 
-				Logger.Log("--- Outbound EOD .XML : Starting executing all .XML files in single xml file...");
+				Logger.Log("--- Outbound EOD .XML : Starting executing POSLOG and INVENTORYCOUNT xml file...");
 				await ExecuteAllAndSaveToSingleXmlAsync();
+				await ExecuteStoreInventoryCountAsync();
 
-				//Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
-				//await UploadToSftpAsync();
+				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
+				await UploadToSftpAsync();
 			}
 			finally
 			{
@@ -199,7 +202,6 @@ namespace GXIntegration_Levis.Views
 					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
 					var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode);
 					var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate, storeCode);
-					var storeInventoryCount = await repositories.StoreInventoryCountRepository.GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
 
 					// Generate XML fragments
 					var xmlFragments = new[]
@@ -211,7 +213,6 @@ namespace GXIntegration_Levis.Views
 						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
 						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
-						OutboundStoreInventoryCount.GenerateXml(storeInventoryCount, null, "template")
 					};
 
 					string[] xmlTypes = new[]
@@ -223,7 +224,6 @@ namespace GXIntegration_Levis.Views
 						"StoreReturn",
 						"StoreGoodsReturn",
 						"StoreGoods",
-						"StoreInventoryCount"
 					};
 
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
@@ -235,10 +235,7 @@ namespace GXIntegration_Levis.Views
 						("StoreReturn", storeReturnItems as IEnumerable<object>),
 						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
 						("StoreGoods", storeGoodsItems as IEnumerable<object>),
-						("StoreInventoryCount", storeInventoryCount as IEnumerable<object>)
 					};
-
-
 
 					var storeRoot = new XElement("OutboundData");
 
@@ -314,6 +311,17 @@ namespace GXIntegration_Levis.Views
 				{
 					Logger.Log($"[ERROR] Failed to process store {storeCode}: {ex}");
 				}
+			}
+		}
+
+		private async Task ExecuteStoreInventoryCountAsync()
+		{
+			var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+			foreach (var store in prismStores)
+			{
+				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
+				await OutboundStoreInventoryCount.Execute(repositories.StoreInventoryCountRepository, config, "xml", storeCode);
 			}
 		}
 

@@ -15,23 +15,36 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public class OutboundStoreInventoryCount
 	{
-		public static async Task Execute(StoreInventoryCountRepository repository, GXConfig config, string generate_type)
+		public static async Task Execute(StoreInventoryCountRepository repository, GXConfig config, string generate_type, string storeCode)
 		{
 			try
 			{
 				DateTime from_date = DateTime.Today; // 00:00:00
 				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
-				//var items = await repository.GetStoreInventoryCountAsync(from_date, to_date);
+				var items = await repository.GetStoreInventoryCountAsync(from_date, to_date, storeCode);
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-				Directory.CreateDirectory(outboundDir);
+				string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
 
-				string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-				string fileName = $"StoreInventoryCount_{timestamp}.xml";
+				Directory.CreateDirectory(outboundDir);
+				Directory.CreateDirectory(archiveDir);
+
+				string countryCode = config.CountryCode ?? "XX";
+				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+
+				var existingFiles = Directory.GetFiles(archiveDir, $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_*.xml")
+					.Where(f => Path.GetFileName(f).Contains(todayPrefix))
+					.ToList();
+
+				int nextSequence = existingFiles.Count + 1;
+				string sequenceStr = nextSequence.ToString("D3");
+				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+
+				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				//Logger.Log($"EOD StoreInventoryCount downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
-				//GenerateXml(items, filePath, generate_type);
+				Logger.Log($"EOD StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
+				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)
 			{
