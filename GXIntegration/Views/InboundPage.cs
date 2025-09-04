@@ -117,11 +117,14 @@ namespace GXIntegration_Levis.Views
 
 						string inboundDir = globalInbound.EnsureInboundDirectory();
 
+						Logger.Log("--------------------------------------------------------------------------");
+
+
 						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
-						await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
-						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
-						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
+						//await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 
 						MessageBox.Show("All sync operations completed successfully!");
 					}

@@ -16,11 +16,8 @@ namespace GXIntegration_Levis.InboundHandlers
 		public async Task RunASNSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
-			{
-				Logger.Log("");
-				Logger.Log("**************************************************************************");
-				Logger.Log(">>> Starting INBOUND ASN Sync Process...");
-				Logger.Log("**************************************************************************");
+			{			
+				Logger.Log("[INBOUND] Starting ASN Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 

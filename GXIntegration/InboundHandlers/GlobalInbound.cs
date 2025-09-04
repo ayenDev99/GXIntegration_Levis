@@ -119,7 +119,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				Logger.Log("Username : " + prismUsername);
 				Logger.Log("Password : [REDACTED]");
 				Logger.Log("Workstation Name : " + workstationName);
-				Logger.Log("--------------------------------------------------------------------------");
 				Logger.Log("Starting Prism authentication...");
 
 				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
@@ -127,7 +126,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (string.IsNullOrEmpty(session))
 				{
 					Logger.Log("❌ Authentication failed.");
-					Console.WriteLine("❌ Authentication failed.");
 					return null;
 				}
 
@@ -143,6 +141,8 @@ namespace GXIntegration_Levis.InboundHandlers
 
 		public static string CallPrismAPI(string auth_session, string endpoint, string obj, out bool issuccessful, string Method)
 		{
+			Logger.Log($"-----------------------------");
+
 			var config = XDocument.Load("config.xml");
 			string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
 
@@ -156,11 +156,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Headers.Add("Auth-Session", auth_session);
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
-
-			Logger.Log("--------------------------------------------------------------------------");
-			Logger.Log("Calling Prism API...");
-			Logger.Log($"URL: {requestUri}");
-			Logger.Log($"Method: {request.Method}");
+			Logger.Log("[INBOUND] Calling Prism API...");
+			Logger.Log($"[INBOUND] URL: {requestUri}");
+			Logger.Log($"[INBOUND] Method: {request.Method}");
 
 			if (Method != "GET")
 			{
@@ -207,8 +205,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 
 				issuccessful = false;
-				Logger.Log("API call failed");
-				//Logger.Log("API call failed" + ex);
+				Logger.Log("❌ [INBOUND] API call failed");
 			}
 
 			try
@@ -217,19 +214,23 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (errorResponse?.errors != null && errorResponse.errors.Count > 0)
 				{
 					string errorMsg = errorResponse.errors[0].errormsg;
-					Logger.Log("Prism Error: " + errorMsg);
+					Logger.Log($"❌ [INBOUND] Prism Error: {errorMsg}");
 				}
 				else
 				{
-					Logger.Log("Response: " + responseContent);
-					Logger.Log("DATA SAVED SUCCESSFULLY!");
+					// !Note:Uncomment for debugging file content.
+					//Logger.Log("✅ [INBOUND] Response: " + responseContent);
+					Logger.Log("✅ [INBOUND] DATA SAVED SUCCESSFULLY!");
 				}
+			
 			}
 			catch
 			{
 				// fallback: raw log if not valid JSON
 				Logger.Log("Response: " + responseContent);
 			}
+
+			Logger.Log($"-----------------------------");
 
 			return responseContent;
 		}
@@ -246,7 +247,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					Directory.CreateDirectory(inboundDir);
 					Logger.Log("INBOUND folder created: " + inboundDir);
-					Console.WriteLine("Created INBOUND directory: " + inboundDir);
 				}
 				else
 				{
@@ -258,7 +258,6 @@ namespace GXIntegration_Levis.InboundHandlers
 			catch (Exception ex)
 			{
 				Logger.Log("❌ Failed to ensure INBOUND directory: " + ex);
-				Console.WriteLine("❌ Failed to create/check INBOUND directory: " + ex.Message);
 				throw;
 			}
 		}
@@ -272,29 +271,30 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (files.Length == 0)
 				{
 					Logger.Log($"No '{filePattern}' files found in: {inboundDir}");
-					Console.WriteLine($"No '{filePattern}' files found.");
 					return new List<string>();
 				}
 
-				Logger.Log("Files to be processed --------------------------------------------------------");
+				//Logger.Log("Files to be processed : ");
 				var fileList = new List<string>();
 				foreach (string file in files)
 				{
 					string fileName = Path.GetFileName(file);
-					Console.WriteLine(" - " + fileName);
-					Logger.Log(fileName);
+					//Logger.Log("-> " + fileName);
 					fileList.Add(file);
 				}
-				Logger.Log("-------------------------------------------------------------------------------");
+				//Logger.Log("-------------------------------------------------------------------------------");
 
 				return fileList;
 			}
 			catch (Exception ex)
 			{
 				Logger.Log("❌ Error retrieving inbound files: " + ex);
-				Console.WriteLine("❌ Error retrieving inbound files: " + ex.Message);
 				return new List<string>();
 			}
+		}
+		public static bool IsDuplicateError(PrismErrorResponse response)
+		{
+			return response?.errors?.Any(e => e.errorcode == "DBError.8") == true;
 		}
 
 

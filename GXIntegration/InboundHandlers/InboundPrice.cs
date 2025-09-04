@@ -15,10 +15,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			try
 			{
-				Logger.Log("");
-				Logger.Log("**************************************************************************");
-				Logger.Log(">>> Starting INBOUND PRICE Sync Process...");
-				Logger.Log("**************************************************************************");
+				Logger.Log("[INBOUND] Starting PRICE Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 
