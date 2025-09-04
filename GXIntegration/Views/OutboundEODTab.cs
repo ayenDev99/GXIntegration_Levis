@@ -1,6 +1,5 @@
 ﻿using Guna.UI.WinForms;
 using GXIntegration.Properties;
-using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
@@ -16,7 +15,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using static System.Data.Entity.Infrastructure.Design.Executor;
 
 
 namespace GXIntegration_Levis.Views
@@ -53,7 +51,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1 = new GunaDataGridView
 			{
 				Location = new Point(20, 20),
-				Size = new Size(704, 230),
+				Size = new Size(704, 140),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -68,16 +66,18 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-			guna1DataGridView1.ColumnCount = 4;
+			guna1DataGridView1.ColumnCount = 5;
 			guna1DataGridView1.Columns[0].Name = "ID";
 			guna1DataGridView1.Columns[1].Name = "Name";
 			guna1DataGridView1.Columns[2].Name = "File Name Format";
-			guna1DataGridView1.Columns[3].Name = "File Type";
+			guna1DataGridView1.Columns[3].Name = "Generate by";
+			guna1DataGridView1.Columns[4].Name = "Type";
 
-			guna1DataGridView1.Columns[0].Width = 30;
-			guna1DataGridView1.Columns[1].Width = 250;
-			guna1DataGridView1.Columns[2].Width = 455;
-			guna1DataGridView1.Columns[3].Width = 85;
+			guna1DataGridView1.Columns[0].Width = 20;
+			guna1DataGridView1.Columns[1].Width = 170;
+			guna1DataGridView1.Columns[2].Width = 600;
+			guna1DataGridView1.Columns[3].Width = 80;
+			guna1DataGridView1.Columns[4].Width = 50;
 
 			var imageColumn = new DataGridViewImageColumn
 			{
@@ -95,20 +95,14 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
 
-			void AddRow(string id, string name, string format, string type)
-				=> guna1DataGridView1.Rows.Add(id, name, format, type);
+			void AddRow(string id, string name, string format, string generate, string type)
+				=> guna1DataGridView1.Rows.Add(id, name, format, generate, type);
 
-			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
-			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
-			AddRow("3", "RETAIL_SALE", "StoreSale_[yyyymmddhhmmss]", ".xml");
-			AddRow("4", "RETURN_SALE", "StoreReturn_[yyyymmddhhmmss]", ".xml");
-			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
-			AddRow("6", "STORE_TRANSFER - SHIPPING", "StoreShipping_[yyyymmddhhmmss]", ".xml");
-			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
-			AddRow("8", "INVENTORY_COUNT", "StoreInventoryCount_[yyyymmddhhmmss]", ".xml");
-			AddRow("9", "INVENTORY SNAPSHOTS", "LS[Country code]_AMA_PSSTKR_[yyyymmddhhmmss]", ".txt");
-			AddRow("10", "INTRANSIT", "LS[Country Code]_[REGION Code]_INTRANSIT_[yyyymmddhhmmss]", ".txt");
-			AddRow("11", "PRICE", "[REGION Code]_[Country code]_PRICING_[yyyymmddhhmmss]", ".txt");
+			AddRow("1", "PRICE", "[Region]_[CountryCode]_PRICING_[DaySequence]_[yyyymmddhhmmss]", "by Market", ".txt");
+			AddRow("2", "INVENTORY SNAPSHOTS", "[Region]_[CountryCode]_[StoreCode]_PSSTKR_[DaySequence]_[yyyymmddhhmmss]", "by Store", ".txt");
+			AddRow("3", "INTRANSIT", "[Region]_[CountryCode]_INTRANSIT_[DaySequence]_[yyyymmddhhmmss]", "by Market", ".txt");
+			AddRow("4", "INVENTORYCOUNT", "[Region]_[CountryCode]_[StoreCode]_INVENTORYCOUNT_[DaySequence]_[yyyymmddhhmmss]", "by Store", ".xml");
+			AddRow("5", "POSLOG", "[Region]_[CountryCode]_[StoreCode]_POSLOG_[DaySequence]_[yyyymmddhhmmss]", "by Store", ".xml");
 
 			this.Controls.Add(guna1DataGridView1);
 		}
@@ -155,14 +149,14 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
 				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
 				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				await OutboundPrice.Execute(repositories.PriceRepository, config);
 				Logger.Log($"Downloaded successfully.");
 
 				Logger.Log("--- Outbound EOD .XML : Starting executing POSLOG and INVENTORYCOUNT xml file...");
-				await ExecuteAllAndSaveToSingleXmlAsync();
 				await ExecuteStoreInventoryCountAsync();
+				await ExecuteAllAndSaveToSingleXmlAsync();
 
 				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
 				await UploadToSftpAsync();
