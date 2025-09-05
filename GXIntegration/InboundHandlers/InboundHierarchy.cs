@@ -115,6 +115,7 @@ namespace GXIntegration_Levis.InboundHandlers
 															, json
 															, out bool isSuccessful
 															, "POST"
+															, 1
 														);
 
 									Logger.Log($"API Response: {responseJson}");

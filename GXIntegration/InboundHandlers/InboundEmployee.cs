@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using static GXIntegration_Levis.Helpers.GlobalHelper;
 using JsonFormatting = Newtonsoft.Json.Formatting;
 
 namespace GXIntegration_Levis.InboundHandlers
@@ -31,6 +30,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					var result = BuildItemCollection(file);
 					string fileName = Path.GetFileName(file);
 
+					Logger.Log($"-----------------------------");
 					Logger.Log($"[INBOUND] -> {fileName}");
 					Logger.Log($"[INBOUND] Records found: {result.Count}");
 
@@ -128,76 +128,96 @@ namespace GXIntegration_Levis.InboundHandlers
 						{
 							employeeData["emplphone"] = new[] { new { emailaddress = phoneNumber } };
 						}
-
+						
 						//***********************************************************************
+						// Get RPS.EMPLOYEE
+						string employeeUsername = row["UserName"]?.ToString().ToUpper();
+						var prism_employee = await repository.GetRpsEmployee("USER_NAME", employeeUsername);
 
-						// Call API to CREATE | POST employee
-						string endpointCreate = "/api/common/employee";
-						var payload = new { data = new[] { employeeData } };
-						string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-						string responseJson = GlobalInbound.CallPrismAPI(
-												session
-												, endpointCreate
-												, json
-												, out bool issuccessful
-												, "POST");
-
-						// !Note:Uncomment for debugging file content.
-						//Logger.Log("[INBOUND] Payload:\n" + json);
+						long? empExtendRowVersion = null;
+						string responseJson = null;
 
 						// Check for duplicate error and proceed to UPDATE | PUT
-						var errorResponse = JsonConvert.DeserializeObject<PrismErrorResponse>(responseJson);
-						if (GlobalInbound.IsDuplicateError(errorResponse))
+						if (prism_employee == null || prism_employee.Count == 0)
 						{
-							Logger.Log("UPDATE EMPLOYEE");
-							string employeeUsername = row["UserName"]?.ToString().ToUpper();
-							var prism_employee = await repository.GetRpsEmployee("USER_NAME", employeeUsername);
+							Logger.Log($"[INBOUND] [{rowIndex}] CREATE EMPLOYEE");
+							// Call API to CREATE | POST employee
+							string endpointCreate = "/api/common/employee";
+							var payload = new { data = new[] { employeeData } };
+							string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+							responseJson = GlobalInbound.CallPrismAPI(
+													session
+													, endpointCreate
+													, json
+													, out bool issuccessful
+													, "POST"
+													, rowIndex);
 
-							long? empExtendRowVersion = null;
+							// !Note:Uncomment for debugging file content.
+							//Logger.Log("[INBOUND] Payload:\n" + json);
+						}
+						else
+						{
+							var empFirstItem = prism_employee[0];
 
-							if (prism_employee != null && prism_employee.Count > 0)
+							Logger.Log($"[INBOUND] [{rowIndex}] UPDATE EMPLOYEE");
+
+							employeeRowVersion = empFirstItem.ROW_VERSION;
+							employeeSid = empFirstItem.SID.ToString();
+							//Logger.Log(JsonConvert.SerializeObject(empFirstItem, Formatting.Indented));
+
+							// Get RPS.EMPLOYEE_EXTEND
+							var prism_employee_extend = await repository.GetRpsEmployeeExtend("EMPLOYEE_SID", employeeSid);
+							//Logger.Log(JsonConvert.SerializeObject(empExtendFirstItem, Formatting.Indented));
+
+							if (prism_employee_extend == null || prism_employee_extend.Count == 0)
 							{
-								// Get RPS.EMPLOYEE
-								var empFirstItem = prism_employee[0];
-								employeeRowVersion = empFirstItem.ROW_VERSION;
-								employeeSid = empFirstItem.SID.ToString();
-								//Logger.Log(JsonConvert.SerializeObject(empFirstItem, Formatting.Indented));
-
-								// Get RPS.EMPLOYEE_EXTEND
-								var prism_employee_extend = await repository.GetRpsEmployeeExtend("EMPLOYEE_SID", employeeSid);
-								var empExtendFirstItem = prism_employee_extend[0];
-								empExtendRowVersion = empExtendFirstItem.ROW_VERSION;
-								//Logger.Log(JsonConvert.SerializeObject(empExtendFirstItem, Formatting.Indented));
-
-								// Required fields for update
-								if (employeeRowVersion.HasValue)
-								{
-									employeeData["rowversion"] = employeeRowVersion.Value;
-									employeeExtend["rowversion"] = empExtendRowVersion.Value;
-								}
+								Logger.Log($"[INBOUND] [{rowIndex}] EMPLOYEE_EXTEND not found — adding new EMPLOYEE_EXTEND");
 
 								employeeData["employeeextend"] = new[] { employeeExtend };
+							}
+							else
+							{
+								var empExtendFirstItem = prism_employee_extend[0];
+								empExtendRowVersion = empExtendFirstItem.ROW_VERSION;
 
-								// Build update payload and send PUT
-								var updatePayload = new { data = new[] { employeeData } };
-								string updateJson = JsonConvert.SerializeObject(updatePayload, JsonFormatting.Indented);
-								string endpointUpdate = $"/api/common/employee/{employeeSid}?cols=*,emplphone.*,empladdress.*,emplemail.*,employeeextend.*,employeestore.*,employeesubsidiary.*,usergroupuser.*";
+								Logger.Log($"[INBOUND] [{rowIndex}] EMPLOYEE_EXTEND found — updating existing EMPLOYEE_EXTEND");
 
-								responseJson = GlobalInbound.CallPrismAPI(
-												session
-												, endpointUpdate
-												, updateJson
-												, out bool isSuccessful
-												, "PUT");
+								employeeExtend["rowversion"] = empExtendRowVersion;
+								employeeData["employeeextend"] = new[] { employeeExtend };
 							}
 
-							Console.WriteLine($"[INBOUND] API Response: {responseJson}");
-						}
-					}
+							// Required fields for update
+							if (employeeRowVersion.HasValue)
+							{
+								employeeData["rowversion"] = employeeRowVersion.Value;
+							}
 
+							// Build update payload and send PUT
+							var updatePayload = new { data = new[] { employeeData } };
+							string updateJson = JsonConvert.SerializeObject(updatePayload, JsonFormatting.Indented);
+							string endpointUpdate = $"/api/common/employee/{employeeSid}?cols=*,emplphone.*,empladdress.*,emplemail.*,employeeextend.*,employeestore.*,employeesubsidiary.*,usergroupuser.*";
+
+							responseJson = GlobalInbound.CallPrismAPI(
+											session
+											, endpointUpdate
+											, updateJson
+											, out bool isSuccessful
+											, "PUT"
+											, rowIndex);
+
+						}
+
+						Console.WriteLine($"[INBOUND] [{rowIndex}] API Response: {responseJson}");
 						rowIndex++;
 						continue;
 					}
+
+
+
+					rowIndex++;
+					continue;
+				}
 				
 				Logger.Log("[INBOUND] Employee sync process completed.");
 			}

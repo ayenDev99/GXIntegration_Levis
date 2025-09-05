@@ -114,7 +114,8 @@ namespace GXIntegration_Levis.InboundHandlers
 				string prismUsername = config.Root.Element("PrismConfig").Element("Username").Value;
 				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
 				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
-
+				
+				Logger.Log("--------------------------------------------------------------------------");
 				Logger.Log("Address : " + prismAddress);
 				Logger.Log("Username : " + prismUsername);
 				Logger.Log("Password : [REDACTED]");
@@ -139,10 +140,8 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 		}
 
-		public static string CallPrismAPI(string auth_session, string endpoint, string obj, out bool issuccessful, string Method)
+		public static string CallPrismAPI(string auth_session, string endpoint, string obj, out bool issuccessful, string Method, int rowIndex)
 		{
-			Logger.Log($"-----------------------------");
-
 			var config = XDocument.Load("config.xml");
 			string prismAddress = config.Root.Element("PrismConfig").Element("Address").Value;
 
@@ -156,9 +155,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Headers.Add("Auth-Session", auth_session);
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
-			Logger.Log("[INBOUND] Calling Prism API...");
-			Logger.Log($"[INBOUND] URL: {requestUri}");
-			Logger.Log($"[INBOUND] Method: {request.Method}");
+			Logger.Log($"[INBOUND] [{rowIndex}] Calling Prism API...");
+			Logger.Log($"[INBOUND] [{rowIndex}] URL: {requestUri}");
+			Logger.Log($"[INBOUND] [{rowIndex}] Method: {request.Method}");
 
 			if (Method != "GET")
 			{
@@ -205,7 +204,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 
 				issuccessful = false;
-				Logger.Log("❌ [INBOUND] API call failed");
+				Logger.Log($"❌ [INBOUND] [{rowIndex}] API call failed");
 			}
 
 			try
@@ -214,13 +213,13 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (errorResponse?.errors != null && errorResponse.errors.Count > 0)
 				{
 					string errorMsg = errorResponse.errors[0].errormsg;
-					Logger.Log($"❌ [INBOUND] Prism Error: {errorMsg}");
+					Logger.Log($"❌ [INBOUND] [{rowIndex}] Prism Error: {errorMsg}");
 				}
 				else
 				{
 					// !Note:Uncomment for debugging file content.
 					//Logger.Log("✅ [INBOUND] Response: " + responseContent);
-					Logger.Log("✅ [INBOUND] DATA SAVED SUCCESSFULLY!");
+					Logger.Log($"[INBOUND] [{rowIndex}] DATA SAVED SUCCESSFULLY!");
 				}
 			
 			}
@@ -229,8 +228,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				// fallback: raw log if not valid JSON
 				Logger.Log("Response: " + responseContent);
 			}
-
-			Logger.Log($"-----------------------------");
 
 			return responseContent;
 		}
@@ -292,9 +289,5 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 		}
 
-		public static bool IsDuplicateError(PrismErrorResponse response)
-		{
-			return response?.errors?.Any(e => e.errorcode == "DBError.8") == true;
-		}
 	}
 }

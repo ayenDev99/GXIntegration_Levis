@@ -134,7 +134,8 @@ namespace GXIntegration_Levis.InboundHandlers
 												, "/api/backoffice/inventory?action=InventorySaveItems"
 												, json
 												, out bool issuccessful
-												, "POST");
+												, "POST"
+												, 1);
 
 						Logger.Log("Response: " + responseJson);
 					}
