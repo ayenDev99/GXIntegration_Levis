@@ -45,7 +45,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 										.ToList();
 
 					int nextSequence = existingFiles.Count + 1;
-					string sequenceStr = nextSequence.ToString("D3");
+					string sequenceStr = nextSequence.ToString("D2");
 
 					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);

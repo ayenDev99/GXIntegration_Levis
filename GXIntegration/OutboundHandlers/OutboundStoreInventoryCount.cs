@@ -37,7 +37,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					.ToList();
 
 				int nextSequence = existingFiles.Count + 1;
-				string sequenceStr = nextSequence.ToString("D3");
+				string sequenceStr = nextSequence.ToString("D2");
 				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
 
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
