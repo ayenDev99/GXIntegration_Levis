@@ -131,7 +131,7 @@ namespace GXIntegration_Levis.Helpers
 				.AddSeconds(-59)
 				.AddMilliseconds(-999);
 
-			Logger.Log($">>> Processing Time Window: FROM = {from_date:yyyy-MM-dd HH:mm}, TO = {to_date:yyyy-MM-dd HH:mm}");
+			//Logger.Log($">>> Processing Time Window: FROM = {from_date:yyyy-MM-dd HH:mm}, TO = {to_date:yyyy-MM-dd HH:mm}");
 
 			return (from_date, to_date);
 		}

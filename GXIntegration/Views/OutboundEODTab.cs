@@ -148,18 +148,21 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				Logger.Log($"--- Outbound EOD .TXT : Start Downloading .TXT files on local dir");
+				Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
 				await OutboundPrice.Execute(repositories.PriceRepository, config);
 				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
 				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				Logger.Log($"Downloaded successfully.");
+				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
-				Logger.Log("--- Outbound EOD .XML : Starting executing POSLOG and INVENTORYCOUNT xml file...");
+				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
 				await ExecuteStoreInventoryCountAsync();
 				await ExecuteAllAndSaveToSingleXmlAsync();
+				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
-				Logger.Log("--- Outbound EOD : UploadToSftpAsync is about to be called...");
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
 				await UploadToSftpAsync();
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+
 			}
 			finally
 			{
@@ -181,10 +184,13 @@ namespace GXIntegration_Levis.Views
 			string countryCode = config.CountryCode ?? "XX";
 			string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
 
+			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating POSLOG...");
+
 			foreach (var store in prismStores)
 			{
 				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
-				Logger.Log($"[XML] >> STORE CODE : {storeCode} <<");
+				Logger.Log($"[OUTBOUND - EOD] [XML] STORE_CODE : {storeCode}...");
+				//Logger.Log($"[OUTBOUND - EOD] [XML] >> STORE CODE : {storeCode} <<");
 
 				try
 				{
@@ -247,8 +253,7 @@ namespace GXIntegration_Levis.Views
 								storeRoot.Add(XElement.Parse(fragment));
 
 								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
-								Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}. Item count: {count}");
-								//Logger.Log($"[XML] Successfully generated {xmlType} XML for store {storeCode}.");
+								Logger.Log($"[OUTBOUND] Successfully generated {xmlType} XML. Item count: {count}");
 							}
 							catch (Exception ex)
 							{
@@ -299,7 +304,7 @@ namespace GXIntegration_Levis.Views
 						await writer.FlushAsync();
 					}
 
-					Logger.Log($"[FILE] XML file created: {fileName}");
+					Logger.Log($"[OUTBOUND] Downloaded successfully | File Name: {fileName}");
 				}
 				catch (Exception ex)
 				{
@@ -373,7 +378,7 @@ namespace GXIntegration_Levis.Views
 								}
 
 								File.Move(filePath, archivedPath);
-								Logger.Log($"Uploaded and archived: {archivedPath}");
+								Logger.Log($"[OUTBOUND - EOD] [SFTP] Uploaded and archived: {archivedPath}");
 							}
 							catch (Exception ex)
 							{
@@ -383,7 +388,6 @@ namespace GXIntegration_Levis.Views
 
 						sftp.Disconnect();
 
-						Logger.Log("Upload to SFTP completed successfully.");
 						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}

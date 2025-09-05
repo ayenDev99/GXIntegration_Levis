@@ -42,7 +42,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[TXT] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[OUTBOUND - EOD] [TXT] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				string output = Format(items, ",");
 

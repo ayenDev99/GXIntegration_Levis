@@ -32,7 +32,8 @@ namespace GXIntegration_Levis.Views
 
 		public OutboundPage()
 		{
-			Logger.Log(">>> Start Outbound Process...");
+			Logger.Log("--------------------------------------------------------------------------");
+			Logger.Log("Starting OUTBOUND Process...");
 
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);

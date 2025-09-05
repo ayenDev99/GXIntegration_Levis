@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"EOD StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[OUTBOUND - EOD] [XML] StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
 				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)

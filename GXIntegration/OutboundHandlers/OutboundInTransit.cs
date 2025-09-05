@@ -44,7 +44,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_INTRANSIT_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[TXT] InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[OUTBOUND - EOD] [TXT] InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				string output = Format(items, "|");
 
