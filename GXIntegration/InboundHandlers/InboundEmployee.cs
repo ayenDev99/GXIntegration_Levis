@@ -54,49 +54,39 @@ namespace GXIntegration_Levis.InboundHandlers
 						}
 
 						var baseStoreSid = prism_store[0].SID.ToString();
-						long? employeeRowVersion = null; // 🟡 Add this line
+						long? employeeRowVersion = null;
 						string employeeSid = null;
 
 						//Logger.Log($"[INBOUND] prism_store has {prism_store.Count} item(s). First item: {JsonConvert.SerializeObject(firstItem, Formatting.Indented)}");
 						Logger.Log($"[INBOUND] [{rowIndex}] StoreCode : {storeCode} | SID : {baseStoreSid}");
 
-						// 🛠 Build employeeextend with optional rowversion
+						//***********************************************************************
+						//  Build employeeextend with optional rowversion
+						//***********************************************************************
 						var employeeExtend = new Dictionary<string, object>
 						{
-							["udf6string"] = row["EffectiveStartDate"]?.ToString(),
-							["udf7string"] = row["EmploymentStatus"]?.ToString(),
-							["udf10string"] = row["EmployeeID"]?.ToString(),
-							["udf11string"] = row["Gender"]?.ToString(),
-							["udf12string"] = row["Language"]?.ToString()
+							["udf6string"]		= row["EffectiveStartDate"]?.ToString()
+							, ["udf7string"]	= row["EmploymentStatus"]?.ToString()
+							, ["udf10string"]	= row["EmployeeID"]?.ToString()
+							, ["udf11string"]	= row["Gender"]?.ToString()
+							, ["udf12string"]	= row["Language"]?.ToString()
 						};
 
 						var employeeData = new Dictionary<string, object>
 						{
-							["active"] = Convert.ToBoolean(row["Active"])
-							,
-							["basestoresid"] = baseStoreSid
-							,
-							["firstname"] = row["Firstname"]?.ToString()
-							,
-							["lastname"] = row["Lastname"]?.ToString()
-							,
-							["hiredate"] = row["HireDate"]?.ToString()
-							,
-							["jobsid"] = await repository.GetRpsJobSid(row["JobTitle"]?.ToString())
-							,
-							["jobtitle"] = "Manager"
-							,
-							["originapplication"] = "RProPrismWeb"
-							,
-							["origsbssid"] = "555356986000134257"
-							,
-							["status"] = 1
-							,
-							["useractive"] = true
-							,
-							["username"] = row["UserName"]?.ToString()
-							,
-							["employeesubsidiary"] = new[]
+							["active"]				= Convert.ToBoolean(row["Active"])
+							, ["basestoresid"]		= baseStoreSid
+							, ["firstname"]			= row["Firstname"]?.ToString()
+							, ["lastname"]			= row["Lastname"]?.ToString()
+							, ["hiredate"]			= row["HireDate"]?.ToString()
+							, ["jobsid"]			= await repository.GetRpsJobSid(row["JobTitle"]?.ToString())
+							, ["jobtitle"]			= "Manager"
+							, ["originapplication"] = "RProPrismWeb"
+							, ["origsbssid"]		= "555356986000134257"
+							, ["status"]			= 1
+							, ["useractive"]		= true
+							, ["username"]			= row["UserName"]?.ToString()
+							, ["employeesubsidiary"] = new[]
 								{
 									new {
 										accessallstores     = true
@@ -104,8 +94,7 @@ namespace GXIntegration_Levis.InboundHandlers
 										, sbssid            = "555356986000134257"
 									}
 								}
-							,
-							["empladdress"] = new[]
+							, ["empladdress"] = new[]
 								{
 									new {
 										active = true
@@ -116,20 +105,18 @@ namespace GXIntegration_Levis.InboundHandlers
 										, postalcode        = row["WorkZipCode"]?.ToString()
 									}
 								}
-							//,
-							//["employeeextend"] = new[]
-							//	{
-							//		new {
-							//			udf6string          = row["EffectiveStartDate"]?.ToString()
-							//			, udf7string        = row["EmploymentStatus"]?.ToString()
-							//			, udf10string       = row["EmployeeID"]?.ToString()
-							//			, udf11string       = row["Gender"]?.ToString()
-							//			, udf12string       = row["Language"]?.ToString()
-							//		}
-							//	}
+							, ["employeeextend"] = new[]
+								{
+									new {
+										udf6string          = row["EffectiveStartDate"]?.ToString()
+										, udf7string        = row["EmploymentStatus"]?.ToString()
+										, udf10string       = row["EmployeeID"]?.ToString()
+										, udf11string       = row["Gender"]?.ToString()
+										, udf12string       = row["Language"]?.ToString()
+									}
+								}
 						};
 
-						// Conditionally add 'emplemail'
 						string workerEmail = row["WorkerEmail"]?.ToString();
 						if (!string.IsNullOrWhiteSpace(workerEmail))
 						{
@@ -142,56 +129,47 @@ namespace GXIntegration_Levis.InboundHandlers
 							employeeData["emplphone"] = new[] { new { emailaddress = phoneNumber } };
 						}
 
+						//***********************************************************************
 
-						// 🔁 Call API to create employee
+						// Call API to CREATE | POST employee
 						string endpointCreate = "/api/common/employee";
 						var payload = new { data = new[] { employeeData } };
 						string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 						string responseJson = GlobalInbound.CallPrismAPI(
-							session, endpointCreate, json,
-							out bool issuccessful, "POST");
-
-						var errorResponse = JsonConvert.DeserializeObject<PrismErrorResponse>(responseJson);
+												session
+												, endpointCreate
+												, json
+												, out bool issuccessful
+												, "POST");
 
 						// !Note:Uncomment for debugging file content.
 						//Logger.Log("[INBOUND] Payload:\n" + json);
 
+						// Check for duplicate error and proceed to UPDATE | PUT
+						var errorResponse = JsonConvert.DeserializeObject<PrismErrorResponse>(responseJson);
 						if (GlobalInbound.IsDuplicateError(errorResponse))
 						{
+							Logger.Log("UPDATE EMPLOYEE");
 							string employeeUsername = row["UserName"]?.ToString().ToUpper();
 							var prism_employee = await repository.GetRpsEmployee("USER_NAME", employeeUsername);
-
-							string endpointGet = $"/api/common/employee?filters=USER_NAME eq '{employeeUsername}'";
-							string getResponse = GlobalInbound.CallPrismAPI(
-	session,
-	endpointGet,
-	string.Empty,
-	out bool isSuccessfulGet,
-	"GET");
 
 							long? empExtendRowVersion = null;
 
 							if (prism_employee != null && prism_employee.Count > 0)
 							{
+								// Get RPS.EMPLOYEE
 								var empFirstItem = prism_employee[0];
 								employeeRowVersion = empFirstItem.ROW_VERSION;
 								employeeSid = empFirstItem.SID.ToString();
+								//Logger.Log(JsonConvert.SerializeObject(empFirstItem, Formatting.Indented));
 
-								Logger.Log(JsonConvert.SerializeObject(empFirstItem, Formatting.Indented));
+								// Get RPS.EMPLOYEE_EXTEND
+								var prism_employee_extend = await repository.GetRpsEmployeeExtend("EMPLOYEE_SID", employeeSid);
+								var empExtendFirstItem = prism_employee_extend[0];
+								empExtendRowVersion = empExtendFirstItem.ROW_VERSION;
+								//Logger.Log(JsonConvert.SerializeObject(empExtendFirstItem, Formatting.Indented));
 
-								var extendItem = empFirstItem.employeeextend[0];
-
-								//string extendJson = JsonConvert.SerializeObject(extendItem, Formatting.Indented);
-								//Logger.Log($"TEST\n{extendJson}");
-
-
-								empExtendRowVersion = extendItem.rowversion;
-
-						
-								Logger.Log($"[INBOUND] Employee SID : {employeeSid}");
-								Logger.Log($"[INBOUND] ROW VERSION : {employeeRowVersion}");
-
-								// 🔁 ✅ Add rowversion to employeeData for update
+								// Required fields for update
 								if (employeeRowVersion.HasValue)
 								{
 									employeeData["rowversion"] = employeeRowVersion.Value;
@@ -200,15 +178,17 @@ namespace GXIntegration_Levis.InboundHandlers
 
 								employeeData["employeeextend"] = new[] { employeeExtend };
 
-								// 🔄 Build update payload and send PUT
+								// Build update payload and send PUT
 								var updatePayload = new { data = new[] { employeeData } };
 								string updateJson = JsonConvert.SerializeObject(updatePayload, JsonFormatting.Indented);
-
 								string endpointUpdate = $"/api/common/employee/{employeeSid}?cols=*,emplphone.*,empladdress.*,emplemail.*,employeeextend.*,employeestore.*,employeesubsidiary.*,usergroupuser.*";
 
 								responseJson = GlobalInbound.CallPrismAPI(
-									session, endpointUpdate, updateJson,
-									out bool isSuccessful, "PUT");
+												session
+												, endpointUpdate
+												, updateJson
+												, out bool isSuccessful
+												, "PUT");
 							}
 
 							Console.WriteLine($"[INBOUND] API Response: {responseJson}");

@@ -282,7 +282,6 @@ namespace GXIntegration_Levis.InboundHandlers
 					//Logger.Log("-> " + fileName);
 					fileList.Add(file);
 				}
-				//Logger.Log("-------------------------------------------------------------------------------");
 
 				return fileList;
 			}
@@ -292,11 +291,10 @@ namespace GXIntegration_Levis.InboundHandlers
 				return new List<string>();
 			}
 		}
+
 		public static bool IsDuplicateError(PrismErrorResponse response)
 		{
 			return response?.errors?.Any(e => e.errorcode == "DBError.8") == true;
 		}
-
-
 	}
 }
