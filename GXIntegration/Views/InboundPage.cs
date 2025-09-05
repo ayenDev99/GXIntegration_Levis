@@ -119,9 +119,9 @@ namespace GXIntegration_Levis.Views
 
 						Logger.Log("--------------------------------------------------------------------------");
 
-						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
 						//await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _inboundHierarchyRepository);
+						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
 						//await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
 						//await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 

@@ -155,9 +155,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Headers.Add("Auth-Session", auth_session);
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
-			Logger.Log($"[INBOUND] [{rowIndex}] Calling Prism API...");
-			Logger.Log($"[INBOUND] [{rowIndex}] URL: {requestUri}");
-			Logger.Log($"[INBOUND] [{rowIndex}] Method: {request.Method}");
+			Logger.Log($" Calling Prism API...");
+			Logger.Log($" URL: {requestUri}");
+			Logger.Log($" Method: {request.Method}");
 
 			if (Method != "GET")
 			{
@@ -204,7 +204,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 
 				issuccessful = false;
-				Logger.Log($"❌ [INBOUND] [{rowIndex}] API call failed");
+				Logger.Log($"❌ API call failed");
 			}
 
 			try
@@ -213,13 +213,13 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (errorResponse?.errors != null && errorResponse.errors.Count > 0)
 				{
 					string errorMsg = errorResponse.errors[0].errormsg;
-					Logger.Log($"❌ [INBOUND] [{rowIndex}] Prism Error: {errorMsg}");
+					Logger.Log($"❌ Prism Error: {errorMsg}");
 				}
 				else
 				{
 					// !Note:Uncomment for debugging file content.
 					//Logger.Log("✅ [INBOUND] Response: " + responseContent);
-					Logger.Log($"[INBOUND] [{rowIndex}] DATA SAVED SUCCESSFULLY!");
+					Logger.Log($" DATA SAVED SUCCESSFULLY!");
 				}
 			
 			}

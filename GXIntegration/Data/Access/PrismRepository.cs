@@ -3,6 +3,7 @@ using GXIntegration_Levis.Helpers;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Data.Access
@@ -196,6 +197,128 @@ namespace GXIntegration_Levis.Data.Access
 				}
 			}
 		}
+
+		public async Task<dynamic> GetRpsSubsidiary(string columnName, string columnValue)
+		{
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> { "ACTIVE" };
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+
+					string sql = $@"
+						SELECT 
+							*
+						FROM 
+							RPS.Subsidiary 
+						WHERE 
+							{columnName} = :ColumnValue
+					";
+
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
+
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching RPS Subsidiary SID: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS Subsidiary SID: {ex.Message}");
+					return null;
+				}
+			}
+		}
+
+
+
+		public async Task<List<dynamic>> GetUdfDetailsAsync(string udfNo, string udfOption, string sbsSid)
+		{
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+					string sql = @"
+						SELECT 
+							SBS.SBS_NAME,
+							SBS.SID,
+							U.UDF_NO,
+							U.SID AS UDF_SID,
+							O.UDF_OPTION
+						FROM 
+							RPS.INVN_UDF U
+						LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = U.SBS_SID
+						LEFT JOIN RPS.INVN_UDF_OPTION O ON U.SID = O.UDF_SID
+						WHERE 
+							U.UDF_NO = :UdfNo
+							AND O.UDF_OPTION = :UdfOption
+							AND SBS.SID = :SbsSid
+					";
+
+					var result = await connection.QueryAsync(sql, new
+					{
+						UdfNo = udfNo,
+						UdfOption = udfOption,
+						SbsSid = sbsSid
+					});
+
+					return result.ToList();
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching UDF details: {ex.Message}");
+					Console.WriteLine($"Error fetching UDF details: {ex.Message}");
+					return new List<dynamic>();
+				}
+			}
+		}
+
+		public async Task<List<dynamic>> GetInvnUdfSidAsync(string udfNo, string sbsSid)
+		{
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+					string sql = @"
+						SELECT 
+							U.SID,
+							COUNT(DISTINCT O.UDF_OPTION) AS OptionCount
+						FROM 
+							RPS.INVN_UDF U
+						LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = U.SBS_SID
+						LEFT JOIN RPS.INVN_UDF_OPTION O ON U.SID = O.UDF_SID
+						WHERE 
+							U.UDF_NO = :UdfNo
+							AND SBS.SID = :SbsSid
+						GROUP BY U.SID
+					";
+
+					var result = await connection.QueryAsync(sql, new
+					{
+						UdfNo = udfNo,
+						SbsSid = sbsSid
+					});
+
+					return result.ToList();
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching UDF details: {ex.Message}");
+					Console.WriteLine($"Error fetching UDF details: {ex.Message}");
+					return new List<dynamic>();
+				}
+			}
+		}
+
 
 	}
 }

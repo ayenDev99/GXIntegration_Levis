@@ -213,8 +213,6 @@ namespace GXIntegration_Levis.InboundHandlers
 						continue;
 					}
 
-
-
 					rowIndex++;
 					continue;
 				}

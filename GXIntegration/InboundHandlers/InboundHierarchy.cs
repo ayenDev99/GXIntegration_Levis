@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		private readonly Dictionary<string, string> columnToUdfMap = new Dictionary<string, string>
 		{
 			{ "BRAND_CD", "UDF6" },
-			{ "BRAND_NM", "UDF1" },
+			{ "BRAND_NM", "UDF7" },
 			{ "CONSUMER_CD", "UDF10" },
 			{ "CONSUMER_NM", "UDF11" },
 			{ "PROD_CAT_CD", "UDF2" },
@@ -28,26 +28,28 @@ namespace GXIntegration_Levis.InboundHandlers
 			{ "SUB_CLASS_NM", "UDF3" }
 		};
 
-		public async Task RunHierarchySyncAsync(string session, string inboundDir, InboundHierarchyRepository repository)
+		public async Task RunHierarchySyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
 			{
-				Logger.Log("[INBOUND] Starting HIERARCHY Sync Process...");
+				Logger.Log($"--------------------------------------------------------------------------");
+				Logger.Log("[INBOUND - HIERARCHY] Starting HIERARCHY Sync Process...");
+				Logger.Log($"--------------------------------------------------------------------------");
 
 				string fileNameFormat = "LSPI_HIERARCHY_*.*";
-
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
 				if (files.Count == 0) return;
 
 				foreach (string file in files)
 				{
-					Logger.Log($"\nStarting processing for file: {Path.GetFileName(file)}");
-
 					var udfData = BuildHierarchyByUdf(file);
+
+					Logger.Log($"[INBOUND - HIERARCHY] -> {Path.GetFileName(file)}");
+					Logger.Log($"[INBOUND - HIERARCHY] UDF_NO Records found: {udfData.Count}");
 
 					// Extract distinct, non-empty values
 					var brandCodes = udfData.TryGetValue("UDF6", out var bc) ? bc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var brandNames = udfData.TryGetValue("UDF1", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
+					var brandNames = udfData.TryGetValue("UDF7", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
 					var consumerCodes = udfData.TryGetValue("UDF10", out var cc) ? cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
 					var consumerNames = udfData.TryGetValue("UDF11", out var cn) ? cn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
 					var productCategoryCodes = udfData.TryGetValue("UDF2", out var pc) ? pc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
@@ -60,7 +62,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					var filteredUdfValues = new Dictionary<string, List<string>>
 					{
 						{ "6", brandCodes },
-						{ "1", brandNames },
+						{ "7", brandNames },
 						{ "10", consumerCodes },
 						{ "11", consumerNames },
 						{ "2", productCategoryCodes },
@@ -71,24 +73,23 @@ namespace GXIntegration_Levis.InboundHandlers
 						{ "3", subClassNames }
 					};
 
-					var SBS_result = await repository.GetSbsListAsync();
+					var SBS_result = await repository.GetRpsSubsidiary("ACTIVE", "1");
+					Logger.Log($"[INBOUND - HIERARCHY] SBS Count : {SBS_result.Count}");
 
-					Logger.Log("Retrieved SBS List");
-
+					int rowIndex = 1;
 					foreach (var sbsItem in SBS_result)
 					{
-						Logger.Log($"\nChecking SBS: {sbsItem.SBS_NAME} (SID: {sbsItem.SID})");
-
+						Logger.Log($"[INBOUND - HIERARCHY] [{rowIndex}] SBS Name : {sbsItem.SBS_NAME} | SBS_NO : {sbsItem.SBS_NO} | SID: {sbsItem.SID}");
 						foreach (var udfType in filteredUdfValues)
 						{
-							Logger.Log($"\nChecking UDF Type: UDF{udfType.Key} with {udfType.Value.Count} values");
+							//Logger.Log($"[INBOUND - HIERARCHY]		UDF_NO : {udfType.Key} | Count : {udfType.Value.Count}");
 
 							foreach (var udfValue in udfType.Value)
 							{
-								Logger.Log($"Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
+								//Logger.Log($"Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
 
 								var udf_result = await repository.GetUdfDetailsAsync(udfType.Key, udfValue, sbsItem.SID.ToString());
-								Logger.Log($"Found {udf_result?.Count ?? 0} existing UDF entries.");
+								//Logger.Log($"Found {udf_result?.Count ?? 0} existing UDF entries.");
 								if (udf_result == null || udf_result.Count == 0)
 								{
 									var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
@@ -107,7 +108,9 @@ namespace GXIntegration_Levis.InboundHandlers
 									};
 
 									var json = JsonConvert.SerializeObject(payload, Formatting.Indented);
-									Logger.Log("Payload:\n" + json);
+									//Logger.Log("[INBOUND - HIERARCHY] Payload:\n" + json);
+
+									Logger.Log($"[INBOUND - HIERARCHY]			[CREATE] UDF_NO : {udfType.Key} | Value: '{udfValue}'");
 
 									string responseJson = GlobalInbound.CallPrismAPI(
 															session
@@ -118,8 +121,7 @@ namespace GXIntegration_Levis.InboundHandlers
 															, 1
 														);
 
-									Logger.Log($"API Response: {responseJson}");
-
+									//Logger.Log($"[INBOUND - HIERARCHY] API Response: {responseJson}");
 									continue;
 								}
 
@@ -129,26 +131,30 @@ namespace GXIntegration_Levis.InboundHandlers
 									{
 										var udfSid = udf_res.UDF_SID;
 
-										Logger.Log($"Missing value detected: '{udfValue}' (UDF_SID: {udfSid})");
-										Logger.Log("Preparing payload to insert...");
+										Logger.Log($"[INBOUND - HIERARCHY] Missing value detected: '{udfValue}' (UDF_SID: {udfSid})");
+										Logger.Log("[INBOUND - HIERARCHY] Preparing payload to insert...");
 
 									}
 									else
 									{
-										Logger.Log("UDF value '{udfValue}' already exists.");
+										Logger.Log($"[INBOUND - HIERARCHY]			UDF_NO : {udfType.Key} | Value: '{udfValue}' already exists.");
 									}
 								}
 							}
 						}
+
+						rowIndex++;
+						continue;
 					}
+
 				}
 
-				Logger.Log("Hierarchy sync process completed.");
+				Logger.Log("[INBOUND - HIERARCHY] Hierarchy sync process completed.");
 
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in RunHierarchySyncAsync: {ex}");
+				Logger.Log($"❌ [INBOUND - HIERARCHY] Error in RunHierarchySyncAsync: {ex}");
 			}
 		}
 
@@ -190,11 +196,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 				}
 
-				Logger.Log($"Parsed {result.Count} UDF-mapped columns from file: {Path.GetFileName(filePath)}");
+				//Logger.Log($"Parsed {result.Count} UDF-mapped columns from file: {Path.GetFileName(filePath)}");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildHierarchyByUdf: {ex}");
+				Logger.Log($"❌ [INBOUND - HIERARCHY] Error in BuildHierarchyByUdf: {ex}");
 			}
 
 			return result;
