@@ -253,7 +253,7 @@ namespace GXIntegration_Levis.Views
 								storeRoot.Add(XElement.Parse(fragment));
 
 								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
-								Logger.Log($"[OUTBOUND] Successfully generated {xmlType} XML. Item count: {count}");
+								Logger.Log($"[OUTBOUND - EOD]		Successfully generated {xmlType} XML. Item count: {count}");
 							}
 							catch (Exception ex)
 							{
@@ -304,7 +304,7 @@ namespace GXIntegration_Levis.Views
 						await writer.FlushAsync();
 					}
 
-					Logger.Log($"[OUTBOUND] Downloaded successfully | File Name: {fileName}");
+					Logger.Log($"[OUTBOUND - EOD] [FILE] Downloaded successfully | File Name: {fileName}");
 				}
 				catch (Exception ex)
 				{

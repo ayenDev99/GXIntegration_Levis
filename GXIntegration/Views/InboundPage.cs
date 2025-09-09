@@ -17,7 +17,6 @@ namespace GXIntegration_Levis.Views
 		private GunaDataGridView guna1DataGridView1;
 		private GunaButton btnSaveToPrism;
 
-		private InboundHierarchyRepository _inboundHierarchyRepository;
 		private PrismRepository _prismRepository;
 
 		private readonly InboundEmployee inboundEmployee = new InboundEmployee();
@@ -32,7 +31,6 @@ namespace GXIntegration_Levis.Views
 			config = GXConfig.Load(configPath);
 
 			_prismRepository = new PrismRepository(config.MainDbConnection);
-			_inboundHierarchyRepository = new InboundHierarchyRepository(config.MainDbConnection);
 
 			InitializeComponent();
 			InitializeGrid();
@@ -120,10 +118,10 @@ namespace GXIntegration_Levis.Views
 						Logger.Log("--------------------------------------------------------------------------");
 
 						//await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository); 
 						//await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
 						//await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 
 						MessageBox.Show("All sync operations completed successfully!");
 					}

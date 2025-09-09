@@ -1,9 +1,16 @@
-﻿using GXIntegration_Levis.Data.Access;
+﻿using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using Microsoft.VisualBasic.FileIO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using JsonFormatting = Newtonsoft.Json.Formatting;
+
 
 namespace GXIntegration_Levis.InboundHandlers
 {
@@ -13,63 +20,171 @@ namespace GXIntegration_Levis.InboundHandlers
 
 		public async Task RunPriceSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
+			XDocument config = XDocument.Load("config.xml");
+
+
 			try
 			{
 				Logger.Log("[INBOUND] Starting PRICE Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
-
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) return;
+				if (files.Count == 0)
+				{
+					Logger.Log("[INBOUND] No price files found.");
+					return;
+				}
 
 				foreach (string file in files)
 				{
 					var result = BuildPriceCollection(file);
 					Logger.Log($"Price file loaded. Rows found: {result.Count}");
 
-					foreach (var row in result)
+					// Load SBS_NO from config
+					var sbsNos = config
+						.Descendants("Subsidiary")
+						.Select(x => int.Parse(x.Value))
+						.ToList();
+
+					// Process each subsidiary
+					foreach (var sbsNo in sbsNos)
 					{
-						foreach (var kv in row)
+						Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
+
+						// Process each row from the file
+						foreach (var row in result)
 						{
-							Console.WriteLine($"{kv.Key}: {kv.Value}");
+							// Log each key/value in the row (optional for debugging)
+							foreach (var kv in row)
+							{
+								//Logger.Log($"{kv.Key}: {kv.Value}");
+							}
+
+							// Prepare filters
+							var baseFilters = new Dictionary<string, object>
+								{
+									{ "DESCRIPTION1", row["ItemCode"] },
+									{ "ACTIVE", 1 },
+									{ "PRICE_LVL_NAME", "LSPC" }
+								};
+
+							var filters = new Dictionary<string, object>(baseFilters)
+								{
+									{ "SBS_NO", sbsNo }
+								};
+
+							Logger.Log($"[INBOUND - PRICE] Fetching item data for SBS_NO {sbsNo} | Item Code : {row["ItemCode"]}");
+
+							var results = await repository.GetInboundItemsAsync(filters);
+							var resultList = results?.ToList() ?? new List<dynamic>();
+
+							// Log count
+							Logger.Log($"[INBOUND - PRICE] Item count: {resultList.Count}");
+
+							//string jsonResult = JsonConvert.SerializeObject(results, Formatting.Indented); // Pretty print
+							//Logger.Log("Inbound items result:\n" + jsonResult);
+
+							foreach (var item in resultList)
+							{
+								var price_lvl_sid = item.ACTIVE_PRICE_LVL_SID;
+								var sbs_sid = item.SBS_SID;
+								Logger.Log($"PRICE_LVL_SID : {sbs_sid}");
+
+								if (results != null)
+								{
+									var newAjustmentData = await createRpsAdjustment(session, item);
+									string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
+
+									await createRpsAdjItem(session, item, row, adjusment_sid);
+								}
+								else
+								{
+									Logger.Log("No inbound items found or an error occurred.");
+								}
+							}
 						}
-
-						//var payload = new
-						//{
-						//	data = new[]
-						//				{
-						//					new
-						//					{
-						//						OriginApplication = "RProPrismWeb",
-						//					}
-						//				}
-						//};
-
-						//var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-
-						//Console.WriteLine("Payload:");
-						//Console.WriteLine(json);
-						////Logger.Log("Payload built:\n" + json);
-
-						//string responseJson = GlobalInbound.CallPrismAPI(
-						//						session,
-						//						prismAddress,
-						//						"/api/backoffice/inventory?action=InventorySaveItems",
-						//						json,
-						//						out bool issuccessful,
-						//						"POST");
-
-						////string responseJson = globalInbound.CallPrismAPI(session, prismAddress, "/api/backoffice/inventory?action=InventorySaveItems", json, out bool issuccessful, "POST");
-						//Console.WriteLine("Response: " + responseJson);
 					}
 				}
-
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}");
 				return;
 			}
+		}
+
+		private async Task<string> createRpsAdjustment(string session, dynamic item)
+		{
+			Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJUSTMENT");
+
+			string price_lvl_sid = item?.ACTIVE_PRICE_LVL_SID?.ToString();
+			string sbs_sid = item?.SBS_SID?.ToString();
+
+			var adjustmentPayload = new Dictionary<string, object>
+			{
+				["adjtype"] = 1,
+				//["clerksid"] = "RProPrismWeb",
+				//["creatingdoctype"] = "RProPrismWeb",
+				["originapplication"] = "RProPrismWeb",
+				//["origstoresid"] = "RProPrismWeb",
+				["pricelvlsid"] = price_lvl_sid,
+				["sbssid"] = sbs_sid,
+				["status"] = 3,
+			};
+
+			// NOTE: ADD REASON SID FROM RPS.PREF_REASON
+
+			// Call API to CREATE RPS.ADJUSTMENT
+			string endpointCreate = "/api/backoffice/adjustment";
+			var payload = new { data = new[] { adjustmentPayload } };
+			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, endpointCreate
+									, json
+									, out bool issuccessful
+									, "POST"
+									, 1
+									);
+
+			return responseJson;
+
+		}
+
+		private async Task<string> createRpsAdjItem(string session, dynamic item, dynamic fileRowData, string adjustmentSid)
+		{
+			Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJ_ITEM");
+
+			string item_sid = item?.SID?.ToString();
+			string sbs_sid = item?.SBS_SID?.ToString();
+			decimal adjValue = 0m;
+			if (!decimal.TryParse(fileRowData["Price"], out adjValue))
+			{
+				Logger.Log($"[WARNING] Could not parse Price '{fileRowData["Price"]}' to decimal. Defaulting to 0.");
+			}
+			var adjustmentPayload = new Dictionary<string, object>
+			{
+				["adjsid"] = adjustmentSid,
+				["itemsid"] = item_sid,
+				["originapplication"] = "RProPrismWeb",
+				["rowversion"] = 1,
+				["adjvalue"] = adjValue
+			};
+
+			// Call API to CREATE RPS.ADJUSTMENT
+			string endpointCreate = $"/api/backoffice/adjustment/{adjustmentSid}/adjitem";
+			var payload = new { data = new[] { adjustmentPayload } };
+			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, endpointCreate
+									, json
+									, out bool issuccessful
+									, "POST"
+									, 1
+									);
+
+			return responseJson;
 		}
 
 		private List<Dictionary<string, string>> BuildPriceCollection(string filePath)

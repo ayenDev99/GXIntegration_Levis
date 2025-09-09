@@ -31,7 +31,7 @@ namespace GXIntegration_Levis.Views
 				Font = new Font("Segoe UI", 9)
 			};
 
-			tabDb = new TabPage("Database");
+			tabDb = new TabPage("Prism Database");
 			tabSftp = new TabPage("SFTP");
 			tabApi = new TabPage("API");
 

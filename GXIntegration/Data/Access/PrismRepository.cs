@@ -237,8 +237,6 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-
-
 		public async Task<List<dynamic>> GetUdfDetailsAsync(string udfNo, string udfOption, string sbsSid)
 		{
 			using (var connection = new OracleConnection(_connectionString))
@@ -319,6 +317,57 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
+		public async Task<IEnumerable<dynamic>> GetInboundItemsAsync(Dictionary<string, object> filters)
+		{
+			// Whitelisted column names with their table aliases
+			var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+				{
+					{ "DESCRIPTION1", "INV" },
+					{ "ACTIVE", "INV" },
+					{ "SBS_NO", "SBS" },
+					{ "PRICE_LVL_NAME", "PL" }
+				};
 
+			var whereClauses = new List<string>();
+			var parameters = new DynamicParameters();
+
+			foreach (var filter in filters)
+			{
+				if (!allowedColumns.ContainsKey(filter.Key))
+					throw new ArgumentException($"Invalid filter column: {filter.Key}");
+
+				string tableAlias = allowedColumns[filter.Key];
+				string paramName = $"p_{filter.Key}";
+
+				whereClauses.Add($"{tableAlias}.{filter.Key} = :{paramName}");
+				parameters.Add(paramName, filter.Value);
+			}
+
+			string sql = $@"
+							SELECT 
+								*
+							FROM 
+								RPS.INVN_SBS_ITEM INV
+							LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID
+							LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SBS_SID = SBS.SID
+							WHERE 
+								{string.Join(" AND ", whereClauses)}
+						";
+
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+					return await connection.QueryAsync(sql, parameters);
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Query error: {ex.Message}");
+					return null;
+				}
+			}
+
+		}
 	}
 }

@@ -18,7 +18,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			try
 			{
-				Logger.Log("[INBOUND] Starting EMPLOYEE Sync Process...");
+				Logger.Log("[INBOUND - EMPLOYEE] Starting EMPLOYEE Sync Process...");
 
 				string fileNameFormat = "LSPI_WD_*.*";
 
@@ -31,8 +31,8 @@ namespace GXIntegration_Levis.InboundHandlers
 					string fileName = Path.GetFileName(file);
 
 					Logger.Log($"-----------------------------");
-					Logger.Log($"[INBOUND] -> {fileName}");
-					Logger.Log($"[INBOUND] Records found: {result.Count}");
+					Logger.Log($"[INBOUND - EMPLOYEE] -> {fileName}");
+					Logger.Log($"[INBOUND - EMPLOYEE] Records found: {result.Count}");
 
 					int rowIndex = 1;
 					foreach (var row in result)
@@ -48,7 +48,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						if (prism_store == null || prism_store.Count == 0)
 						{
-							Logger.Log($"[INBOUND] [{rowIndex}] StoreCode is not existing : {storeCode}");
+							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} is not existing.");
 							rowIndex++;
 							continue;
 						}
@@ -57,8 +57,8 @@ namespace GXIntegration_Levis.InboundHandlers
 						long? employeeRowVersion = null;
 						string employeeSid = null;
 
-						//Logger.Log($"[INBOUND] prism_store has {prism_store.Count} item(s). First item: {JsonConvert.SerializeObject(firstItem, Formatting.Indented)}");
-						Logger.Log($"[INBOUND] [{rowIndex}] StoreCode : {storeCode} | SID : {baseStoreSid}");
+						//Logger.Log($"[INBOUND - EMPLOYEE] prism_store has {prism_store.Count} item(s). First item: {JsonConvert.SerializeObject(firstItem, Formatting.Indented)}");
+						Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | SID : {baseStoreSid}");
 
 						//***********************************************************************
 						//  Build employeeextend with optional rowversion
@@ -140,7 +140,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						// Check for duplicate error and proceed to UPDATE | PUT
 						if (prism_employee == null || prism_employee.Count == 0)
 						{
-							Logger.Log($"[INBOUND] [{rowIndex}] CREATE EMPLOYEE");
+							Logger.Log($"[INBOUND - EMPLOYEE]		[CREATE]");
 							// Call API to CREATE | POST employee
 							string endpointCreate = "/api/common/employee";
 							var payload = new { data = new[] { employeeData } };
@@ -154,13 +154,13 @@ namespace GXIntegration_Levis.InboundHandlers
 													, rowIndex);
 
 							// !Note:Uncomment for debugging file content.
-							//Logger.Log("[INBOUND] Payload:\n" + json);
+							//Logger.Log("[INBOUND - EMPLOYEE] Payload:\n" + json);
 						}
 						else
 						{
 							var empFirstItem = prism_employee[0];
 
-							Logger.Log($"[INBOUND] [{rowIndex}] UPDATE EMPLOYEE");
+							Logger.Log($"[INBOUND - EMPLOYEE]		[UPDATE]");
 
 							employeeRowVersion = empFirstItem.ROW_VERSION;
 							employeeSid = empFirstItem.SID.ToString();
@@ -172,7 +172,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							if (prism_employee_extend == null || prism_employee_extend.Count == 0)
 							{
-								Logger.Log($"[INBOUND] [{rowIndex}] EMPLOYEE_EXTEND not found — adding new EMPLOYEE_EXTEND");
+								Logger.Log($"[INBOUND - EMPLOYEE]		EMPLOYEE_EXTEND not found — adding new EMPLOYEE_EXTEND");
 
 								employeeData["employeeextend"] = new[] { employeeExtend };
 							}
@@ -181,7 +181,7 @@ namespace GXIntegration_Levis.InboundHandlers
 								var empExtendFirstItem = prism_employee_extend[0];
 								empExtendRowVersion = empExtendFirstItem.ROW_VERSION;
 
-								Logger.Log($"[INBOUND] [{rowIndex}] EMPLOYEE_EXTEND found — updating existing EMPLOYEE_EXTEND");
+								Logger.Log($"[INBOUND - EMPLOYEE]		EMPLOYEE_EXTEND found — updating existing EMPLOYEE_EXTEND");
 
 								employeeExtend["rowversion"] = empExtendRowVersion;
 								employeeData["employeeextend"] = new[] { employeeExtend };
@@ -208,7 +208,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						}
 
-						Console.WriteLine($"[INBOUND] [{rowIndex}] API Response: {responseJson}");
+						Console.WriteLine($"[INBOUND - EMPLOYEE]		API Response: {responseJson}");
 						rowIndex++;
 						continue;
 					}
@@ -217,11 +217,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					continue;
 				}
 				
-				Logger.Log("[INBOUND] Employee sync process completed.");
+				Logger.Log("[INBOUND - EMPLOYEE] Employee sync process completed.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND] Error in RunEmployeeSyncAsync: {ex.Message}");
+				Logger.Log($"❌ [INBOUND - EMPLOYEE] Error in RunEmployeeSyncAsync: {ex.Message}");
 				return;
 			}
 		}
@@ -258,7 +258,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							if (fields.Length > headers.Length)
 							{
-								Logger.Log("[INBOUND] WARNING : Extra values in line.");
+								Logger.Log("[INBOUND - EMPLOYEE] WARNING : Extra values in line.");
 							}
 
 							result.Add(rowDict);
@@ -268,7 +268,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND] Error in BuildItemCollection: {ex.Message}");
+				Logger.Log($"❌ [INBOUND - EMPLOYEE] Error in BuildItemCollection: {ex.Message}");
 			}
 
 			return result;

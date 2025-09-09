@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Linq;
 using static GXIntegration_Levis.Helpers.GlobalHelper;
 
@@ -127,6 +128,8 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (string.IsNullOrEmpty(session))
 				{
 					Logger.Log("❌ Authentication failed.");
+					string exMessage = "Prism authentication failed. Please check the prism connection and configuration then try again.";
+					MessageBox.Show($"Error: {exMessage}", "Prism Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					return null;
 				}
 
