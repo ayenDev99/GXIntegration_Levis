@@ -3,6 +3,7 @@ using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Views;
 using System;
+using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -42,6 +43,7 @@ namespace GXIntegration
 		public Form1()
 		{
 			InitializeComponent();
+			InitialCreateDatabase();
 			EnableDrag(SideBar);
 
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
@@ -227,6 +229,61 @@ namespace GXIntegration
 		{
 
 		}
-	
+
+
+		// ***************************************************
+		// Initialization
+		// ***************************************************
+		private void InitialCreateDatabase()
+		{
+			string folderPath = Path.Combine(Application.StartupPath, "AppData");
+			//Logger.Log("[INIT] Checking for AppData folder...");
+
+			if (!Directory.Exists(folderPath))
+			{
+				Directory.CreateDirectory(folderPath);
+				Logger.Log($"[INIT] Created AppData folder at: {folderPath}");
+			}
+
+			string dbPath = Path.Combine(folderPath, "TRANSACTION_PROCESS.db");
+			if (!File.Exists(dbPath))
+			{
+				SQLiteConnection.CreateFile(dbPath);
+			}
+
+			string connectionString = $"Data Source={dbPath};Version=3;";
+			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+			{
+				conn.Open();
+
+				string createTableQuery = @"
+				CREATE TABLE IF NOT EXISTS TRANSACTION_PROCESS (
+					ID					INTEGER PRIMARY KEY AUTOINCREMENT
+					, SID				TEXT	NOT NULL
+					, PROCCESS_TYPE		INT
+					, TRANSACTION_TYPE	TEXT
+					, PROCCESS_DATE		TEXT
+					, POST_DATE			TEXT
+					, STATUS			TEXT	NOT NULL
+				);";
+				// !NOTE : PROCESS_TYPE: [1] INBOUND, [2] OUTBOUND
+
+				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
+				{
+					cmd.ExecuteNonQuery();
+					Logger.Log("[INIT] 'TRANSACTION_PROCESS' table created or already exists.");
+				}
+
+				string countQuery = "SELECT COUNT(*) FROM TRANSACTION_PROCESS;";
+				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
+				{
+					long count = (long)countCmd.ExecuteScalar();
+					Logger.Log($"[INIT] DB Record count: {count}");
+				}
+
+				Logger.Log("[INIT] Database initialization complete.");
+			}
+		}
+
 	}
 }

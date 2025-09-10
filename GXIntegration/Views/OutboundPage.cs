@@ -52,111 +52,23 @@ namespace GXIntegration_Levis.Views
 			_storeInventoryCountRepository = new StoreInventoryCountRepository(config.MainDbConnection);
 
 			InitializeComponent();
-			InitialCreateDatabase();
 			InitializeTabs();
 		}
 
 		// ***************************************************
 		// Initialization
 		// ***************************************************
-		private void InitialCreateDatabase()
-		{
-			// 🔧 Define and create AppData folder
-			string folderPath = Path.Combine(Application.StartupPath, "AppData");
-			Logger.Log("Checking for AppData folder...");
-
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-				Logger.Log($"Created AppData folder at: {folderPath}");
-			}
-			else
-			{
-				Logger.Log($"AppData folder already exists at: {folderPath}");
-			}
-
-			// 🗃️ Define DB path
-			string dbPath = Path.Combine(folderPath, "ProcessedPrismTransactions.db");
-			Logger.Log($"Database path: {dbPath}");
-
-			// Create database file if needed
-			if (!File.Exists(dbPath))
-			{
-				SQLiteConnection.CreateFile(dbPath);
-				Logger.Log($"SQLite database created at: {dbPath}");
-			}
-			else
-			{
-				Logger.Log("Database file already exists.");
-			}
-
-			// 🔌 Connect and create tables
-			string connectionString = $"Data Source={dbPath};Version=3;";
-			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
-			{
-				conn.Open();
-				Logger.Log("SQLite connection opened.");
-
-				// 🧱 Create ProcessedPrismTransactions table
-				string createTableQuery = @"
-				CREATE TABLE IF NOT EXISTS ProcessedPrismTransactions (
-					ID INTEGER PRIMARY KEY AUTOINCREMENT,
-					SID TEXT NOT NULL,
-					TYPE TEXT,
-					DATE TEXT,
-					STATUS TEXT NOT NULL
-				);";
-
-				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
-				{
-					cmd.ExecuteNonQuery();
-					Logger.Log("'ProcessedPrismTransactions' table created or already exists.");
-				}
-
-				// 🔍 Check if table is empty
-				string countQuery = "SELECT COUNT(*) FROM ProcessedPrismTransactions;";
-				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
-				{
-					long count = (long)countCmd.ExecuteScalar();
-					Logger.Log($"Record count in 'ProcessedPrismTransactions': {count}");
-
-					// 🌱 Insert seed data if empty
-					if (count == 0)
-					{
-						Logger.Log("Inserting sample data...");
-
-						string insertQuery = @"
-							INSERT INTO ProcessedPrismTransactions (SID, TYPE, DATE, STATUS) VALUES
-							('SID001', 'storesale', '25-JUN-24 11.41.26.000000000 PM +08:00', 'Success'),
-							('SID002', 'storeshipping', '25-JUN-24 11.41.26.000000000 PM +08:00', 'Failed');
-						";
-
-						using (SQLiteCommand insertCmd = new SQLiteCommand(insertQuery, conn))
-						{
-							int rowsInserted = insertCmd.ExecuteNonQuery();
-							Logger.Log($"Inserted {rowsInserted} records into 'ProcessedPrismTransactions'.");
-						}
-					}
-					else
-					{
-						Logger.Log("Table already contains data. Skipping sample insert.");
-					}
-				}
-
-				Logger.Log("Database initialization complete.");
-			}
-		}
 
 		public static async Task<bool> IsSidProcessedAsync(string sid)
 		{
-			string dbPath = Path.Combine(Application.StartupPath, "AppData", "ProcessedPrismTransactions.db");
+			string dbPath = Path.Combine(Application.StartupPath, "AppData", "TRANSACTION_PROCESS.db");
 			string connectionString = $"Data Source={dbPath};Version=3;";
 
 			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
 			{
 				await conn.OpenAsync();
 
-				string query = "SELECT COUNT(1) FROM ProcessedPrismTransactions WHERE SID = @Sid";
+				string query = "SELECT COUNT(1) FROM TRANSACTION_PROCESS WHERE SID = @Sid";
 				using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
 				{
 					cmd.Parameters.AddWithValue("@Sid", sid);
