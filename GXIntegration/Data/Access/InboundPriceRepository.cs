@@ -168,7 +168,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[ERROR] Failed to insert TempInboundPriceData record. Exception: {ex.Message}");
+					Logger.Log($"[ERROR] Failed to insert TempInboundPriceData record. Exception: {ex.Message}\nStackTrace: {ex.StackTrace}");
 					throw;
 				}
 			}

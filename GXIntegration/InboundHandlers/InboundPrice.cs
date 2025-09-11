@@ -4,7 +4,6 @@ using GXIntegration_Levis.Helpers;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Renci.SshNet;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -40,13 +39,12 @@ namespace GXIntegration_Levis.InboundHandlers
 					await processPriceSyncAsync(result, repository, session, false);
 				}
 
-
 				await reprocessPriceDbSyncAsync(repository, session);
 
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
 				return;
 			}
 		}
@@ -57,100 +55,108 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			try
 			{
-					// Load SBS_NO from config
-					var sbsNos = config
-						.Descendants("Subsidiary")
-						.Select(x => int.Parse(x.Value))
-						.ToList();
+				// Load SBS_NO from config
+				var sbsNos = config
+					.Descendants("Subsidiary")
+					.Select(x => int.Parse(x.Value))
+					.ToList();
 
-					// Process each subsidiary
-					foreach (var sbsNo in sbsNos)
+				// Process each subsidiary
+				foreach (var sbsNo in sbsNos)
+				{
+					Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
+
+					// Process each row from the data
+					foreach (var row in result)
 					{
-						Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
-
-						// Process each row from the data
-						foreach (var row in result)
+						try
 						{
-						//Log each key/value in the row (optional for debugging)
-						foreach (var kv in row) { Logger.Log($"{kv.Key}: {kv.Value}"); }
+							//Log each key/value in the row (optional for debugging)
+							//foreach (var kv in row) { Logger.Log($"{kv.Key}: {kv.Value}"); }
 
-						string effectivityDateStr = row["EffectivityDate"];
-						DateTime effectivityDate = DateTime.ParseExact(effectivityDateStr, "yyyyMMdd", null);
-						DateTime currentDate = DateTime.Now.Date;
+							string effectivityDateStr = row["EffectivityDate"];
+							DateTime effectivityDate = DateTime.ParseExact(effectivityDateStr, "yyyyMMdd", null);
+							DateTime currentDate = DateTime.UtcNow.Date;
 
-						// Prepare filters
-						var baseFilters = new Dictionary<string, object>
-								{
-									{ "DESCRIPTION1", row["ProductCode"] },
-									{ "ACTIVE", 1 },
-									{ "PRICE_LVL_NAME", "LSPC" }
-								};
+							// Get PriceLevel value from config.xml
 
-						var filters = new Dictionary<string, object>(baseFilters)
-								{
-									{ "SBS_NO", sbsNo }
-								};
-						var results = await repository.GetInboundItemsAsync(filters);
-						var resultList = results as List<dynamic> ?? new List<dynamic>();
 
-						if (effectivityDate <= currentDate)
-						{
-							Logger.Log("[INBOUND - PRICE] Effectivity Date is valid (≤ current system date).");
-							Logger.Log($"[INBOUND - PRICE] Fetching item data for SBS_NO {sbsNo} | Item Code : {row["ProductCode"]}");
+							// Prepare filters
+							var baseFilters = new Dictionary<string, object>
+									{
+										{ "DESCRIPTION1", row["ProductCode"] },
+										{ "ACTIVE", 1 },
+										{ "PRICE_LVL_NAME", "LSPC" }
+									};
 
-							if (resultList.Count == 0)
+							var filters = new Dictionary<string, object>(baseFilters)
+									{
+										{ "SBS_NO", sbsNo }
+									};
+							var results = await repository.GetInboundItemsAsync(filters);
+							var resultList = results as List<dynamic> ?? new List<dynamic>();
+
+							if (effectivityDate <= currentDate)
 							{
-								Logger.Log("No results returned from GetInboundItemsAsync.");
-								continue;
-							}
+								Logger.Log("[INBOUND - PRICE] Effectivity Date is valid (≤ current system date).");
+								Logger.Log($"[INBOUND - PRICE] Fetching item data for SBS_NO {sbsNo} | Item Code : {row["ProductCode"]}");
 
-							Logger.Log($"[INBOUND - PRICE] Item count: {resultList.Count}");
-
-							string jsonResult = JsonConvert.SerializeObject(resultList, Formatting.Indented);
-							//Logger.Log("Inbound items result:\n" + jsonResult);
-
-							foreach (var item in resultList)
-							{
-								var price_lvl_sid = item.ACTIVE_PRICE_LVL_SID;
-								var sbs_sid = item.SBS_SID;
-								Logger.Log($"[INBOUND - PRICE] PRICE_LVL_SID : {sbs_sid}");
-
-								var newAjustmentData = await createRpsAdjustment(session, item);
-								string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
-
-								await createRpsAdjItem(session, item, row, adjusment_sid);
-
-								Logger.Log($"isReprocess: {isReprocess}");
-
-								if (isReprocess)
+								if (resultList.Count == 0)
 								{
-									Logger.Log("Reprocessing item...");
+									Logger.Log("No results returned from GetInboundItemsAsync.");
+									continue;
+								}
 
-									var repo = new InboundPriceRepository();
-									await repo.MarkTempPriceRowAsProcessedAsync(row);
+								Logger.Log($"[INBOUND - PRICE] Item count: {resultList.Count}");
+
+								string jsonResult = JsonConvert.SerializeObject(resultList, Formatting.Indented);
+								//Logger.Log("Inbound items result:\n" + jsonResult);
+
+								foreach (var item in resultList)
+								{
+									var price_lvl_sid = item.ACTIVE_PRICE_LVL_SID;
+									var sbs_sid = item.SBS_SID;
+									Logger.Log($"[INBOUND - PRICE] PRICE_LVL_SID : {sbs_sid}");
+
+									var newAjustmentData = await createRpsAdjustment(session, item);
+									string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
+
+									await createRpsAdjItem(session, item, row, adjusment_sid);
+
+									Logger.Log($"isReprocess: {isReprocess}");
+
+									if (isReprocess)
+									{
+										Logger.Log("Reprocessing item...");
+
+										var repo = new InboundPriceRepository();
+										await repo.MarkTempPriceRowAsProcessedAsync(row);
+									}
 								}
 							}
-						}
-						else
-						{
-							if (resultList.Count == 0)
+							else
 							{
-								Logger.Log("[SKIP] Skip inserting data to temporary table. ProductCode is not existing on Prism DB.");
-								continue;
+								if (resultList.Count == 0)
+								{
+									Logger.Log("[SKIP] Skip inserting data to temporary table. ProductCode is not existing on Prism DB.");
+									continue;
+								}
+
+								await insertDataToTempDb(row);
 							}
 
-							await insertDataToTempDb(row);
 						}
-
-						return;
-
+						catch (Exception ex)
+						{
+							Logger.Log($"[ERROR] Failed to process row for ProductCode: {row["ProductCode"]} | {ex.Message}\nStackTrace: {ex.StackTrace}");
+						}
 					}
 				}
 				
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[ERROR] Error inserting data - {ex.Message}");
+				Logger.Log($"[ERROR] Error inserting data - {ex.Message}\nStackTrace: {ex.StackTrace}");
 
 				throw;
 			}
@@ -197,23 +203,9 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (tempRecord.TryGetValue("Level1Code", out var level1Code)) rowDict["Level1Code"] = level1Code;
 
 				formattedRecords.Add(rowDict);
-				//bool exists = await CheckIfItemExistsInTargetDB(tempRecord);
-
-				//if (!exists)
-				//{
-				//	await InsertIntoTargetDB(tempRecord);
-				//}
-				//else
-				//{
-				//	await UpdatePriceInTargetDatabase(tempRecord);
-				//}
-
-				//// Mark processed in temp table
-				//await MarkTempPriceRowAsProcessedAsync(tempRecord);
 			}
 
 			await processPriceSyncAsync(formattedRecords, repository, session, true);
-
 		}
 
 		private async Task<string> createRpsAdjustment(string session, dynamic item)
@@ -320,12 +312,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					, reasonDesc			: row["ReasonDesc"]
 					, level1Code			: row["Level1Code"]
 				);
-
 				
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[ERROR] Error inserting data ProductCode: {row["ProductCode"]} - {ex.Message}");
+				Logger.Log($"[ERROR] Error inserting data ProductCode: {row["ProductCode"]} - {ex.Message}\nStackTrace: {ex.StackTrace}");
 
 				throw;
 			}
@@ -383,7 +374,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildPriceCollection: {ex.Message}");
+				Logger.Log($"Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}");
 			}
 
 			return result;
