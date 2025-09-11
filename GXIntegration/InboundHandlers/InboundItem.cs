@@ -39,7 +39,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						var alu = row["PROD_SKU"]?.ToString();
 						var upc = row["PROD_GTIN"]?.ToString();
-						var rps_isi_collection = await repository.GetRpsInvnSbsItem(upc);
+						var rps_isi_collection = await repository.GetRpsInvnSbsItem("UPC", upc);
 						Logger.Log($"RPS.INVN_SBS_ITEM Collection: {rps_isi_collection}");
 						if (rps_isi_collection != null)
 						{

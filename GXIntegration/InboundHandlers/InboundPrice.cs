@@ -28,10 +28,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0)
-				{
-					Logger.Log("[INBOUND - PRICE] No price files found.");
-				}
+				if (files.Count == 0) { Logger.Log("[INBOUND - PRICE] No price files found.");}
 
 				foreach (string data in files)
 				{

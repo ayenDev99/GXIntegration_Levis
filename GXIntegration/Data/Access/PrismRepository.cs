@@ -87,38 +87,45 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-		public async Task<dynamic> GetRpsInvnSbsItem(string upc)
+		public async Task<dynamic> GetRpsInvnSbsItem(string columnName, string columnValue)
 		{
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> { "UPC", "DESCRIPTION1" };
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
 
-					string sql = @"
+					string sql = $@"
 						SELECT 
 							*
 						FROM 
-							RPS.INVN_SBS_ITEM ISI
+							RPS.INVN_SBS_ITEM 
 						WHERE 
-							ISI.UPC = :Upc
+							{columnName} = :ColumnValue
 					";
 
-					var result = await connection.QueryFirstOrDefaultAsync(sql, new
-					{
-						Upc = upc
-					});
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
 
-					return result;
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS job SID: {ex.Message}");
-					Console.WriteLine($"Error fetching RPS job SID: {ex.Message}");
+					Logger.Log($"Error fetching RPS INVN_SBS_ITEM SID: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS INVN_SBS_ITEM SID: {ex.Message}");
 					return null;
 				}
 			}
 		}
+
 
 		public async Task<dynamic> GetRpsEmployee(string columnName, string columnValue)
 		{
@@ -313,6 +320,47 @@ namespace GXIntegration_Levis.Data.Access
 					Logger.Log($"Error fetching UDF details: {ex.Message}");
 					Console.WriteLine($"Error fetching UDF details: {ex.Message}");
 					return new List<dynamic>();
+				}
+			}
+		}
+
+		public async Task<dynamic> GetRpsPO(string columnName, string columnValue)
+		{
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> { "PO_NO" };
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+
+					string sql = $@"
+						SELECT 
+							*
+						FROM 
+							RPS.PO PO
+						LEFT JOIN RPS.PO_ITEM POI ON POI.PO_SID = PO.SID
+						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = POI.ITEM_SID
+						WHERE 
+							{columnName} = :ColumnValue
+					";
+
+					Logger.Log(columnName);
+					Logger.Log(columnValue);
+
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching RPS PO SID: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS PO SID: {ex.Message}");
+					return null;
 				}
 			}
 		}

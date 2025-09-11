@@ -120,8 +120,8 @@ namespace GXIntegration_Levis.Views
 						//await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
 						//await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository); 
 						//await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
-						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
+						//await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
 
 						MessageBox.Show("All sync operations completed successfully!");
 					}
