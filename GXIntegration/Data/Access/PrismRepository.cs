@@ -48,7 +48,7 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-		public async Task<dynamic> GetRpsStore(string columnName, string columnValue)
+		public async Task<List<dynamic>> GetRpsStore(string columnName, string columnValue)
 		{
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
@@ -76,13 +76,13 @@ namespace GXIntegration_Levis.Data.Access
 					//Logger.Log(columnValue);
 
 					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
-					return results;
+					return results.ToList();
 				}
 				catch (Exception ex)
 				{
 					Logger.Log($"Error fetching RPS job SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS job SID: {ex.Message}");
-					return null;
+					return new List<dynamic>();
 				}
 			}
 		}
@@ -324,7 +324,7 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
-		public async Task<dynamic> GetRpsPO(string columnName, string columnValue)
+		public async Task<List<dynamic>> GetRpsPO(string columnName, string columnValue)
 		{
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
@@ -350,17 +350,17 @@ namespace GXIntegration_Levis.Data.Access
 							{columnName} = :ColumnValue
 					";
 
-					Logger.Log(columnName);
-					Logger.Log(columnValue);
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
 
 					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
-					return results;
+					return results.ToList();
 				}
 				catch (Exception ex)
 				{
 					Logger.Log($"Error fetching RPS PO SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS PO SID: {ex.Message}");
-					return null;
+					return new List<dynamic>();
 				}
 			}
 		}
@@ -372,6 +372,8 @@ namespace GXIntegration_Levis.Data.Access
 			{
 				{ "DESCRIPTION1", "INV" },
 				{ "ACTIVE", "INV" },
+				{ "ATTRIBUTE", "INV" },
+				{ "ITEM_SIZE", "INV" },
 				{ "SBS_NO", "SBS" },
 				{ "PRICE_LVL_NAME", "PL" }
 			};
@@ -401,7 +403,9 @@ namespace GXIntegration_Levis.Data.Access
 						PL.PRICE_LVL_NAME,
 						PL.SID AS ACTIVE_PRICE_LVL_SID,
 						SBS.SID AS SBS_SID,
-						INV.SID
+						INV.SID,
+						INV.ITEM_SIZE,
+						INV.ATTRIBUTE
 					FROM 
 						RPS.INVN_SBS_ITEM INV
 					LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID

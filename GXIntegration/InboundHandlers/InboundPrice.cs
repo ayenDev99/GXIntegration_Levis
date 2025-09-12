@@ -205,6 +205,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			await processPriceSyncAsync(formattedRecords, repository, session, true);
 		}
 
+		// ***************************************************
+		// API PROCESS METHODS
+		// ***************************************************
 		private async Task<string> createRpsAdjustment(string session, dynamic item)
 		{
 			Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJUSTMENT");
@@ -276,6 +279,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			return responseJson;
 		}
 
+		// ***************************************************
+		// MISC METHODS
+		// ***************************************************
 		private async Task insertDataToTempDb(dynamic row)
 		{
 			try

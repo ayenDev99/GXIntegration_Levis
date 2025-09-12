@@ -136,6 +136,15 @@ namespace GXIntegration_Levis.Helpers
 			return (from_date, to_date);
 		}
 
+		public static string FormatDateToIso8601(string inputDate)
+		{
+			if (DateTime.TryParseExact(inputDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime dt))
+				return dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
+
+			return null;
+		}
+
+
 		public static string ToOracleTimestampTZLiteral(DateTime dt, string timezoneOffset = "+08:00")
 		{
 			// Format example: 20-AUG-25 09.59.20.123456 AM +08:00
