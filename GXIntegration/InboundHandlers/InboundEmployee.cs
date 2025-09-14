@@ -18,19 +18,18 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			try
 			{
-				Logger.Log("[INBOUND - EMPLOYEE] Starting EMPLOYEE Sync Process...");
+				Logger.Log($"--------------------------------------------------------------------------");
+				Logger.Log("[INBOUND - EMPLOYEE] STARTING EMPLOYEE Sync Process...");
 
 				string fileNameFormat = "LSPI_WD_*.*";
-
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) return;
+				if (files.Count == 0) { Logger.Log($"[INBOUND - EMPLOYEE] No {fileNameFormat} file format found."); }
 
 				foreach (string file in files)
 				{
 					var result = BuildItemCollection(file);
 					string fileName = Path.GetFileName(file);
 
-					Logger.Log($"-----------------------------");
 					Logger.Log($"[INBOUND - EMPLOYEE] -> {fileName}");
 					Logger.Log($"[INBOUND - EMPLOYEE] Records found: {result.Count}");
 
@@ -217,7 +216,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					continue;
 				}
 				
-				Logger.Log("[INBOUND - EMPLOYEE] Employee sync process completed.");
+				Logger.Log("[INBOUND - EMPLOYEE] END Sync Process.");
 			}
 			catch (Exception ex)
 			{

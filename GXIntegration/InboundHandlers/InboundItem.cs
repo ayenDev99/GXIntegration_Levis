@@ -18,12 +18,12 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			try
 			{
-				Logger.Log("[INBOUND] Starting ITEM Sync Process...");
+				Logger.Log($"--------------------------------------------------------------------------");
+				Logger.Log("[INBOUND - ITEM] STARTING ITEM Sync Process...");
 
 				string fileNameFormat = "LSPI_ITEM_*.*";
-
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) return;
+				if (files.Count == 0) { Logger.Log($"[INBOUND - ITEM] No {fileNameFormat} file format found."); }
 
 				foreach (string file in files)
 				{
@@ -49,8 +49,6 @@ namespace GXIntegration_Levis.InboundHandlers
 						{
 							// CREATE
 						}
-
-						
 
 						//Build payload for this specific row
 		
@@ -127,7 +125,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						};
 
 						var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-						Logger.Log("Payload:\n" + json);
+						//Logger.Log("Payload:\n" + json);
 
 						string responseJson = GlobalInbound.CallPrismAPI(
 												session
@@ -141,11 +139,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 				}
 
-				Logger.Log("Item sync process completed.");
+				Logger.Log("[INBOUND - ITEM] END Sync Process.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}");
+				Logger.Log($"[INBOUND  - ITEM] Error in RunItemSyncAsync: {ex.Message}");
 				return;
 			}
 		}
@@ -183,7 +181,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildItemCollection: {ex.Message}");
+				Logger.Log($"[INBOUND  - ITEM] Error in BuildItemCollection: {ex.Message}");
 			}
 
 			return result;

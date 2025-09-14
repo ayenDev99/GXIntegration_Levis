@@ -158,9 +158,9 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Headers.Add("Auth-Session", auth_session);
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
-			Logger.Log($" Calling Prism API...");
-			Logger.Log($" URL: {requestUri}");
-			Logger.Log($" Method: {request.Method}");
+			//Logger.Log($" Calling Prism API...");
+			//Logger.Log($" URL: {requestUri}");
+			//Logger.Log($" Method: {request.Method}");
 
 			if (Method != "GET")
 			{
@@ -246,11 +246,11 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (!Directory.Exists(inboundDir))
 				{
 					Directory.CreateDirectory(inboundDir);
-					Logger.Log("INBOUND folder created: " + inboundDir);
+					//Logger.Log("INBOUND folder created: " + inboundDir);
 				}
 				else
 				{
-					Logger.Log("INBOUND folder already exists: " + inboundDir);
+					//Logger.Log("INBOUND folder already exists: " + inboundDir);
 				}
 
 				return inboundDir;

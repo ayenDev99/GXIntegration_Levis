@@ -18,13 +18,13 @@ namespace GXIntegration_Levis.InboundHandlers
 		public async Task RunASNSyncAsync(string session, string inboundDir, PrismRepository repository)
 		{
 			try
-			{			
-				Logger.Log("[INBOUND - ASN] Starting ASN Sync Process...");
+			{
+				Logger.Log($"--------------------------------------------------------------------------");
+				Logger.Log("[INBOUND - ASN] STARTING ASN Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTRDX_*.*";
-
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) { Logger.Log("[INBOUND - ASN] No ASN files found.");	}
+				if (files.Count == 0) { Logger.Log($"[INBOUND - ASN] No {fileNameFormat} file format found."); }
 
 				foreach (string file in files)
 				{
@@ -94,14 +94,13 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						continue;
 					}
-
 				}
 
-				Logger.Log("[INBOUND - ASN] End ASN Sync Process...");
+				Logger.Log("[INBOUND - ASN] END Sync Process");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in RunASNSyncAsync: {ex.Message}");
+				Logger.Log($"[INBOUND - ASN] Error in RunASNSyncAsync: {ex.Message}");
 				return;
 			}
 		}

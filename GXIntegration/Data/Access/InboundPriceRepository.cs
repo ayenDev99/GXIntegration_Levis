@@ -209,7 +209,7 @@ namespace GXIntegration_Levis.Data.Access
 			}
 
 			// Log the total count
-			Logger.Log($"[DB] Retrieved {results.Count} data from temp db with EffectivityDate <= {currentDate:yyyyMMdd}");
+			Logger.Log($"[INBOUND - PRICE] Retrieved {results.Count} data from temp db with EffectivityDate <= {currentDate:yyyyMMdd}");
 
 			// Optionally log details of each row (e.g., ProductCode and EffectivityDate)
 			foreach (var row in results)

@@ -33,12 +33,11 @@ namespace GXIntegration_Levis.InboundHandlers
 			try
 			{
 				Logger.Log($"--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - HIERARCHY] Starting HIERARCHY Sync Process...");
-				Logger.Log($"--------------------------------------------------------------------------");
+				Logger.Log("[INBOUND - HIERARCHY] STARTING HIERARCHY Sync Process...");
 
 				string fileNameFormat = "LSPI_HIERARCHY_*.*";
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) return;
+				if (files.Count == 0) { Logger.Log($"[INBOUND - HIERARCHY] No {fileNameFormat} file format found."); }
 
 				foreach (string file in files)
 				{
@@ -149,7 +148,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				}
 
-				Logger.Log("[INBOUND - HIERARCHY] Hierarchy sync process completed.");
+				Logger.Log("[INBOUND - HIERARCHY] END Sync Process.");
 
 			}
 			catch (Exception ex)

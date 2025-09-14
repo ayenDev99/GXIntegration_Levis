@@ -24,11 +24,12 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			try
 			{
+				Logger.Log($"--------------------------------------------------------------------------");
 				Logger.Log("[INBOUND - PRICE] Starting PRICE Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) { Logger.Log("[INBOUND - PRICE] No price files found.");}
+				if (files.Count == 0) { Logger.Log($"[INBOUND - PRICE] No {fileNameFormat} file format found."); }
 
 				foreach (string data in files)
 				{
@@ -38,10 +39,11 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				await reprocessPriceDbSyncAsync(repository, session);
 
+				Logger.Log("[INBOUND - PRICE] END Sync Process");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in RunItemSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				Logger.Log($"[INBOUND - PRICE] Error in RunItemSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
 				return;
 			}
 		}
@@ -100,7 +102,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 								if (resultList.Count == 0)
 								{
-									Logger.Log("No results returned from GetInboundItemsAsync.");
+									Logger.Log("[INBOUND - PRICE] No results returned.");
 									continue;
 								}
 
@@ -120,7 +122,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 									await createRpsAdjItem(session, item, row, adjusment_sid);
 
-									Logger.Log($"isReprocess: {isReprocess}");
+									//Logger.Log($"isReprocess: {isReprocess}");
 
 									if (isReprocess)
 									{
@@ -168,7 +170,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			if (tempRecords.Count == 0)
 			{
-				Logger.Log("No reprocess records found on TempInboundPriceData.db.");
+				Logger.Log("[INBOUND - PRICE] No reprocess records found on TempInboundPriceData.db.");
 
 				return;
 			}
@@ -245,14 +247,14 @@ namespace GXIntegration_Levis.InboundHandlers
 
 		private async Task<string> createRpsAdjItem(string session, dynamic item, dynamic fileRowData, string adjustmentSid)
 		{
-			Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJ_ITEM");
+			//Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJ_ITEM");
 
 			string item_sid = item?.SID?.ToString();
 			string sbs_sid = item?.SBS_SID?.ToString();
 			decimal adjValue = 0m;
 			if (!decimal.TryParse(fileRowData["Price"], out adjValue))
 			{
-				Logger.Log($"[WARNING] Could not parse Price '{fileRowData["Price"]}' to decimal. Defaulting to 0.");
+				Logger.Log($"[INBOUND - PRICE] Could not parse Price '{fileRowData["Price"]}' to decimal. Defaulting to 0.");
 			}
 			var adjustmentPayload = new Dictionary<string, object>
 			{
@@ -377,7 +379,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				Logger.Log($"[INBOUND - PRICE] Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}");
 			}
 
 			return result;
