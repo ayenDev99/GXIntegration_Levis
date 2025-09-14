@@ -91,7 +91,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
-			var allowedColumns = new HashSet<string> { "UPC", "DESCRIPTION1" };
+			var allowedColumns = new HashSet<string> { "UPC", "DESCRIPTION1", "ALU" };
 
 			if (!allowedColumns.Contains(columnName.ToUpper()))
 				throw new ArgumentException("Invalid column name");
@@ -125,7 +125,6 @@ namespace GXIntegration_Levis.Data.Access
 				}
 			}
 		}
-
 
 		public async Task<dynamic> GetRpsEmployee(string columnName, string columnValue)
 		{

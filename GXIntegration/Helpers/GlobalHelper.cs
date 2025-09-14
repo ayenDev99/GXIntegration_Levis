@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GXIntegration_Levis.Helpers
 {
@@ -41,7 +40,6 @@ namespace GXIntegration_Levis.Helpers
 				}
 			}
 		}
-
 
 		public static void HandleCellMouseMove(DataGridView dataGridView, DataGridViewCellMouseEventArgs e, string actionColumnName = "Action")
 		{
@@ -138,17 +136,63 @@ namespace GXIntegration_Levis.Helpers
 
 		public static string FormatDateToIso8601(string inputDate)
 		{
-			if (DateTime.TryParseExact(inputDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime dt))
-				return dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
+			if (DateTime.TryParseExact(inputDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime datePart))
+			{
+				// Get current time (UTC) and combine with the input date
+				DateTime now = DateTime.UtcNow;
+				DateTime fullDateTime = new DateTime(
+					datePart.Year, datePart.Month, datePart.Day,
+					now.Hour, now.Minute, now.Second, now.Millisecond,
+					DateTimeKind.Utc);
+
+				return fullDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss.fff'Z'");
+			}
 
 			return null;
 		}
-
 
 		public static string ToOracleTimestampTZLiteral(DateTime dt, string timezoneOffset = "+08:00")
 		{
 			// Format example: 20-AUG-25 09.59.20.123456 AM +08:00
 			return dt.ToString("dd-MMM-yy hh.mm.ss.ffffff tt").ToUpper() + " " + timezoneOffset;
+		}
+
+		// ***************************************************
+		// Parsing Methods
+		// ***************************************************
+		public static decimal? GetDecimalValue(IDictionary<string, string> item, string key, int decimalPlaces)
+		{
+			if (item != null &&
+				item.TryGetValue(key, out var val) &&
+				decimal.TryParse(val, out var parsed))
+			{
+				return Math.Round(parsed, decimalPlaces);
+			}
+
+			return null;
+		}
+
+		public static int? GetIntValue(IDictionary<string, string> item, string key)
+		{
+			if (item != null &&
+				item.TryGetValue(key, out var val) &&
+				int.TryParse(val?.ToString(), out var parsed))
+			{
+				return parsed;
+			}
+			return null;
+		}
+
+		public static string GetStringValue(IDictionary<string, string> item, string key)
+		{
+			if (item != null &&
+				item.TryGetValue(key, out var val) &&
+				val != null)
+			{
+				return val.ToString();
+			}
+
+			return null;
 		}
 
 		// ***************************************************
@@ -210,8 +254,9 @@ namespace GXIntegration_Levis.Helpers
 			};
 		}
 
-
-		// Prism error log
+		// ***************************************************
+		// Prism Error Log Methods
+		// ***************************************************
 		public class PrismErrorResponse
 		{
 			public List<PrismError> errors { get; set; }
@@ -222,7 +267,6 @@ namespace GXIntegration_Levis.Helpers
 			public string errorcode { get; set; }
 			public string errormsg { get; set; }
 		}
-
 
 	}
 

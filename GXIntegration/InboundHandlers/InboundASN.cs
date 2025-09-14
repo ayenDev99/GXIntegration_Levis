@@ -2,17 +2,11 @@
 using GXIntegration_Levis.Helpers;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.ConstrainedExecution;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using static Org.BouncyCastle.Math.EC.ECCurve;
-using JsonFormatting = Newtonsoft.Json.Formatting;
 
 
 namespace GXIntegration_Levis.InboundHandlers
@@ -92,6 +86,8 @@ namespace GXIntegration_Levis.InboundHandlers
 									Logger.Log($"[INBOUND - ASN]		ROW DATA: {string.Join(", ", row.Select(kv => $"{kv.Key}={kv.Value}"))}");
 									await createRpsPOAsync(repository, session, row);
 								}
+
+
 							}
 
 						}
@@ -101,6 +97,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				}
 
+				Logger.Log("[INBOUND - ASN] End ASN Sync Process...");
 			}
 			catch (Exception ex)
 			{
@@ -180,42 +177,74 @@ namespace GXIntegration_Levis.InboundHandlers
 		private async Task<string> createRpsPOAsync(dynamic repo, string session, IDictionary<string, string> item)
 		{
 			Logger.Log($"[INBOUND - PRICE]		[CREATE] PO");
-
 			//Logger.Log("[INBOUND - PRICE] [CREATE] PO - Item Details:");
 			//item?.ToList().ForEach(kv => Logger.Log($"   {kv.Key} = {kv.Value}"));
 
-			var storeCode = item?.TryGetValue("StoreCode", out var storeCodeValue) == true ? storeCodeValue : null;
-			var poNo = item?.TryGetValue("DocumentNumber", out var poNoValue) == true ? poNoValue : null;
+			var storeCode		= GlobalHelper.GetStringValue(item, "StoreCode");
+			var prismStore		= await repo.GetRpsStore("ADDRESS5", storeCode);
 
-			var prismStore = await repo.GetRpsStore("ADDRESS5", storeCode);
+			if (prismStore == null || prismStore.Count == 0) 
+			{ 
+				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");	
+			}
 
-			if (prismStore == null || prismStore.Count == 0) { Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");	}
+			int? billtostoreno		= prismStore?.Count > 0 ? Convert.ToInt32(prismStore[0].STORE_NO) : (int?) null;
+			int? orderQty			= GlobalHelper.GetIntValue(item, "Quantity");
+			var poNo				= GlobalHelper.GetStringValue(item, "DocumentNumber");
+			var sbs_sid				= prismStore?.Count > 0 ? prismStore[0].SBS_SID.ToString() : null;
+			var instruction1		= GlobalHelper.GetStringValue(item, "StoreOrderNumber");
+			string shippingDate		= GlobalHelper.FormatDateToIso8601(item?["ShipmentDate"]);
+			string orderDate		= GlobalHelper.FormatDateToIso8601(item?["OrderDate"]);
+			decimal? purchasePrice	= GlobalHelper.GetDecimalValue(item, "PurchasePrice", 4);
+			decimal? landedCost		= GlobalHelper.GetDecimalValue(item, "LandedCost", 4);
+			decimal? taxCost		= GlobalHelper.GetDecimalValue(item, "TaxtCost", 4);
+			var productCode			= GlobalHelper.GetStringValue(item, "ProductCode");
+			var sizeCode			= GlobalHelper.GetStringValue(item, "SizeCode");
+			var colorCode			= GlobalHelper.GetStringValue(item, "ColorCode");
+			var itemAlu				= productCode + sizeCode + colorCode;
 
-			int billtostoreno = Convert.ToInt32(prismStore[0].STORE_NO);
+			var prismInvnSbsItem = await repo.GetRpsInvnSbsItem("ALU", itemAlu);
+			var activeItems = new List<dynamic>();
+			foreach (var x in prismInvnSbsItem)
+				if (((IDictionary<string, object>)x)["SBS_SID"]?.ToString() == sbs_sid)
+					activeItems.Add(x);
 
-			var sbs_sid = prismStore[0].SBS_SID.ToString();
-			var shippingdate = item?.TryGetValue("ShipmentDate", out var rawDate) == true
-								? GlobalHelper.FormatDateToIso8601(rawDate)
-								: null;
-
-			var PoPayload = new Dictionary<string, object>
+			// CREATE RPS.PO
+			var poPayload = new Dictionary<string, object>
 			{
-				["billtostoreno"] = billtostoreno,
-				["originapplication"] = "RProPrismWeb",
-				["sbssid"] = sbs_sid,
-				["shippingdate"] = shippingdate,
-				["status"] = 1,
-				["potype"] = 0,
-				["pono"] = poNo,
+				["billtostoreno"]		= billtostoreno
+				, ["createddatetime"]	= orderDate
+				, ["originapplication"] = "RProPrismWeb"
+				, ["sbssid"]			= sbs_sid
+				, ["shippingDate"]		= shippingDate
+				, ["status"]			= 1
+				, ["potype"]			= 0
+				, ["pono"]				= poNo
+				, ["ordqty"]			= orderQty
+				, ["instruction1"]		= instruction1
 			};
 
-			//string payloadJson = System.Text.Json.JsonSerializer.Serialize(PoPayload, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-			//Logger.Log(payloadJson);
+			// CREATE RPS.PO_ITEM
+			var itemSid = ((IDictionary<string, object>)activeItems.First())["SID"]?.ToString();
+			if (!string.IsNullOrWhiteSpace(itemSid))
+			{
+				poPayload["poitem"] = new[] 
+				{ 
+					new { 
+						itemsid		= itemSid
+						, price		= purchasePrice
+						, cost		= landedCost
+						, taxamount = taxCost
+						, ordqty	= orderQty
+					} 
+				};
+			}
+
+			var payload = new { data = new[] { poPayload }};
+			string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
 			// Call API to CREATE RPS.PO
 			string endpointCreate = "/api/backoffice/purchaseorder";
-			var payload = new { data = new[] { PoPayload } };
-			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 			string responseJson = GlobalInbound.CallPrismAPI(
 									session
 									, endpointCreate
@@ -223,11 +252,8 @@ namespace GXIntegration_Levis.InboundHandlers
 									, out bool issuccessful
 									, "POST"
 									, 1
-									);
-
-			return responseJson;
-
-			
+								);
+			return responseJson;	
 		}
 
 		// ***************************************************
