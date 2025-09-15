@@ -26,8 +26,10 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
 						SELECT
-							ISI.DESCRIPTION1			AS ProductCode
-							, ISI.ALU					AS Sku
+							SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)	AS ProductCode
+							, ISI.DESCRIPTION1 
+								|| ISI.ITEM_SIZE
+								|| ISI.ATTRIBUTE        AS Sku	
 							, ISI.ITEM_SIZE				AS Waist
 							, ISI.ATTRIBUTE				AS Inseam
 							, TO_CHAR(STORE.ADDRESS4)	AS StoreCode

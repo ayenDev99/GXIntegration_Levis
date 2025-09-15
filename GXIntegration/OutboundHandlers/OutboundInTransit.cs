@@ -63,6 +63,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			var sb = new StringBuilder();
 
+			sb.AppendLine(
+				$"ProductCode" +
+				$"{d}SKU" +
+				$"{d}DIM1" +
+				$"{d}DIM2" +
+				$"{d}StoreCode" +
+				$"{d}TotalOpenQTY"
+			);
+
 			foreach (var item in items)
 			{
 				sb.AppendLine(
@@ -71,7 +80,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
 					$"{d}{item.StoreCode}" +
-					$"{d}{item.Quantity}{d}"
+					$"{d}{item.Quantity}"
 				);
 			}
 
