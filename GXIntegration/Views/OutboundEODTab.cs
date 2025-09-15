@@ -88,9 +88,6 @@ namespace GXIntegration_Levis.Views
 				ImageLayout = DataGridViewImageCellLayout.Zoom
 			};
 
-			// ! Note: Uncomment if testing output per EOD files
-			//guna1DataGridView1.Columns.Add(imageColumn);
-
 			guna1DataGridView1.CellContentClick += CellContentClick;
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
@@ -149,19 +146,19 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
-				//await OutboundPrice.Execute(repositories.PriceRepository, config);
-				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
 				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
 				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
-				//Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
-				//await ExecuteStoreInventoryCountAsync();
-				//await ExecuteAllAndSaveToSingleXmlAsync();
-				//Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
+				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
+				await ExecuteStoreInventoryCountAsync();
+				await ExecuteAllAndSaveToSingleXmlAsync();
+				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				//await UploadToSftpAsync();
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				await UploadToSftpAsync();
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
 
 			}
 			finally
@@ -237,7 +234,8 @@ namespace GXIntegration_Levis.Views
 						("StoreGoods", storeGoodsItems as IEnumerable<object>),
 					};
 
-					var storeRoot = new XElement("OutboundData");
+					//var storeRoot = new XElement("OutboundData");
+					List<XElement> validFragments = new List<XElement>();
 
 					for (int i = 0; i < xmlFragments.Length; i++)
 					{
@@ -250,7 +248,8 @@ namespace GXIntegration_Levis.Views
 						{
 							try
 							{
-								storeRoot.Add(XElement.Parse(fragment));
+								var parsedFragment = XElement.Parse(fragment);
+								validFragments.Add(parsedFragment);
 
 								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
 								Logger.Log($"[OUTBOUND - EOD]		Successfully generated {xmlType} XML. Item count: {count}");
@@ -267,14 +266,18 @@ namespace GXIntegration_Levis.Views
 					}
 
 					// Skip file generation if no data at all
-					if (!storeRoot.HasElements)
+					if (!validFragments.Any())
 					{
 						Logger.Log($"[INFO] No outbound data generated for store {storeCode}. File will not be created.");
 						continue;
 					}
 
 					// Prepare output XML document
-					var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), storeRoot);
+					//var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), validFragments);
+					var document = new XDocument(
+													new XDeclaration("1.0", "utf-8", "yes"),
+													new XElement("Root", validFragments) // Or another name
+												);
 
 					var settings = new XmlWriterSettings
 					{
