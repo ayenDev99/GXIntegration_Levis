@@ -80,7 +80,9 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.ATTRIBUTE							AS PTDIM2
 								, ''									AS PTStyle
 								, VOU.PO_NO								AS PTControlNumber
-								, ISB.DESCRIPTION1						AS PTEAN				    
+								, ISB.DESCRIPTION1						AS PTEAN
+                        
+								, VOU.SID								AS VouSid				    
 								, ''									AS CartonNumber
 							FROM
 								RPS.VOUCHER VOU
@@ -101,6 +103,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.STATUS = 4
 								AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 =  :StoreCode)
 					";
+
 
 					//FETCH FIRST 1 ROWS ONLY
 					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate

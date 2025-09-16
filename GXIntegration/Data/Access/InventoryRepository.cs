@@ -76,7 +76,7 @@ namespace GXIntegration_Levis.Data.Access
 						WHERE 
 						ISI.active = 1
 							AND S.ACTIVE = 1
-							AND TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-07-30'
+							AND TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-09-30'
 					";
 
 					//TRUNC(ISI.post_date) BETWEEN

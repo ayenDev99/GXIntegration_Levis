@@ -51,6 +51,7 @@ namespace GXIntegration_Levis.Model
 		public string PTEAN { get; set; }
 
 		public string CartonNumber { get; set; }
+		public string VouSid { get; set; }
 
 	}
 }
