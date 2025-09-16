@@ -80,10 +80,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 				sb.AppendLine(
 					$"{item.SalesOrg}" +
 					$"{d}{item.PC9}" +
-					$"{d}{item.PriceLevel}" +
+					$"{d}{item.FormattedPriceLevel}" +
 					$"{d}{item.ConditionType}" +
-					$"{d}{item.PriceStartDate}" +
-					$"{d}{item.PriceEndDate}" +
+					$"{d}{item.FormattedPriceStartDate}" +
+					$"{d}{item.FormattedPriceEndDate}" +
 					$"{d}{item.Price}" +
 					$"{d}{item.Flag}"
 				);

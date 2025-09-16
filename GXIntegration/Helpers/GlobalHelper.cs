@@ -268,6 +268,26 @@ namespace GXIntegration_Levis.Helpers
 			public string errormsg { get; set; }
 		}
 
+		// ***************************************************
+		// Config.xml Methods
+		// ***************************************************
+		public static Dictionary<string, string> LoadOBPriceLevels()
+		{
+			var result = new Dictionary<string, string>();
+			var doc = new System.Xml.XmlDocument();
+			doc.Load("config.xml");
+
+			foreach (System.Xml.XmlNode node in doc.SelectNodes("//OBPriceLevels/add"))
+			{
+				var key = node.Attributes["key"]?.Value;
+				var value = node.Attributes["value"]?.Value;
+
+				if (key != null && value != null)
+					result[key] = value;
+			}
+
+			return result;
+		}
 	}
 
 }
