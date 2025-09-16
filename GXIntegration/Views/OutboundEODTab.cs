@@ -145,15 +145,15 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
-				await OutboundPrice.Execute(repositories.PriceRepository, config);
-				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
+				//Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
+				//await OutboundPrice.Execute(repositories.PriceRepository, config);
+				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				//Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
 				//Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
 				//await ExecuteStoreInventoryCountAsync();
-				//await ExecuteAllAndSaveToSingleXmlAsync();
+				await ExecuteAllAndSaveToSingleXmlAsync();
 				//Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
 				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
@@ -204,8 +204,8 @@ namespace GXIntegration_Levis.Views
 					var xmlFragments = new[]
 					{
 						//OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
-						//OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
-						OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
+						OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
+						//OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
 						//OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
 						//OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						//OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
@@ -215,8 +215,8 @@ namespace GXIntegration_Levis.Views
 					string[] xmlTypes = new[]
 					{
 						//"StoreSale",
-						//"StoreShipping",
-						"StoreReceiving",
+						"StoreShipping",
+						//"StoreReceiving",
 						//"StoreInventoryAdjustment",
 						//"StoreReturn",
 						//"StoreGoodsReturn",
@@ -226,8 +226,8 @@ namespace GXIntegration_Levis.Views
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
 					{
 						//("StoreSale", storeSaleItems as IEnumerable<object>),
-						//("StoreShipping", storeShippingItems as IEnumerable<object>),
-						("StoreReceiving", storeReceivingItems as IEnumerable<object>),
+						("StoreShipping", storeShippingItems as IEnumerable<object>),
+						//("StoreReceiving", storeReceivingItems as IEnumerable<object>),
 						//("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
 						//("StoreReturn", storeReturnItems as IEnumerable<object>),
 						//("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
