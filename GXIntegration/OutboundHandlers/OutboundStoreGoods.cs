@@ -95,16 +95,21 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "RECEIVING");
 			writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "INVENTORY_CONTROL");
 
-			GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, "1");
-
-			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.StoreCode))
+			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.OrganizationID))
 			{
-				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
+				var itemStore = storeGroup.FirstOrDefault();
+				if (itemStore == null) continue;
 
-				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationNo))
+				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, itemStore.OrganizationID);
+				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", itemStore.RetailStoreID);
+
+				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationID))
 				{
-					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", wsGroup.Key);
-					GlobalOutbound.WriteCDataElement(writer, "TillID", storeGroup.Key + wsGroup.Key);
+					var itemWs = wsGroup.FirstOrDefault();
+					if (itemWs == null) continue;
+
+					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", itemWs.WorkstationID);
+					GlobalOutbound.WriteCDataElement(writer, "TillID", itemWs.TillID);
 
 					foreach (var vouGroup in GlobalOutbound.GroupBySafe(wsGroup, i => i.SequenceNo))
 					{
@@ -115,44 +120,44 @@ namespace GXIntegration_Levis.OutboundHandlers
 						GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(vouItems.BusinessDayDate));
 						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(vouItems.BeginDateTime, true));
 						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(vouItems.EndDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "OperatorID", vouItems.OperatorId);
+						GlobalOutbound.WriteCDataElement(writer, "OperatorID", vouItems.OperatorID);
 						GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", vouItems.CurrencyCode);
 
-						GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
+						GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", vouItems.InventoryMovementSuccess);
 						GlobalOutbound.WritePosTransactionProperties(writer, "REGION", vouItems.Region);
 						GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", vouItems.Country);
-						GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", vouItems.AlternateStoreId);
+						GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", vouItems.AlternateStoreID);
 
 						writer.WriteStartElement("InventoryTransaction");
 						writer.WriteStartElement("ReceiveInventory");
 
 						GlobalOutbound.WriteCDataElement(writer, "DocumentStatus", vouItems.DocumentStatus);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentID", vouItems.DocumentId);
-						GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", "RECEIVING_ASN");
-						GlobalOutbound.WriteCDataElement(writer, "DocumentType", "RECEIVING");
-						GlobalOutbound.WriteCDataElement(writer, "DocumentSubType", "ASN");
-						GlobalOutbound.WriteCDataElement(writer, "CompletionTimestamp", GlobalOutbound.FormatDate(vouItems.CompletionTimestamp));
-						GlobalOutbound.WriteCDataElement(writer, "LastActivityTimestamp", GlobalOutbound.FormatDate(vouItems.LastActivityTimestamp));
+						GlobalOutbound.WriteCDataElement(writer, "DocumentID", vouItems.DocumentID);
+						GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", vouItems.RetailStoreID);
+						GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", vouItems.DocumentTypeDescription);
+						GlobalOutbound.WriteCDataElement(writer, "DocumentType", vouItems.DocumentType);
+						GlobalOutbound.WriteCDataElement(writer, "DocumentSubType", vouItems.DocumentSubType);
+						GlobalOutbound.WriteCDataElement(writer, "CompletionTimestamp", GlobalOutbound.FormatDate(vouItems.CompletionTimestamp, true));
+						GlobalOutbound.WriteCDataElement(writer, "LastActivityTimestamp", GlobalOutbound.FormatDate(vouItems.LastActivityTimestamp, true));
 
 						// Shipment
 						writer.WriteStartElement("Shipment");
 						GlobalOutbound.WriteCDataElement(writer, "ShipmentSequence", vouItems.ShipmentSequence);
-						GlobalOutbound.WriteCDataElement(writer, "DestinationRetailLocationID", vouItems.DestinationRetailLocationId);
+						GlobalOutbound.WriteCDataElement(writer, "DestinationRetailLocationID", vouItems.DestinationRetailLocationID);
 						GlobalOutbound.WriteCDataElement(writer, "StatusCode", vouItems.ShipmentStatusCode);
 						writer.WriteEndElement(); // </Shipment>
 
 						// Carton
 						writer.WriteStartElement("Carton");
-						GlobalOutbound.WriteCDataElement(writer, "CartonID", vouItems.SequenceNo);
-						GlobalOutbound.WriteCDataElement(writer, "StatusCode", "1");
+						GlobalOutbound.WriteCDataElement(writer, "CartonID", vouItems.CartonID);
+						GlobalOutbound.WriteCDataElement(writer, "StatusCode", vouItems.CartonStatusCode);
 
 						foreach (var lineItem in vouGroup)
 						{
 							writer.WriteStartElement("LineItem");
 							writer.WriteAttributeString("VoidFlag", "false");
 							GlobalOutbound.WriteCDataElement(writer, "LineNumber", lineItem.LineNumber);
-							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemId);
+							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemID);
 							GlobalOutbound.WriteCDataElement(writer, "ActualCount", lineItem.ActualCount);
 							GlobalOutbound.WriteCDataElement(writer, "ExpectedCount", lineItem.ExpectedCount);
 							GlobalOutbound.WriteCDataElement(writer, "PostedCount", lineItem.PostedCount);
@@ -177,7 +182,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 						{
 							writer.WriteStartElement("LineItem");
 							writer.WriteAttributeString("VoidFlag", "false");
-							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemId);
+							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemID);
 
 							GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", lineItem.PTDIM1);
 							GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", lineItem.PTDIM2);

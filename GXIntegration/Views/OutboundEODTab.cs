@@ -206,10 +206,10 @@ namespace GXIntegration_Levis.Views
 						//OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
 						//OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
 						//OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
-						OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
+						//OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
 						//OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						//OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
-						//OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
+						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
 					};
 
 					string[] xmlTypes = new[]
@@ -217,10 +217,10 @@ namespace GXIntegration_Levis.Views
 						//"StoreSale",
 						//"StoreShipping",
 						//"StoreReceiving",
-						"StoreInventoryAdjustment",
+						//"StoreInventoryAdjustment",
 						//"StoreReturn",
 						//"StoreGoodsReturn",
-						//"StoreGoods",
+						"StoreGoods",
 					};
 
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
@@ -228,10 +228,10 @@ namespace GXIntegration_Levis.Views
 						//("StoreSale", storeSaleItems as IEnumerable<object>),
 						//("StoreShipping", storeShippingItems as IEnumerable<object>),
 						//("StoreReceiving", storeReceivingItems as IEnumerable<object>),
-						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
+						//("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
 						//("StoreReturn", storeReturnItems as IEnumerable<object>),
 						//("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
-						//("StoreGoods", storeGoodsItems as IEnumerable<object>),
+						("StoreGoods", storeGoodsItems as IEnumerable<object>),
 					};
 
 					//var storeRoot = new XElement("OutboundData");

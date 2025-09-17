@@ -31,61 +31,64 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								VOU.SID							AS VouSid
-								, TO_CHAR(S.ADDRESS4)           AS StoreCode
-								, VOU.WORKSTATION               AS WorkstationNo
-								, VOU.VOU_NO			        AS SequenceNo
-								, TRUNC(VOU.CREATED_DATETIME)   AS BusinessDayDate
-								, VOU.CREATED_DATETIME	        AS BeginDateTime
-								, VOU.POST_DATE                 AS EndDateTime
-								, VOU.CLERK_SID			        AS OperatorId
-								, C.ALPHABETIC_CODE             AS CurrencyCode
-								, REGION.REGION_NAME	        AS Region
-								, COUNTRY.COUNTRY_CODE          AS Country
-								, S.ADDRESS5			        AS AlternateStoreId
-								, CASE WHEN VOU.STATUS = 4 
+                            	'1'										AS OrganizationID
+								, (SELECT ADDRESS4 FROM RPS.STORE 
+									WHERE SID = VOU.STORE_SID)			AS RetailStoreID
+								, VOU.WORKSTATION						AS WorkstationID
+								, (SELECT ADDRESS4 FROM RPS.STORE 
+									WHERE SID = VOU.STORE_SID) 
+									|| VOU.WORKSTATION					AS TillID
+                                , VOU.VOU_NO			                AS SequenceNo
+                                , TRUNC(VOU.CREATED_DATETIME)           AS BusinessDayDate
+								, VOU.CREATED_DATETIME	                AS BeginDateTime
+								, VOU.POST_DATE                         AS EndDateTime
+                                , EMPLOYEE.EMPL_NAME			        AS OperatorID
+                                , C.ALPHABETIC_CODE                     AS CurrencyCode
+                                ,'true'                                 AS InventoryMovementSuccess
+                                ,'AMA'	                                AS Region
+                                , COUNTRY.COUNTRY_CODE                  AS Country
+                                , (SELECT ADDRESS4 FROM RPS.STORE 
+                                    WHERE SID = VOU.STORE_SID)			AS AlternateStoreID
+                                , CASE WHEN VOU.STATUS = 4 
 									THEN 'CLOSED' 
 									ELSE 'PENDING' 
-									END							AS DocumentStatus
-								, VOU.VOU_NO					AS DocumentId
-								, VOU.MODIFIED_DATETIME			AS CompletionTimestamp
-								, VOU.MODIFIED_DATETIME			AS LastActivityTimestamp
-								, ''							AS ShipmentSequence
-								, ''							AS DestinationRetailLocationId
-								, ''							AS ShipmentStatusCode
-								, VI.CARTON_NO					AS CartonId
-								, VI.CARTON_STATUS				AS CartonStatusCode
-								, VI.ITEM_POS					AS LineNumber
-								, ISB.DESCRIPTION1				AS ItemId
-								, VI.QTY						AS ActualCount
-								, ''							AS ExpectedCount
-								, ''							AS PostedCount
-								, VOU.CREATED_DATETIME			AS SaleLineBusinessDayDate
-								, ''							AS TransactionSequence
-								, ''							AS LineItemSequence
-								, ''							AS RecordCreationType
-								, ''							AS LineItemStatusCode
-								, ''							AS PTDIM1
-								, ''							AS PTDIM2
-								, ''							AS PTStyle
-								, ''							AS PTControlNumber
-								, ''							AS PTEAN
-								, VI.QTY						AS QuantityOrdered
-								, ''							AS QuantityReceived
-								, ISB.DESCRIPTION2				AS Description
-
-								, VOU_REASON.NAME				AS ReasonCode
-								, ''							AS OriginatorName
-								, ''							AS ActualDeliveryDate
-								, ''							AS ActualShipDate
-								, S.ADDRESS5					AS DestinationPartyID
-								, S.ZIP							AS ShipmentPostalCode
-								, COUNTRY.COUNTRY_CODE			AS ShipmentCountry
-								, VI.QTY 						AS QuantityShipped
+									END							        AS DocumentStatus
+                                , VOU.VOU_NO					        AS DocumentID
+                                , 'RECEIVING_ASN'                       AS DocumentTypeDescription
+                                , 'RECEIVING'                           AS DocumentType
+                                , 'ASN'                                 AS DocumentSubType
+                                , VOU.MODIFIED_DATETIME			        AS CompletionTimestamp
+								, VOU.MODIFIED_DATETIME			        AS LastActivityTimestamp
+								, '1'							        AS ShipmentSequence
+                                , (SELECT ADDRESS4 FROM RPS.STORE 
+                                    WHERE SID = VOU.SLIP_STORE_SID)		AS DestinationAlternateStoreID
+                                , ''				                    AS ShipmentStatusCode
+                                , '1'					                AS CartonID
+                                , VI.CARTON_STATUS				        AS CartonStatusCode
+                                , VI.ITEM_POS					        AS LineNumber
+                                , ISB.DESCRIPTION1				        AS ItemID
+                                , VI.QTY						        AS ActualCount
+                                , ''							        AS ExpectedCount
+                                , ''							        AS PostedCount
+                                , VOU.CREATED_DATETIME			        AS SaleLineBusinessDayDate
+                                , ''							        AS TransactionSequence
+                                , VI.ITEM_POS							AS LineItemSequence
+                                , 'OTHER'							    AS RecordCreationType
+								, '1'							        AS LineItemStatusCode
+                                , ISB.ITEM_SIZE							AS PTDIM1
+                                , ISB.ATTRIBUTE							AS PTDIM2
+                                , ''									AS PTStyle
+                                , VOU.PO_NO								AS PTControlNumber
+                                , ISB.DESCRIPTION1						AS PTEAN
+                                , ''						            AS QuantityOrdered
+                                , ''                                    AS QuantityReceived
+                                , '1'                                   AS CartonNumber
+                                , ISB.DESCRIPTION2				        AS Description
+                                
+								, VOU.SID							    AS VouSid							
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
-							LEFT JOIN RPS.STORE	S					ON S.SID = VOU.STORE_SID
 							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
 							LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
 							LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
@@ -100,7 +103,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_TYPE = 0
 								AND VOU.VOU_CLASS = 0
 								AND VOU.STATUS = 4
-								AND S.ADDRESS4 = :StoreCode
+                                AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
 
 					// TO CONFIRM STATUS
