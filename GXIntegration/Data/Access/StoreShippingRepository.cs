@@ -98,8 +98,7 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.VOU_CLASS = 2
 								AND VOU.SLIP_FLAG = 1
 								AND VOU.STATUS = 3
-                                AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = '6451')
-
+                                AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
