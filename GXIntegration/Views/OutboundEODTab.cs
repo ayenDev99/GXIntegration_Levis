@@ -1,6 +1,8 @@
 ﻿using Guna.UI.WinForms;
 using GXIntegration.Properties;
+using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using GXIntegration_Levis.OutboundHandlers;
 using GXIntegration_Levis.Properties;
 using Renci.SshNet;
@@ -374,6 +376,7 @@ namespace GXIntegration_Levis.Views
 			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
 			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating INVENTORYCOUNT...");
+
 			foreach (var store in prismStores)
 			{
 				if (store is IDictionary<string, object> dict && dict.TryGetValue("ADDRESS4", out var addr) && addr != null)
@@ -382,28 +385,40 @@ namespace GXIntegration_Levis.Views
 
 					try
 					{
-						// Fetch inventory count first
-						var items = await repositories.StoreInventoryCountRepository
-													  .GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
+						var repo = new StoreInventoryCountRepository(config.MainDbConnection);
 
-						// Convert/filter to valid fragments (your business logic goes here)
-						var validFragments = items.Where(x => x != null).ToList();
+						int pageSize = 100000;
+						int startRow = 1;
+						int totalFetched = 0;
+						var allItems = new List<StoreInventoryCountModel>();
 
-						if (!validFragments.Any())
+						while (true)
 						{
-							Logger.Log($"[OUTBOUND - EOD] [XML]		No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
+							var batch = await repo.GetPagedStoreInventoryCountAsync(
+								fromDate, toDate, storeCode, startRow, startRow + pageSize - 1);
+
+							if (batch.Count == 0)
+								break;
+
+							allItems.AddRange(batch);
+							totalFetched += batch.Count;
+
+							Logger.Log($"[OUTBOUND - EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
+
+							startRow += pageSize;
+						}
+
+						if (!allItems.Any())
+						{
+							Logger.Log($"[OUTBOUND - EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
 							continue;
 						}
 
-						await OutboundStoreInventoryCount.Execute(
-							repositories.StoreInventoryCountRepository,
-							config,
-							"xml",
-							storeCode);
+						await OutboundStoreInventoryCount.Execute(allItems, config, "xml", storeCode);
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"[OUTBOUND - EOD] Failed for StoreCode: {storeCode} | {ex}");
+						Logger.Log($"[OUTBOUND - EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
 					}
 				}
 				else
@@ -412,7 +427,6 @@ namespace GXIntegration_Levis.Views
 				}
 			}
 		}
-
 
 		private async Task UploadToSftpAsync()
 		{	

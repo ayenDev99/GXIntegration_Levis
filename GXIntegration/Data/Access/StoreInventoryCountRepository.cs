@@ -12,18 +12,29 @@ namespace GXIntegration_Levis.Data.Access
 	public class StoreInventoryCountRepository
 	{
 		private readonly string _connectionString;
+
 		public StoreInventoryCountRepository(string connectionString)
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreInventoryCountModel>> GetStoreInventoryCountAsync(DateTime from_date, DateTime to_date, string storeCode)
+
+		public async Task<List<StoreInventoryCountModel>> GetPagedStoreInventoryCountAsync(
+			DateTime fromDate,
+			DateTime toDate,
+			string storeCode,
+			int startRow,
+			int endRow)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
-				try
-				{
-					await connection.OpenAsync();
-					string sql = @"
+				await connection.OpenAsync();
+
+				string sql = @"
+					SELECT * FROM (
+						SELECT 
+							t.*, 
+							ROWNUM AS RN 
+						FROM (
 							SELECT  
 								'1'									AS OrganizationID
 								, STORE.ADDRESS4					AS RetailStoreID
@@ -34,7 +45,7 @@ namespace GXIntegration_Levis.Data.Access
 								, PI_SHEET.CREATED_DATETIME			AS BeginDateTime
 								, PI_SHEET.POST_DATE				AS EndDateTime
 								, PI_SHEET.CREATED_BY				AS OperatorID
-								, CURRENCY.ALPHABETIC_CODE			AS CurrencyCode
+								, 'PHP'								AS CurrencyCode
 								, 'AMA'								AS Region
 								, 'PHP'								AS Country
 								, STORE.ADDRESS4					AS AlternateStoreID
@@ -53,38 +64,39 @@ namespace GXIntegration_Levis.Data.Access
 								, 'ON_HAND'							AS ItemCountInventoryBucketID
 							FROM 
 								RPS.PI_SHEET
-							LEFT JOIN RPS.PI_START			ON PI_START.SHEET_SID = PI_SHEET.SID
-							LEFT JOIN RPS.STORE				ON STORE.SID = PI_SHEET.STORE_SID
-							LEFT JOIN RPS.PI_ZONE			ON PI_ZONE.SHEET_SID = PI_SHEET.SID
-							LEFT JOIN RPS.PI_ZONE_ITEM_V	ON PI_ZONE_ITEM_V.ZONE_SID = PI_ZONE.SID
-							LEFT JOIN RPS.INVN_SBS_ITEM		ON INVN_SBS_ITEM.SID = PI_START.INVN_SBS_ITEM_SID
-							LEFT JOIN RPS.SUBSIDIARY		ON SUBSIDIARY.SID = PI_SHEET.SBS_SID
-							LEFT JOIN RPS.CURRENCY			ON CURRENCY.SID = SUBSIDIARY.BASE_CURRENCY_SID
+								LEFT JOIN RPS.STORE ON STORE.SID = PI_SHEET.STORE_SID
+								LEFT JOIN RPS.PI_ZONE ON PI_ZONE.SHEET_SID = PI_SHEET.SID
+								LEFT JOIN RPS.PI_ZONE_ITEM_V ON PI_ZONE_ITEM_V.ZONE_SID = PI_ZONE.SID
+								LEFT JOIN RPS.INVN_SBS_ITEM ON INVN_SBS_ITEM.SID = PI_ZONE_ITEM_V.INVN_SBS_ITEM_SID
 							WHERE 
 								TRUNC(PI_SHEET.POST_DATE) BETWEEN :FromDate AND :ToDate
 								AND STORE.ADDRESS4 = :StoreCode
-					";
+								AND PI_SHEET.ACTIVE = 1
+						) t
+					)
+					WHERE RN BETWEEN :StartRow AND :EndRow
+				";
 
-					//Logger.Log($"Generated SQL: {sql}");
-
-					var parameters = new
-					{
-						FromDate = from_date,
-						ToDate = to_date,
-						StoreCode = storeCode
-					};
-
-					var sales = await connection.QueryAsync<StoreInventoryCountModel>(sql, parameters);
-					return sales.ToList();
-				}
-				catch (Exception ex)
+				var parameters = new
 				{
-					Logger.Log($"Error fetching Store Inventory Adjustment data: {ex.Message}");
-					Console.WriteLine($"Error fetching Store Inventory Adjustment data: {ex.Message}");
-					return new List<StoreInventoryCountModel>();
-				}
+					FromDate = fromDate,
+					ToDate = toDate,
+					StoreCode = storeCode,
+					StartRow = startRow,
+					EndRow = endRow
+				};
+
+				//Logger.Log($"[TEST {sql}");
+
+				var result = await connection.QueryAsync<StoreInventoryCountModel>(
+					sql,
+					param: parameters,
+					transaction: null,
+					commandTimeout: 300,
+					commandType: System.Data.CommandType.Text);
+
+				return result.ToList();
 			}
 		}
-
 	}
 }

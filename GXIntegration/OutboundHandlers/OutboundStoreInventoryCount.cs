@@ -15,13 +15,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public class OutboundStoreInventoryCount
 	{
-		public static async Task Execute(StoreInventoryCountRepository repository, GXConfig config, string generate_type, string storeCode)
+		public static async Task Execute(List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode)
 		{
 			try
 			{
-				var fromDate = DateTime.Today;
-				var toDate = DateTime.Today;
-				var items = await repository.GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
 				if (!items.Any()) { return; }
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
@@ -45,6 +42,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string filePath = Path.Combine(outboundDir, fileName);
 
 				Logger.Log($"[OUTBOUND - EOD] [XML]			StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
+
 				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)
