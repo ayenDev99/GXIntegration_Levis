@@ -52,7 +52,6 @@ namespace GXIntegration_Levis.Model
 		public string QuantityShipped { get; set; }
 		public string LineNumber { get; set; }
 		public string Description { get; set; }
-
-		public string VouSid { get; set; }
+		public string SlipSid { get; set; }
 	}
 }

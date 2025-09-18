@@ -94,6 +94,7 @@ namespace GXIntegration_Levis.Data.Access
 							, VI.QTY 											AS QUANTITYSHIPPED
 							, VI.ITEM_POS										AS LINENUMBER
 							, ISB.DESCRIPTION2									AS DESCRIPTION
+							, SLIP.SID											AS SlipSid							
 						FROM
 							RPS.VOUCHER VOU
 						LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID

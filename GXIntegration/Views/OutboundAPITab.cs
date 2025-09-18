@@ -427,7 +427,7 @@ namespace GXIntegration_Levis.Views
 				new OutboundConfig
 				{
 					Items = storeShippingItems,
-					GetSid = i => ((StoreShippingModel)i).VouSid.ToString(),
+					GetSid = i => ((StoreShippingModel)i).SlipSid.ToString(),
 					GetDocNo = i => ((StoreShippingModel)i).SequenceNo.ToString(),
 					GetDate = i => ((StoreShippingModel)i).BusinessDayDate.DateTime,
 					XmlGen = list => OutboundStoreShipping.GenerateXml(list.Cast<StoreShippingModel>().ToList(), null, "template"),

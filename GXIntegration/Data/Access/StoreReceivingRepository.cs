@@ -99,6 +99,7 @@ namespace GXIntegration_Levis.Data.Access
 								, VOU.VOU_NO								AS PTCONTROLNUMBER
 								, 'PHP'										AS COUNTRY
 								, ISB.UPC									AS PTEAN
+								, VOU.SID									AS VouSid							
 								FROM
 									RPS.VOUCHER VOU
 								LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
