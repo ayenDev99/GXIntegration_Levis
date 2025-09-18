@@ -23,6 +23,10 @@ namespace GXIntegration_Levis.Views
 		private OutboundRepositories _repositories;
 		private GunaDataGridView guna1DataGridView1;
 
+		private DateTimePicker datePickerFrom;
+		private DateTimePicker datePickerTo;
+		private Label lblFrom;
+		private Label lblTo;
 		private GunaButton btnSendXml;
 
 		public OutboundAPITab(GXConfig config, OutboundRepositories repositories)
@@ -42,7 +46,7 @@ namespace GXIntegration_Levis.Views
 		{
 			guna1DataGridView1 = new GunaDataGridView
 			{
-				Location = new Point(20, 20),
+				Location = new Point(20, 50),
 				Size = new Size(615, 180),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
@@ -106,15 +110,62 @@ namespace GXIntegration_Levis.Views
 
 		private void InitializeControls()
 		{
+			// --------------------
+			// Date Range Controls
+			// --------------------
+			lblFrom = new Label
+			{
+				Text = "From:",
+				Location = new Point(20, 24),
+				AutoSize = true
+			};
+
+			datePickerFrom = new DateTimePicker
+			{
+				Location = new Point(70, 20),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd hh:mm tt",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today
+			};
+
+			lblTo = new Label
+			{
+				Text = "To:",
+				Location = new Point(250,24),
+				AutoSize = true
+			};
+
+			datePickerTo = new DateTimePicker
+			{
+				Location = new Point(290, 20),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd hh:mm tt",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today.AddDays(1).AddSeconds(-1)
+			};
+
+			// --------------------
+			// Add to Control
+			// --------------------
+			this.Controls.Add(lblFrom);
+			this.Controls.Add(datePickerFrom);
+			this.Controls.Add(lblTo);
+			this.Controls.Add(datePickerTo);
+
+			// --------------------
+			// Send Button
+			// --------------------
 			btnSendXml = GlobalHelper.CreateButton(
 				text: "Send XML to API",
-				location: new Point(20, 300),
+				location: new Point(20, 240),  // Adjust based on grid size
 				clickAction: async () => await ManualSendXmlFilesToApi()
 			);
-
 			this.Controls.Add(btnSendXml);
 		}
-
+		
 		public async Task TriggerAPIAsync()
 		{
 			await AutoSendXmlFilesToApi();
@@ -168,8 +219,10 @@ namespace GXIntegration_Levis.Views
 			{
 				var config = GXConfig.Load("config.xml");
 				//var reprocessMinutes = config.ReprocessMinutes;
-				var reprocessMinutes = 600;
-				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
+				//var reprocessMinutes = 600;
+				//var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
+				var fromDate = datePickerFrom.Value;
+				var toDate = datePickerTo.Value;
 
 				Logger.Log($"[OUTBOUND API-MANUAL]		Process DateRange From: {fromDate}, To: {toDate}");
 
