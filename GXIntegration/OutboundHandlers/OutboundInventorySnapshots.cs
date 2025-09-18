@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInventorySnapshots
 	{
-		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores)
+		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores, DateTime fromDate, DateTime toDate)
 		{
 			try
 			{
@@ -23,8 +23,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 				{
 					string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					var fromDate = DateTime.Today;
-					var toDate = DateTime.Today;
 					var items = await repository.GetInventoryAsync(fromDate, toDate, storeCode);
 					if (!items.Any())
 					{

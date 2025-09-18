@@ -15,12 +15,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInTransit
 	{
-		public static async Task Execute(InTransitRepository repository, GXConfig config)
+		public static async Task Execute(InTransitRepository repository, GXConfig config, DateTime fromDate, DateTime toDate)
 		{
 			try
 			{
-				var fromDate = DateTime.Today;
-				var toDate = DateTime.Today;
 				var items = await repository.GetInventoryAsync(fromDate, toDate);
 				string countryCode = config.CountryCode ?? "XX";
 				if (!items.Any())

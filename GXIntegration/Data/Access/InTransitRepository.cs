@@ -52,6 +52,7 @@ namespace GXIntegration_Levis.Data.Access
 							AND ISI.ACTIVE = 1
 					";
 
+					//AND TRUNC(VOU.POST_DATE) <= :ToDate
 					//VOU.POST_DATE BETWEEN :FromDate AND :ToDate
 					//TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-07-20' AND DATE '2025-09-16'
 

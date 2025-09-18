@@ -14,12 +14,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundPrice
 	{
-		public static async Task Execute(PriceRepository repository, GXConfig config)
+		public static async Task Execute(PriceRepository repository, GXConfig config, DateTime fromDate, DateTime toDate)
 		{
 			try
 			{
-				var fromDate = DateTime.Today;
-				var toDate = DateTime.Today;
 				var items = await repository.GetPriceAsync(fromDate, toDate);
 				if (!items.Any())
 				{

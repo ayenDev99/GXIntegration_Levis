@@ -10,7 +10,6 @@ using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -62,7 +61,6 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-			// Add checkbox column FIRST
 			var checkBoxColumn = new DataGridViewCheckBoxColumn
 			{
 				Name = "Select",
@@ -160,7 +158,7 @@ namespace GXIntegration_Levis.Views
 			// --------------------
 			btnSendXml = GlobalHelper.CreateButton(
 				text: "Send XML to API",
-				location: new Point(20, 240),  // Adjust based on grid size
+				location: new Point(20, 240),
 				clickAction: async () => await ManualSendXmlFilesToApi()
 			);
 			this.Controls.Add(btnSendXml);
@@ -174,10 +172,9 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		// Process Methods
 		// ***************************************************
-
 		public async Task ManualSendXmlFilesToApi()
 		{
-			Logger.Log("[OUTBOUND API-MANUAL] Start Manual Reprocess...");
+			Logger.Log("[OUTBOUND API-MANUAL] Start Manual Process...");
 
 			guna1DataGridView1.EndEdit();
 
@@ -192,7 +189,7 @@ namespace GXIntegration_Levis.Views
 				return;
 			}
 
-			var selectedDocTypes = guna1DataGridView1.Rows
+			var selectedRows = guna1DataGridView1.Rows
 								.Cast<DataGridViewRow>()
 								.Where(r => r.Cells["Select"].Value is bool b && b)
 								.Select(r =>
@@ -204,9 +201,9 @@ namespace GXIntegration_Levis.Views
 								.Where(s => !string.IsNullOrEmpty(s))
 								.ToHashSet();
 
-			Logger.Log("[OUTBOUND API-MANUAL]		Selected Transaction Types: " + string.Join(",", selectedDocTypes));
+			Logger.Log("[OUTBOUND API-MANUAL]		Selected Transaction Types: " + string.Join(",", selectedRows));
 
-			if (!selectedDocTypes.Any())
+			if (!selectedRows.Any())
 			{
 				MessageBox.Show("Please select at least one transaction.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 				return;
@@ -255,7 +252,7 @@ namespace GXIntegration_Levis.Views
 						, inventoryApiUrl);
 
 					var filteredConfigs = outboundConfigs
-						.Where(cfg => selectedDocTypes.Contains(cfg.DocType.ToLowerInvariant()));
+						.Where(cfg => selectedRows.Contains(cfg.DocType.ToLowerInvariant()));
 
 					foreach (var cfg in filteredConfigs)
 					{

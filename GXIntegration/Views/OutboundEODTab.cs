@@ -28,6 +28,10 @@ namespace GXIntegration_Levis.Views
 		private GXConfig config;
 		private readonly OutboundRepositories repositories;
 
+		private DateTimePicker datePickerFrom;
+		private DateTimePicker datePickerTo;
+		private Label lblFrom;
+		private Label lblTo;
 		private GunaButton btnSendXml;
 		private CheckBox headerCheckBox;
 
@@ -38,22 +42,17 @@ namespace GXIntegration_Levis.Views
 
 			InitializeComponent();
 			InitializeGrid();
-			InitializeProcessAllButton();
+			InitializeControls();
 		}
 
 		// ***************************************************
 		// Initialization Methods
 		// ***************************************************
-		public async Task TriggerDownloadAsync()
-		{
-			await ProcessAllDownloads();
-		}
-
 		private void InitializeGrid()
 		{
 			guna1DataGridView1 = new GunaDataGridView
 			{
-				Location = new Point(20, 20),
+				Location = new Point(20, 50),
 				Size = new Size(520, 140),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
@@ -119,30 +118,98 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(guna1DataGridView1);
 		}
 
-		private void InitializeProcessAllButton()
+		private void InitializeControls()
 		{
+			// --------------------
+			// Date Range Controls
+			// --------------------
+			lblFrom = new Label
+			{
+				Text = "From:",
+				Location = new Point(20, 24),
+				AutoSize = true
+			};
+
+			datePickerFrom = new DateTimePicker
+			{
+				Location = new Point(70, 20),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today
+			};
+
+			lblTo = new Label
+			{
+				Text = "To:",
+				Location = new Point(250, 24),
+				AutoSize = true
+			};
+
+			datePickerTo = new DateTimePicker
+			{
+				Location = new Point(290, 20),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today.AddDays(1).AddSeconds(-1)
+			};
+
+			// --------------------
+			// Add to Control
+			// --------------------
+			this.Controls.Add(lblFrom);
+			this.Controls.Add(datePickerFrom);
+			this.Controls.Add(lblTo);
+			this.Controls.Add(datePickerTo);
+
+			// --------------------
+			// Send Button
+			// --------------------
 			btnSendXml = GlobalHelper.CreateButton(
 				text: "Download All and Send to SFTP",
 				location: new Point(20, 250),
-				clickAction: async () => await ProcessAllDownloads()
+				clickAction: async () => await ManualProcess()
 			);
 
 			this.Controls.Add(btnSendXml);
 		}
 
+		public async Task TriggerDownloadAsync()
+		{
+			await ManualProcess();
+		}
 		// ***************************************************
 		// Process Methods
 		// ***************************************************
-		private async Task ProcessAllDownloads()
+		private async Task ManualProcess()
 		{
-			var selectedRows = guna1DataGridView1.Rows
-				.Cast<DataGridViewRow>()
-				.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
-				.ToList();
+			Logger.Log("[OUTBOUND EOD-MANUAL] Start Manual Process...");
 
-			if (!selectedRows.Any())
+			guna1DataGridView1.EndEdit();
+
+			var selectedDocTypes = guna1DataGridView1.Rows
+				.Cast<DataGridViewRow>()
+				.Where(r => r.Cells["Select"].Value is bool b && b)
+				.Select(r =>
+				{
+					var name = r.Cells["Name"].Value?.ToString();
+					return string.IsNullOrWhiteSpace(name)
+						? null
+						: _docTypeMap.TryGetValue(name, out var mapped)
+							? mapped
+							: name;
+				})
+				.Where(s => !string.IsNullOrEmpty(s))
+				.ToHashSet();
+
+			Logger.Log("[OUTBOUND EOD-MANUAL] Selected Transaction Types: " + string.Join(",", selectedDocTypes));
+
+			if (!selectedDocTypes.Any())
 			{
-				MessageBox.Show("Please select at least one process.");
+				MessageBox.Show("Please select at least one transaction.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 				return;
 			}
 
@@ -152,32 +219,35 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+				var fromDate = datePickerFrom.Value;
+				var toDate = datePickerTo.Value;
 
-				foreach (var row in selectedRows)
+				Logger.Log($"[OUTBOUND EOD-MANUAL]		Process DateRange From: {fromDate}, To: {toDate}");
+
+				foreach (var processName in selectedDocTypes)
 				{
-					string processName = row.Cells["Name"].Value.ToString();
-					Logger.Log($"[OUTBOUND - EOD] Processing {processName}...");
+					Logger.Log($"[OUTBOUND EOD] Processing {processName}...");
 
 					switch (processName.ToUpper())
 					{
 						case "PRICE":
-							await OutboundPrice.Execute(repositories.PriceRepository, config);
+							await OutboundPrice.Execute(repositories.PriceRepository, config, fromDate, toDate);
 							break;
 
 						case "INVENTORY SNAPSHOTS":
-							await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores);
+							await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, fromDate, toDate);
 							break;
 
 						case "INTRANSIT":
-							await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+							await OutboundInTransit.Execute(repositories.InTransitRepository, config, fromDate, toDate);
 							break;
 
 						case "INVENTORYCOUNT":
-							await ExecuteStoreInventoryCountAsync();
+							await ExecuteStoreInventoryCountAsync(prismStores, fromDate, toDate);
 							break;
 
 						case "POSLOG":
-							await ExecuteAllAndSaveToSingleXmlAsync();
+							await ExecuteAllAndSaveToSingleXmlAsync(prismStores, fromDate, toDate);
 							break;
 
 						default:
@@ -186,9 +256,8 @@ namespace GXIntegration_Levis.Views
 					}
 				}
 
-				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				Logger.Log("[OUTBOUND EOD] [SFTP] Start Uploading generated files to SFTP...");
 				await UploadToSftpAsync();
-
 
 				MessageBox.Show("OUTBOUND EOD Processed Successfully.");
 			}
@@ -199,11 +268,8 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task ExecuteAllAndSaveToSingleXmlAsync(CancellationToken cancellationToken = default)
+		private async Task ExecuteAllAndSaveToSingleXmlAsync(dynamic prismStores, DateTime fromDate, DateTime toDate)
 		{
-			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-			var fromDate = DateTime.Today;
-			var toDate = DateTime.Today;
 			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 			string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
 
@@ -213,12 +279,12 @@ namespace GXIntegration_Levis.Views
 			string countryCode = config.CountryCode ?? "XX";
 			string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
 
-			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating POSLOG...");
+			Logger.Log($"[OUTBOUND EOD] [XML] Start Generating POSLOG...");
 
 			foreach (var store in prismStores)
 			{
 				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
-				Logger.Log($"[OUTBOUND - EOD] [XML] STORE_CODE : {storeCode}...");
+				Logger.Log($"[OUTBOUND EOD] [XML] STORE_CODE : {storeCode}...");
 
 				try
 				{
@@ -283,23 +349,23 @@ namespace GXIntegration_Levis.Views
 								validFragments.Add(parsedFragment);
 
 								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
-								Logger.Log($"[OUTBOUND - EOD] [XML]		Successfully generated {xmlType} XML. Item count: {count}");
+								Logger.Log($"[OUTBOUND EOD] [XML]		Successfully generated {xmlType} XML. Item count: {count}");
 							}
 							catch (Exception ex)
 							{
-								Logger.Log($"[OUTBOUND - EOD] [XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
+								Logger.Log($"[OUTBOUND EOD] [XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
 							}
 						}
 						else
 						{
-							Logger.Log($"[OUTBOUND - EOD] [XML]		No {xmlType} data for store {storeCode} was found in Prism for today. Skipping.");
+							Logger.Log($"[OUTBOUND EOD] [XML]		No {xmlType} data for store {storeCode} was found in Prism for today. Skipping.");
 						}
 					}
 
 					// Skip file generation if no data at all
 					if (!validFragments.Any())
 					{
-						Logger.Log($"[OUTBOUND - EOD] [XML] No POSLOG data generated for store {storeCode}. File will not be created.");
+						Logger.Log($"[OUTBOUND EOD] [XML] No POSLOG data generated for store {storeCode}. File will not be created.");
 						continue;
 					}
 
@@ -360,7 +426,7 @@ namespace GXIntegration_Levis.Views
 						await writer.FlushAsync();
 					}
 
-					Logger.Log($"[OUTBOUND - EOD] [XML] Downloaded successfully | File Name: {fileName}");
+					Logger.Log($"[OUTBOUND EOD] [XML] Downloaded successfully | File Name: {fileName}");
 				}
 				catch (Exception ex)
 				{
@@ -369,13 +435,9 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task ExecuteStoreInventoryCountAsync()
+		private async Task ExecuteStoreInventoryCountAsync(dynamic prismStores, DateTime fromDate, DateTime toDate)
 		{
-			var fromDate = DateTime.Today;
-			var toDate = DateTime.Today;
-			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-
-			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating INVENTORYCOUNT...");
+			Logger.Log($"[OUTBOUND EOD] [XML] Start Generating INVENTORYCOUNT...");
 
 			foreach (var store in prismStores)
 			{
@@ -403,14 +465,14 @@ namespace GXIntegration_Levis.Views
 							allItems.AddRange(batch);
 							totalFetched += batch.Count;
 
-							Logger.Log($"[OUTBOUND - EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
+							Logger.Log($"[OUTBOUND EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
 
 							startRow += pageSize;
 						}
 
 						if (!allItems.Any())
 						{
-							Logger.Log($"[OUTBOUND - EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
+							Logger.Log($"[OUTBOUND EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
 							continue;
 						}
 
@@ -418,12 +480,12 @@ namespace GXIntegration_Levis.Views
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"[OUTBOUND - EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
+						Logger.Log($"[OUTBOUND EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
 					}
 				}
 				else
 				{
-					Logger.Log("[OUTBOUND - EOD] Store skipped due to missing ADDRESS4 field");
+					Logger.Log("[OUTBOUND EOD] Store skipped due to missing ADDRESS4 field");
 				}
 			}
 		}
@@ -444,7 +506,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (!Directory.Exists(localDirectory))
 					{
-						Logger.Log($"[OUTBOUND - EOD] [SFTP] Local directory does not exist: {localDirectory}");
+						Logger.Log($"[OUTBOUND EOD] [SFTP] Local directory does not exist: {localDirectory}");
 						return;
 					}
 
@@ -455,7 +517,7 @@ namespace GXIntegration_Levis.Views
 
 					if (!files.Any())
 					{
-						Logger.Log("[OUTBOUND - EOD] [SFTP] No outbound files found to upload.");
+						Logger.Log("[OUTBOUND EOD] [SFTP] No outbound files found to upload.");
 						return;
 					}
 
@@ -484,7 +546,7 @@ namespace GXIntegration_Levis.Views
 
 								ArchiveFile(filePath, localDirectory);
 
-								Logger.Log($"[OUTBOUND - EOD] [SFTP] Uploaded '{fileName}' → {remoteDirectory} and archived.");
+								Logger.Log($"[OUTBOUND EOD] [SFTP] Uploaded '{fileName}' → {remoteDirectory} and archived.");
 							}
 							catch (Exception ex)
 							{
@@ -495,7 +557,7 @@ namespace GXIntegration_Levis.Views
 						sftp.Disconnect();
 					}
 
-					Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+					Logger.Log("[OUTBOUND EOD] [SFTP] Upload to SFTP process completed.");
 				}
 				catch (Exception ex)
 				{
@@ -520,6 +582,18 @@ namespace GXIntegration_Levis.Views
 
 			File.Move(filePath, archivedPath);
 		}
+
+		private readonly Dictionary<string, string> _docTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+		{
+			{ "RETAIL_SALE", "storesale" },
+			{ "RETURN_SALE", "storereturn" },
+			{ "ASN - RECEIVING", "storegoods" },
+			{ "RETURN_TO_DC", "storegoodsreturn" },
+			{ "STORE_TRANSFER - SHIPPING", "storeshipping" },
+			{ "STORE_TRANSFER - RECEIVING", "storereceiving" },
+			{ "ADJUSTMENT", "storeinventoryadjustment" }
+		};
+
 
 		// ***************************************************
 		// Handlers/Helpers
