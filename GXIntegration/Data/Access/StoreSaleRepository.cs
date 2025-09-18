@@ -30,7 +30,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC.WORKSTATION_NO				    AS WorkstationID
                                 , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TillID
                                 , DOC.DOC_NO				            AS SequenceNo
-				                            , DOC.CREATED_DATETIME				    AS BusinessDayDate
+				                , DOC.CREATED_DATETIME				    AS BusinessDayDate
                                 , DOC.CREATED_DATETIME				    AS BeginDateTime
                                 , DOC.INVC_POST_DATE				    AS EndDateTime
                                 , DOC.CASHIER_LOGIN_NAME				AS OperatorID
@@ -39,12 +39,12 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'true'                                AS InventoryMovementSuccess 
                                 , 'AMA'                                 AS Region
                                 , COUNTRY.COUNTRY_CODE                  AS Country
-				                            , STORE.ADDRESS4			            AS AlternateStoreID
+				                , STORE.ADDRESS4			            AS AlternateStoreID
                                 , DOC.DOC_NO                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                     AS Barcode
                                 , DOC_ITEM.ITEM_POS                     AS LineItemSequenceNo
                                 , DOC_ITEM.ITEM_POS                     AS LineItemLineNumber
-				                            , DOC_ITEM.CREATED_DATETIME             AS LineItemBeginDateTime
+				                , DOC_ITEM.CREATED_DATETIME             AS LineItemBeginDateTime
                                 , DOC_ITEM.POST_DATE                    AS LineItemEndDateTime
                                 , DOC_ITEM.ALU                          AS SaleItemID
                                 , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
@@ -127,7 +127,7 @@ namespace GXIntegration_Levis.Data.Access
 				                AND DOC.RECEIPT_TYPE IN (0,2)
 				                AND DOC.DOC_NO IS NOT NULL
 				                AND TRUNC(DOC.POST_DATE) BETWEEN DATE '2025-09-15' AND DATE '2025-09-20'
-				                AND STORE.ADDRESS4 = '6451'
+				                AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
 				                STORE.STORE_NO ASC
 				                , DOC.WORKSTATION_NO ASC

@@ -203,33 +203,33 @@ namespace GXIntegration_Levis.Views
 					// Generate XML fragments
 					var xmlFragments = new[]
 					{
-						OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
+						//OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
 						//OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
 						//OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
 						//OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
-						//OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
+						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						//OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
 						//OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
 					};
 
 					string[] xmlTypes = new[]
 					{
-						"StoreSale",
+						//"StoreSale",
 						//"StoreShipping",
 						//"StoreReceiving",
 						//"StoreInventoryAdjustment",
-						//"StoreReturn",
+						"StoreReturn",
 						//"StoreGoodsReturn",
 						//"StoreGoods",
 					};
 
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
 					{
-						("StoreSale", storeSaleItems as IEnumerable<object>),
+						//("StoreSale", storeSaleItems as IEnumerable<object>),
 						//("StoreShipping", storeShippingItems as IEnumerable<object>),
 						//("StoreReceiving", storeReceivingItems as IEnumerable<object>),
 						//("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
-						//("StoreReturn", storeReturnItems as IEnumerable<object>),
+						("StoreReturn", storeReturnItems as IEnumerable<object>),
 						//("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
 						//("StoreGoods", storeGoodsItems as IEnumerable<object>),
 					};
@@ -273,11 +273,11 @@ namespace GXIntegration_Levis.Views
 					}
 
 					// Prepare output XML document
-					//var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), validFragments);
-					var document = new XDocument(
-													new XDeclaration("1.0", "utf-8", "yes"),
-													new XElement("Root", validFragments) // Or another name
-												);
+					var document = new XDocument(new XDeclaration("1.0", "utf-8", null), validFragments);
+					//var document = new XDocument(
+					//								new XDeclaration("1.0", "utf-8", "yes"),
+					//								new XElement("Root", validFragments) // Or another name
+					//							);
 
 					var settings = new XmlWriterSettings
 					{
