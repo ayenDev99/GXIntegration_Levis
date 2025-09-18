@@ -25,6 +25,7 @@ namespace GXIntegration_Levis.Data.Access
 			{
 				try
 				{
+					//display latest price post_date
 					await connection.OpenAsync();
 					string sql = @"
 						SELECT 

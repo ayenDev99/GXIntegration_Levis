@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {

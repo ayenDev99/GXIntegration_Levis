@@ -10,6 +10,8 @@ using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -518,15 +520,15 @@ namespace GXIntegration_Levis.Views
 						}
 
 						string xml = generateXmlFunc(new List<T> { item });
+						string cleanXml = Regex.Replace(xml, @"<\?xml.*?\?>", "").Trim();
 
-						var soapEnvelope = $@"<?xml version=""1.0"" ?>
-							<S:Envelope xmlns:S=""http://schemas.xmlsoap.org/soap/envelope/"">
-							  <S:Body>
-								<ns2:postTransaction xmlns:ns2=""http://v1.ws.poslog.xcenter.dtv/"">
-								  <rawPoslogString>{System.Security.SecurityElement.Escape(xml)}</rawPoslogString>
-								</ns2:postTransaction>
-							  </S:Body>
-							</S:Envelope>";
+						var soapEnvelope = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<POSLog xmlns=""http://www.nrf-arts.org/IXRetail/namespace/""
+        xmlns:dtv=""http://www.datavantagecorp.com/xstore/""
+        xmlns:xs=""http://www.w3.org/2001/XMLSchema-instance""
+        xs:schemaLocation=""http://www.nrf-arts.org/IXRetail/namespace/ POSLog.xsd"" >
+    {xml}
+</POSLog>";
 
 						//Logger.Log($"SOAP Payload for SID {sid}:\n{soapEnvelope}");
 

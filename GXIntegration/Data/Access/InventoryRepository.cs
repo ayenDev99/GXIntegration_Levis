@@ -30,25 +30,25 @@ namespace GXIntegration_Levis.Data.Access
 					string sql = @"
 						SELECT 
 							'PHP'						        AS CurrencyId
-							, S.ACTIVE_PRICE_LVL_SID
+							, ISP.PRICE_LVL_SID
 							, TO_CHAR(S.ADDRESS4)				AS StoreCode
 							, ISI.DESCRIPTION1					AS ProductCode
 							, ISI.ALU							AS Sku
 							, ISI.ITEM_SIZE						AS Waist
 							, ISI.ATTRIBUTE						AS Inseam
-							, LM.DT				              	AS LastMovementDate
+							, ISIQ.LAST_ON_HAND_QTY_DATE		AS LastMovementDate
 							, CASE 
 								WHEN ISIQ.QTY >= 0 THEN 'P'
 								WHEN ISIQ.QTY < 0 THEN 'N'
-							  END								AS QuantitySign
+								END								AS QuantitySign
 							, ISIQ.QTY							AS Quantity
 							, ISP.PRICE							AS RetailPrice
 							, SUBSTR(CT.COUNTRY_CODE, 1, 2)		AS CountryCode
 							, ISI.UPC							AS ManufactureUpc
 							, ISI.UDF5_STRING					AS Division
-							, ISI.SID
+							, ISP.SID
 						FROM 
-										RPS.INVN_SBS_ITEM ISI
+							RPS.INVN_SBS_ITEM ISI
 						LEFT JOIN RPS.INVN_SBS_ITEM_QTY ISIQ ON ISIQ.INVN_SBS_ITEM_SID = ISI.SID
 						LEFT JOIN RPS.STORE S ON S.SID = ISIQ.STORE_SID
 						LEFT JOIN RPS.CURRENCY C ON C.SID = ISI.CURRENCY_SID
@@ -75,6 +75,7 @@ namespace GXIntegration_Levis.Data.Access
 							ON ISI.SID = LM.ITEM_SID AND ISIQ.STORE_SID = LM.STORE_SID 
 						WHERE 
 							ISI.ACTIVE = 1
+							AND S.ACTIVE_PRICE_LVL_SID = ISP.PRICE_LVL_SID
 							AND ISIQ.QTY <> 0
 							AND S.ADDRESS4 = :StoreCode
 					";

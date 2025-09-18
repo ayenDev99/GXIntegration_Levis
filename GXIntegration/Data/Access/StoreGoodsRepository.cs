@@ -43,10 +43,10 @@ namespace GXIntegration_Levis.Data.Access
 						SELECT
 							'1'										AS OrganizationID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
-								WHERE SID = PO.BILLTO_STORE_SID)	AS RetailStoreID
+								WHERE SID = PO.SHIPTO_STORE_SID)	AS RetailStoreID
 							, VOU.WORKSTATION						AS WorkstationID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
-								WHERE SID = PO.BILLTO_STORE_SID) 
+								WHERE SID = PO.SHIPTO_STORE_SID) 
 									|| VOU.WORKSTATION				AS TILLID
 							, VOU.VOU_NO							AS SequenceNo
 							, TRUNC(VOU.CREATED_DATETIME)			AS BusinessDayDate
@@ -58,7 +58,7 @@ namespace GXIntegration_Levis.Data.Access
 							,'AMA'	                                AS Region
 							, 'PHP'									AS Country
 							, (SELECT ADDRESS4 FROM RPS.STORE 
-								WHERE SID = PO.BILLTO_STORE_SID)	AS AlternateStoreID
+								WHERE SID = PO.SHIPTO_STORE_SID)	AS AlternateStoreID
 							, CASE WHEN VOU.STATUS = 4 
 								THEN 'CLOSED' 
 								ELSE 'PENDING' 

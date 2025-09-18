@@ -51,7 +51,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				Indent = true,
 				Encoding = Encoding.UTF8,
-				OmitXmlDeclaration = false
+				OmitXmlDeclaration = true
 			};
 
 			if (generate_type == "template")
