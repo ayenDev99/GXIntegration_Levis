@@ -162,8 +162,8 @@ namespace GXIntegration_Levis.Views
 				await SendOutboundDataAsync(
 					storeSaleItems,
 					item => item.DocSid,
-					item => item.DocNo,
-					item => item.CreatedDateTime.DateTime,
+					item => item.SequenceNo,
+					item => item.BusinessDayDate.DateTime,
 					list => OutboundStoreSale.GenerateXml(list, null, "template"),
 					"storesale",
 					saleApiUrl,
