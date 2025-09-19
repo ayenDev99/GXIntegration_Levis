@@ -79,18 +79,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void WriteXmlContent(List<StoreSaleModel> items, XmlWriter writer)
 		{
-			writer.WriteStartDocument();
+			writer.WriteStartElement("Transaction", GlobalOutbound.NsIXRetail); // <Transaction>
 
-			// <POSLog> with namespaces
-			writer.WriteStartElement("POSLog", GlobalOutbound.NsIXRetail);
-			writer.WriteAttributeString("xmlns", "dtv", null, GlobalOutbound.NsDtv);
-			writer.WriteAttributeString("xmlns", "xs", null, GlobalOutbound.NsXsi);
-			writer.WriteAttributeString("dtv", GlobalOutbound.NsDtv);
-			writer.WriteAttributeString("xs", GlobalOutbound.NsXsi);
-			writer.WriteAttributeString("schemaLocation", GlobalOutbound.NsIXRetail + " POSLog.xsd");
-
-			// <Transaction>
-			writer.WriteStartElement("Transaction", GlobalOutbound.NsIXRetail);
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
 			writer.WriteAttributeString("TrainingModeFlag", "false");
@@ -101,28 +91,28 @@ namespace GXIntegration_Levis.OutboundHandlers
 				var itemStore = storeGroup.FirstOrDefault();
 				if (itemStore == null) continue;
 
-				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, itemStore.OrganizationID);
-				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", itemStore.RetailStoreID);
+				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, itemStore.OrganizationID ?? "");
+				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", itemStore.RetailStoreID ?? "");
 
 				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationID))
 				{
 					var itemWs = wsGroup.FirstOrDefault();
 					if (itemWs == null) continue;
 
-					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", itemWs.WorkstationID);
-					GlobalOutbound.WriteCDataElement(writer, "TillID", itemWs.TillID);
+					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", itemWs.WorkstationID ?? "");
+					GlobalOutbound.WriteCDataElement(writer, "TillID", itemWs.TillID ?? "");
 
 					foreach (var transGroup in GlobalOutbound.GroupBySafe(wsGroup, i => i.SequenceNo))
 					{
 						var transactionItems = transGroup.FirstOrDefault();
 						if (transactionItems == null) continue;
 
-						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", transactionItems.SequenceNo);
+						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", transactionItems.SequenceNo ?? "");
 						GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(transactionItems.BusinessDayDate));
 						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(transactionItems.BeginDateTime, true));
 						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(transactionItems.EndDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "OperatorID", transactionItems.OperatorID);
-						GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", transactionItems.CurrencyCode);
+						GlobalOutbound.WriteCDataElement(writer, "OperatorID", transactionItems.OperatorID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", transactionItems.CurrencyCode ?? "");
 
 						GlobalOutbound.WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", transactionItems.ReceiptDeliveryMethod);
 						GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", transactionItems.InventoryMovementSuccess);
@@ -136,62 +126,62 @@ namespace GXIntegration_Levis.OutboundHandlers
 						writer.WriteAttributeString("TransactionStatus", "Delivered");
 						writer.WriteAttributeString("TypeCode", "Transaction");
 
-						writer.WriteStartElement("LineItem");
-						writer.WriteAttributeString("EntryMethod", "dtv:ScannerScanner");
-						writer.WriteAttributeString("VoidFlag", "false");
-
+						// === SALE LineItem(s) ===
 						foreach (var itemGroup in GlobalOutbound.GroupBySafe(transGroup, i => i.LineItemSequenceNo))
 						{
 							var lineItems = itemGroup.FirstOrDefault();
 							if (lineItems == null) continue;
 
-							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", lineItems.LineItemSequenceNo);
-							GlobalOutbound.WriteCDataElement(writer, "LineNumber", lineItems.LineItemLineNumber);
+							writer.WriteStartElement("LineItem");
+							writer.WriteAttributeString("EntryMethod", "Scanner"); // fixed value
+							writer.WriteAttributeString("VoidFlag", "false");
+
+							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", lineItems.LineItemSequenceNo ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "LineNumber", lineItems.LineItemLineNumber ?? "");
 							GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(lineItems.LineItemBeginDateTime, true));
 							GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(lineItems.LineItemEndDateTime, true));
 
 							writer.WriteStartElement("Sale");
 							writer.WriteAttributeString("ItemType", "Stock");
 
-							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItems.SaleItemID);
-							GlobalOutbound.WriteCDataElement(writer, "Description", lineItems.SaleDescription);
-							GlobalOutbound.WriteCDataElement(writer, "RegularSalesUnitPrice", lineItems.SaleRegularSalesUnitPrice);
-							GlobalOutbound.WriteCDataElement(writer, "ActualSalesUnitPrice", lineItems.SaleActualSalesUnitPrice);
-							GlobalOutbound.WriteCDataElement(writer, "ExtendedAmount", lineItems.SaleExtendedAmount);
-							GlobalOutbound.WriteCDataElement(writer, "Quantity", lineItems.SaleQuantity);
+							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItems.SaleItemID ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "Description", lineItems.SaleDescription ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "RegularSalesUnitPrice", lineItems.SaleRegularSalesUnitPrice ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "ActualSalesUnitPrice", lineItems.SaleActualSalesUnitPrice ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "ExtendedAmount", lineItems.SaleExtendedAmount ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "Quantity", lineItems.SaleQuantity ?? "");
 
 							GlobalOutbound.WriteMerchandiseHierarchy(writer, "DIVISION", lineItems.Division);
 							GlobalOutbound.WriteMerchandiseHierarchy(writer, "DEPARTMENT", lineItems.Department);
 							GlobalOutbound.WriteMerchandiseHierarchy(writer, "SUBDEPARTMENT", lineItems.SubDepartment);
 							GlobalOutbound.WriteMerchandiseHierarchy(writer, "CLASS", lineItems.Class);
 
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedItemID", GlobalOutbound.NsDtv, lineItems.ScannedItemID);
-							GlobalOutbound.WriteCDataElement(writer, "GiftReceiptFlag", lineItems.GiftReceiptFlag);
+							GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedItemID", GlobalOutbound.NsDtv, lineItems.ScannedItemID ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "GiftReceiptFlag", lineItems.GiftReceiptFlag ?? "");
 
 							writer.WriteStartElement("Associate");
-							GlobalOutbound.WriteCDataElement(writer, "AssociateID", lineItems.AssociateID);
-							writer.WriteEndElement();
+							GlobalOutbound.WriteCDataElement(writer, "AssociateID", lineItems.AssociateID ?? "");
+							writer.WriteEndElement(); // </Associate>
 
 							writer.WriteStartElement("dtv", "PercentageOfItem", GlobalOutbound.NsDtv);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "AssociateID", GlobalOutbound.NsDtv, lineItems.AssociateID);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "Percentage", GlobalOutbound.NsDtv, lineItems.Percentage);
-							writer.WriteEndElement();
+							GlobalOutbound.WriteCDataElement(writer, "dtv", "AssociateID", GlobalOutbound.NsDtv, lineItems.AssociateID ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "dtv", "Percentage", GlobalOutbound.NsDtv, lineItems.Percentage ?? "");
+							writer.WriteEndElement(); // </dtv:PercentageOfItem>
 
 							writer.WriteStartElement("Tax");
 							writer.WriteAttributeString("TaxType", "Sales");
 							writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
 
-							GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", lineItems.TaxAuthority);
-							GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", lineItems.TaxableAmount);
-							GlobalOutbound.WriteCDataElement(writer, "Amount", lineItems.Amount);
-							GlobalOutbound.WriteCDataElement(writer, "Percent", lineItems.Percent);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, lineItems.RawTaxPercentage);
+							GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", lineItems.TaxAuthority ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", lineItems.TaxableAmount ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "Amount", lineItems.Amount ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "Percent", lineItems.Percent ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, lineItems.RawTaxPercentage ?? "");
 
-							writer.WriteStartElement("dtv", "TaxLocationId", GlobalOutbound.NsDtv);
-							writer.WriteEndElement();
+							// Write empty tag only if schema allows it
+							writer.WriteElementString("dtv", "TaxLocationId", GlobalOutbound.NsDtv, "");
 
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, lineItems.TaxGroupID);
-
+							GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, lineItems.TaxGroupID ?? "");
 							writer.WriteEndElement(); // </Tax>
 
 							GlobalOutbound.WriteLineItemProperty(writer, "DEAL_ITEM_PERCENT_OFF", "STRING", lineItems.DealItemPercentOff);
@@ -200,48 +190,49 @@ namespace GXIntegration_Levis.OutboundHandlers
 							GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", lineItems.PTStyle);
 							GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", lineItems.PTEAN);
 
+							writer.WriteEndElement(); // </Sale>
+							writer.WriteEndElement(); // </LineItem>
 						}
 
-						writer.WriteEndElement(); // </Sale>
-						writer.WriteEndElement(); // </LineItem>
-
+						// === TENDER LineItem ===
 						writer.WriteStartElement("LineItem");
 						writer.WriteAttributeString("VoidFlag", "false");
 
-						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", transactionItems.TenderSequenceNo);
-						GlobalOutbound.WriteCDataElement(writer, "LineNumber", transactionItems.TenderLineNumber);
+						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", transactionItems.TenderSequenceNo ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "LineNumber", transactionItems.TenderLineNumber ?? "");
 						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(transactionItems.TenderBeginDateTime, true));
 						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(transactionItems.TenderEndDateTime, true));
 
 						writer.WriteStartElement("Tender");
-						writer.WriteAttributeString("TenderType", transactionItems.TenderType);
-						writer.WriteAttributeString("TypeCode", transactionItems.TypeCode);
-						writer.WriteAttributeString("ChangeFlag", transactionItems.ChangeFlag);
+						writer.WriteAttributeString("TenderType", transactionItems.TenderType ?? "");
+						writer.WriteAttributeString("TypeCode", transactionItems.TypeCode ?? "");
+						writer.WriteAttributeString("ChangeFlag", transactionItems.ChangeFlag ?? "");
 
-						GlobalOutbound.WriteCDataElement(writer, "TenderID", transactionItems.TenderID);
+						GlobalOutbound.WriteCDataElement(writer, "TenderID", transactionItems.TenderID ?? "");
 
 						writer.WriteStartElement("Amount");
-						writer.WriteAttributeString("Currency", transactionItems.AmountCurrency);
-						writer.WriteCData(transactionItems.TenderAmount);
+						writer.WriteAttributeString("Currency", transactionItems.AmountCurrency ?? "");
+						writer.WriteCData(transactionItems.TenderAmount ?? "");
 						writer.WriteEndElement(); // </Amount>
 
 						writer.WriteEndElement(); // </Tender>
 						writer.WriteEndElement(); // </LineItem>
 
+						// Totals
 						writer.WriteStartElement("Total");
 						writer.WriteAttributeString("TotalType", "TransactionGrandAmount");
-						writer.WriteCData(transactionItems.TransactionGrandAmount);
-						writer.WriteEndElement();
+						writer.WriteCData(transactionItems.TransactionGrandAmount ?? "");
+						writer.WriteEndElement(); // </Total>
 
-						GlobalOutbound.WriteCDataElement(writer, "RoundedTotal", transactionItems.RoundedTotal);
+						GlobalOutbound.WriteCDataElement(writer, "RoundedTotal", transactionItems.RoundedTotal ?? "");
+
+						writer.WriteEndElement(); // </RetailTransaction>
 					}
 				}
 			}
 
-			writer.WriteEndElement(); // </RetailTransaction>
 			writer.WriteEndElement(); // </Transaction>
-			writer.WriteEndDocument(); // </POSLog>
-
+			
 		}
 
 	}
