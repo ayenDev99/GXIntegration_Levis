@@ -146,8 +146,8 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				//Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
-				//await OutboundPrice.Execute(repositories.PriceRepository, config);
 				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
+				//await OutboundPrice.Execute(repositories.PriceRepository, config);
 				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
 				//Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
@@ -156,9 +156,9 @@ namespace GXIntegration_Levis.Views
 				//await ExecuteAllAndSaveToSingleXmlAsync();
 				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				//await UploadToSftpAsync();
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				await UploadToSftpAsync();
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
 
 			}
 			finally
@@ -351,60 +351,62 @@ namespace GXIntegration_Levis.Views
 		}
 
 		private async Task UploadToSftpAsync()
-		{
+		{	
+			string host = "levib2bstage.levi.com";
+			int port = 49153;
+			string username = "TestRetailPro";
+			string password = "X67zZkTTAkIC";
+			string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+
+			var directoryMap = GlobalHelper.LoadSftpPathMap();
+
 			await Task.Run(() =>
 			{
-				string host = "levib2bstage.levi.com";
-				int port = 49153;
-				string username = "TestRetailPro";
-				string password = "X67zZkTTAkIC";
-				string remoteDirectory = "/IN/";
-				string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-
 				try
 				{
+					if (!Directory.Exists(localDirectory))
+					{
+						Logger.Log($"Local directory does not exist: {localDirectory}");
+						return;
+					}
+
+					var files = Directory.GetFiles(localDirectory, "*.*")
+						.Where(f => f.EndsWith(".txt", StringComparison.OrdinalIgnoreCase) ||
+									f.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+						.ToArray();
+
+					if (!files.Any())
+					{
+						Logger.Log("No outbound files found to upload.");
+						return;
+					}
+
 					using (var sftp = new SftpClient(host, port, username, password))
 					{
 						sftp.Connect();
-
-						if (!sftp.Exists(remoteDirectory))
-							sftp.CreateDirectory(remoteDirectory);
-
-						if (!Directory.Exists(localDirectory))
-						{
-							Logger.Log("Local directory does not exist: " + localDirectory);
-							//MessageBox.Show($"Local directory does not exist:\n{localDirectory}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-							return;
-						}
-
-						var files = Directory.GetFiles(localDirectory)
-							.Where(f => f.EndsWith(".txt") || f.EndsWith(".xml"))
-							.ToArray();
 
 						foreach (var filePath in files)
 						{
 							try
 							{
+								string fileName = Path.GetFileName(filePath);
+
+								// Pick the correct remote directory based on filename
+								string remoteDirectory = GetRemoteDirectory(fileName, directoryMap);
+
+								if (!sftp.Exists(remoteDirectory))
+									sftp.CreateDirectory(remoteDirectory);
+
+								string remotePath = remoteDirectory + fileName;
+
 								using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 								{
-									string remotePath = remoteDirectory + Path.GetFileName(filePath);
 									sftp.UploadFile(fileStream, remotePath, true);
 								}
 
-								string archiveRootDir = Path.Combine(localDirectory, "ARCHIVE");
-								string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
-								Directory.CreateDirectory(archiveDateDir);
+								ArchiveFile(filePath, localDirectory);
 
-								string archivedPath = Path.Combine(archiveDateDir, Path.GetFileName(filePath));
-
-								if (File.Exists(archivedPath))
-								{
-									File.Delete(archivedPath);
-									Logger.Log($"Overwriting archived file: {archivedPath}");
-								}
-
-								File.Move(filePath, archivedPath);
-								Logger.Log($"[OUTBOUND - EOD] [SFTP] Uploaded and archived: {archivedPath}");
+								Logger.Log($"[OUTBOUND - EOD] [SFTP] Uploaded '{fileName}' → {remoteDirectory} and archived.");
 							}
 							catch (Exception ex)
 							{
@@ -413,16 +415,30 @@ namespace GXIntegration_Levis.Views
 						}
 
 						sftp.Disconnect();
-
-						MessageBox.Show("Upload to SFTP completed successfully.", "SFTP Upload", MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 				}
 				catch (Exception ex)
 				{
-					Logger.Log("\"SFTP Upload failed.");
-					//MessageBox.Show($"SFTP Upload failed:\n{ex.Message}", "SFTP Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					Logger.Log($"SFTP Upload failed: {ex}");
 				}
 			});
+		}
+
+		private void ArchiveFile(string filePath, string localDirectory)
+		{
+			string archiveRootDir = Path.Combine(localDirectory, "ARCHIVE");
+			string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+			Directory.CreateDirectory(archiveDateDir);
+
+			string archivedPath = Path.Combine(archiveDateDir, Path.GetFileName(filePath));
+
+			if (File.Exists(archivedPath))
+			{
+				File.Delete(archivedPath);
+				Logger.Log($"Overwriting archived file: {archivedPath}");
+			}
+
+			File.Move(filePath, archivedPath);
 		}
 
 		// ***************************************************
@@ -444,5 +460,21 @@ namespace GXIntegration_Levis.Views
 		{
 			GlobalHelper.HandleCellMouseLeave(guna1DataGridView1);
 		}
+
+		private string GetRemoteDirectory(string fileName, Dictionary<string, string> directoryMap)
+		{
+			foreach (var kvp in directoryMap)
+			{
+				if (kvp.Key != "DEFAULT" &&
+					fileName.IndexOf(kvp.Key, StringComparison.OrdinalIgnoreCase) >= 0)
+				{
+					return kvp.Value;
+				}
+			}
+
+			return directoryMap.ContainsKey("DEFAULT") ? directoryMap["DEFAULT"] : "/IN/OTHERS/";
+		}
+
+
 	}
 }

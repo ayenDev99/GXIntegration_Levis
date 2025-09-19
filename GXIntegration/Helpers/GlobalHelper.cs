@@ -288,6 +288,25 @@ namespace GXIntegration_Levis.Helpers
 
 			return result;
 		}
+
+		public static Dictionary<string, string> LoadSftpPathMap()
+		{
+			var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			var doc = new System.Xml.XmlDocument();
+			doc.Load("config.xml");
+
+			foreach (System.Xml.XmlNode node in doc.SelectNodes("//SFTPPath/add"))
+			{
+				var key = node.Attributes["key"]?.Value;
+				var value = node.Attributes["value"]?.Value;
+
+				if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
+					result[key] = value;
+			}
+
+			return result;
+		}
+
 	}
 
 }

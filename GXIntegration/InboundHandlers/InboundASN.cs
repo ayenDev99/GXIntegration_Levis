@@ -77,8 +77,8 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							// Check if PO ProductCode exist in DB
 							bool isPOItemsExist = await IsPOItemsExistAsync(repository, documentNumber, productCodes, acceptPartial);
-
-							if (isPOItemsExist)
+							//Logger.Log($"{isPOItemsExist}");
+							if (!isPOItemsExist)
 							{
 								// Create PO
 								foreach (var row in group)
@@ -184,7 +184,8 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			if (prismStore == null || prismStore.Count == 0) 
 			{ 
-				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");	
+				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
+				return null;
 			}
 
 			int? billtostoreno		= prismStore?.Count > 0 ? Convert.ToInt32(prismStore[0].STORE_NO) : (int?) null;
