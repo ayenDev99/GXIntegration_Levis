@@ -152,8 +152,8 @@ namespace GXIntegration_Levis.Views
 				//Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
 				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
-				//await ExecuteStoreInventoryCountAsync();
-				await ExecuteAllAndSaveToSingleXmlAsync();
+				await ExecuteStoreInventoryCountAsync();
+				//await ExecuteAllAndSaveToSingleXmlAsync();
 				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
 				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");

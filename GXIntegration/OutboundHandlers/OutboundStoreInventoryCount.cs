@@ -99,7 +99,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteAttributeString("xs", "schemaLocation", GlobalOutbound.NsXsi,
 				$"{GlobalOutbound.NsIXRetail} Inventory.xsd {GlobalOutbound.NsDtv} DtvInventory.xsd");
 
-			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.StoreID))
+			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.RetailStoreID))
 			{
 				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationID))
 				{
@@ -114,12 +114,12 @@ namespace GXIntegration_Levis.OutboundHandlers
 					writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "INVENTORY_COUNT");
 					writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "INVENTORY_CONTROL");
 
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, "1");
-					GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeGroup.Key);
-					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", wsGroup.Key);
+					GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, item.OrganizationID);
+					GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", item.RetailStoreID);
+					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", item.WorkstationID);
 					GlobalOutbound.WriteCDataElement(writer, "TillID", item.TillID);
 					GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", item.SequenceNo);
-					GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", item.BusinessDayDate);
+					GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(item.BusinessDayDate));
 					GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(item.BeginDateTime, true));
 					GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(item.EndDateTime, true));
 					GlobalOutbound.WriteCDataElement(writer, "OperatorId", item.OperatorID);
@@ -134,23 +134,23 @@ namespace GXIntegration_Levis.OutboundHandlers
 					writer.WriteStartElement("InventoryCount");
 
 					GlobalOutbound.WriteCDataElement(writer, "CountID", item.CountID);
-					GlobalOutbound.WriteCDataElement(writer, "DueDate", item.DueDate);
+					GlobalOutbound.WriteCDataElement(writer, "DueDate", GlobalOutbound.FormatDate(item.DueDate));
 					GlobalOutbound.WriteCDataElement(writer, "CountType", item.CountType);
 					GlobalOutbound.WriteCDataElement(writer, "CountStatus", item.CountStatus);
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "VariancesAdjusted", GlobalOutbound.NsDtv, item.VarianceAdj);
+					GlobalOutbound.WriteCDataElement(writer, "dtv", "VariancesAdjusted", GlobalOutbound.NsDtv, item.VariancesAdjusted);
 
 					// ItemCount
 					foreach (var countItem in wsGroup)
 					{
 						writer.WriteStartElement("ItemCount");
-						GlobalOutbound.WriteCDataElement(writer, "ItemID", countItem.ItemID);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedBarcodeID", GlobalOutbound.NsDtv, countItem.ScannedBarcodeID);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM1", GlobalOutbound.NsDtv, countItem.DIM1);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM2", GlobalOutbound.NsDtv, countItem.DIM2);
-						GlobalOutbound.WriteCDataElement(writer, "Quantity", countItem.Quantity);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "SnapshotQuantity", GlobalOutbound.NsDtv, countItem.SnapshotQty);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "UnitVariance", GlobalOutbound.NsDtv, countItem.UnitVariance);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "InventoryBucketId", GlobalOutbound.NsDtv, countItem.InventoryBucketID);
+						GlobalOutbound.WriteCDataElement(writer, "ItemID", countItem.ItemCountItemID);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedBarcodeID", GlobalOutbound.NsDtv, countItem.ItemCountScannedBarcodeID);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM1", GlobalOutbound.NsDtv, countItem.ItemCountDIM1);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM2", GlobalOutbound.NsDtv, countItem.ItemCountDIM2);
+						GlobalOutbound.WriteCDataElement(writer, "Quantity", countItem.ItemCountQuantity);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "SnapshotQuantity", GlobalOutbound.NsDtv, countItem.ItemCountSnapshotQuantity);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "UnitVariance", GlobalOutbound.NsDtv, countItem.ItemCountUnitVariance);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "InventoryBucketId", GlobalOutbound.NsDtv, countItem.ItemCountInventoryBucketID);
 						writer.WriteEndElement(); // </ItemCount>
 					}
 
