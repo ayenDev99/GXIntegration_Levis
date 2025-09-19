@@ -54,9 +54,9 @@ namespace GXIntegration_Levis.Data.Access
 							, VOU.POST_DATE							AS EndDateTime
 							, EMPLOYEE.EMPL_NAME			        AS OPERATORID
 							, 'PHP'									AS CurrencyCode
-							,'true'                                 AS InventoryMovementSuccess
-							,'AMA'	                                AS Region
-							, 'PHP'									AS Country
+							, 'true'                                AS InventoryMovementSuccess
+							, 'AMA'	                                AS Region
+							, 'PH'									AS Country
 							, (SELECT ADDRESS4 FROM RPS.STORE 
 								WHERE SID = PO.SHIPTO_STORE_SID)	AS AlternateStoreID
 							, CASE WHEN VOU.STATUS = 4 

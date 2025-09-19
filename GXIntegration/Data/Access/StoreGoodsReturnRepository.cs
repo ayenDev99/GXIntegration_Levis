@@ -55,7 +55,7 @@ namespace GXIntegration_Levis.Data.Access
 								, C.ALPHABETIC_CODE                     AS CurrencyCode
 								, 'true'                                AS InventoryMovementSuccess
 								, 'AMA'	                                AS Region
-								, 'PHP'									AS Country
+								, 'PH'									AS Country
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS AlternateStoreID
 								, TRIM(REGEXP_SUBSTR(

@@ -53,7 +53,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'PAPER'                               AS ReceiptDeliveryMethod
                                 , 'true'                                AS InventoryMovementSuccess 
                                 , 'AMA'                                 AS Region
-                                , 'PHP'                                 AS Country
+                                , 'PH'                                  AS Country
                                 , STORE.ADDRESS4			            AS AlternateStoreID
                                 , DOC.DOC_NO                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                     AS Barcode

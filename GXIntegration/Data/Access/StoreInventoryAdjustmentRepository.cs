@@ -52,7 +52,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , CURRENCY.ALPHABETIC_CODE          AS CurrencyCode
                                 , 'true'                            AS InventoryMovementSuccess
                                 , 'AMA'	                            AS Region
-                                , 'PHP'								AS Country
+                                , 'PH'								AS Country
                                 , S.ADDRESS4			            AS AlternateStoreID
                                 , ADJ.ADJ_NO						AS CountID
                                 , 'ADJUSTMENT'					    AS CountType

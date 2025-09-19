@@ -47,7 +47,7 @@ namespace GXIntegration_Levis.Data.Access
 								, PI_SHEET.CREATED_BY				AS OperatorID
 								, 'PHP'								AS CurrencyCode
 								, 'AMA'								AS Region
-								, 'PHP'								AS Country
+								, 'PH'								AS Country
 								, STORE.ADDRESS4					AS AlternateStoreID
 								, PI_SHEET.NAME						AS CountID
 								, PI_SHEET.POST_DATE				AS DueDate

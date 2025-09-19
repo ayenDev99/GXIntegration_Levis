@@ -97,7 +97,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.ATTRIBUTE								AS PTDIM2
 								, ISB.DESCRIPTION1							AS PTSTYLE
 								, VOU.VOU_NO								AS PTCONTROLNUMBER
-								, 'PHP'										AS COUNTRY
+								, 'PH'										AS COUNTRY
 								, ISB.UPC									AS PTEAN
 								, VOU.SID									AS VouSid							
 								FROM

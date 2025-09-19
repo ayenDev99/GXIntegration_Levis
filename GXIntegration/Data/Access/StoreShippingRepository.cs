@@ -84,7 +84,7 @@ namespace GXIntegration_Levis.Data.Access
 							, SLIP.TRACKING_NO									AS TRACKINGNUMBER
 							, 'SHIPPED'											AS STATUSCODE
 							, ''												AS POSTALCODE
-							, 'PHP'												AS COUNTRY
+							, 'PH'												AS COUNTRY
 							, ISB.DESCRIPTION1									AS ITEMID
 							, ISB.ITEM_SIZE										AS PTDIM1
 							, ISB.ATTRIBUTE										AS PTDIM2
