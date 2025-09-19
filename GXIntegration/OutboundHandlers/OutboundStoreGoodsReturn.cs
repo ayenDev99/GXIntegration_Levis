@@ -77,15 +77,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void WriteXmlContent(List<StoreGoodsReturnModel> items, XmlWriter writer)
 		{
-			writer.WriteStartDocument();
-
-			// Root: POSLog
-			writer.WriteStartElement("POSLog");
-			writer.WriteAttributeString("xmlns", "dtv", null, GlobalOutbound.NsDtv);
-			writer.WriteAttributeString("xmlns", "xs", null, GlobalOutbound.NsXsi);
-			writer.WriteAttributeString("xs", "schemaLocation", null, GlobalOutbound.NsIXRetail + "POSLog.xsd");
-
-			writer.WriteStartElement("Transaction");
+			writer.WriteStartElement("Transaction");	// Transaction
+			
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
 			writer.WriteAttributeString("TrainingModeFlag", "false");
@@ -200,8 +193,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			}
 
 			writer.WriteEndElement(); // Transaction
-			writer.WriteEndElement(); // POSLog
-			writer.WriteEndDocument();
+
 		}
 
 	}

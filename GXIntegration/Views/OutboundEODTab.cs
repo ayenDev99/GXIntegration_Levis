@@ -204,34 +204,34 @@ namespace GXIntegration_Levis.Views
 					var xmlFragments = new[]
 					{
 						OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
-						//OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
-						//OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
-						//OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
-						//OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
-						//OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
-						//OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
+						OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
+						OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
+						OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
+						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
+						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
+						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
 					};
 
 					string[] xmlTypes = new[]
 					{
 						"StoreSale",
-						//"StoreShipping",
-						//"StoreReceiving",
-						//"StoreInventoryAdjustment",
-						//"StoreReturn",
-						//"StoreGoodsReturn",
-						//"StoreGoods",
+						"StoreShipping",
+						"StoreReceiving",
+						"StoreInventoryAdjustment",
+						"StoreReturn",
+						"StoreGoodsReturn",
+						"StoreGoods",
 					};
 
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
 					{
 						("StoreSale", storeSaleItems as IEnumerable<object>),
-						//("StoreShipping", storeShippingItems as IEnumerable<object>),
-						//("StoreReceiving", storeReceivingItems as IEnumerable<object>),
-						//("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
-						//("StoreReturn", storeReturnItems as IEnumerable<object>),
-						//("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
-						//("StoreGoods", storeGoodsItems as IEnumerable<object>),
+						("StoreShipping", storeShippingItems as IEnumerable<object>),
+						("StoreReceiving", storeReceivingItems as IEnumerable<object>),
+						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
+						("StoreReturn", storeReturnItems as IEnumerable<object>),
+						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
+						("StoreGoods", storeGoodsItems as IEnumerable<object>),
 					};
 
 					//var storeRoot = new XElement("OutboundData");
@@ -273,7 +273,6 @@ namespace GXIntegration_Levis.Views
 					}
 
 					// Prepare output XML document
-					//var document = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), validFragments);
 					var document = new XDocument(
 													new XDeclaration("1.0", "utf-8", "yes"),
 													new XElement("Root", validFragments) // Or another name
@@ -300,7 +299,6 @@ namespace GXIntegration_Levis.Views
 					string filePath = Path.Combine(outboundDir, fileName);
 
 					// Write to file
-					// Write to file
 					using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
 					using (var writer = XmlWriter.Create(stream, settings))
 					{
@@ -313,13 +311,16 @@ namespace GXIntegration_Levis.Views
 						writer.WriteAttributeString("dtv", GlobalOutbound.NsDtv);
 						writer.WriteAttributeString("xs", GlobalOutbound.NsXsi);
 						writer.WriteAttributeString("schemaLocation", GlobalOutbound.NsIXRetail + "POSLog.xsd");
-						//writer.WriteWhitespace("\n");
 
-						// ✅ Inject your validFragments here
 						foreach (var fragment in validFragments)
 						{
-							fragment.WriteTo(writer);
-							writer.WriteWhitespace(Environment.NewLine + new string(' ', writer.Settings.IndentChars.Length));
+							using (var reader = fragment.CreateReader())
+							{
+								await writer.WriteNodeAsync(reader, true);
+							}
+
+							// Add a newline after each fragment
+							await writer.WriteCommentAsync(" ");
 						}
 
 						writer.WriteEndElement(); // </POSLog>
