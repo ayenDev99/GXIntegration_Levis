@@ -69,7 +69,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.PRICE * DOC_ITEM.QTY         AS SaleExtendedAmount
                                 , DOC_ITEM.QTY                          AS SaleQuantity
                                 , PREF_REASON.NAME                      AS SaleReason
-                                , ''                                    AS SaleReturnType
+                                , 'VERIFIED'                            AS SaleReturnType
                                 , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
                                 , '100'                                 AS Percentage
                                 , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
@@ -141,6 +141,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , ''                                    AS VoucherUnspentAmount
                                 , ''                                    AS VoucherCardNumber
                                 , TENDER.AMOUNT                         AS TransGrandAmount
+                                , ROUND(TO_NUMBER(TENDER.AMOUNT))       AS TransactionGrandAmount
                                 , ROUND(TO_NUMBER(TENDER.AMOUNT))       AS RoundedTotal
                                 , DOC.SID					            AS DocSid
                             FROM 
