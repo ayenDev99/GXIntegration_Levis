@@ -52,7 +52,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
-			var allowedColumns = new HashSet<string> {"ADDRESS5", "ACTIVE"};
+			var allowedColumns = new HashSet<string> { "ADDRESS4", "ADDRESS5", "ACTIVE"};
 
 			if (!allowedColumns.Contains(columnName.ToUpper()))
 				throw new ArgumentException("Invalid column name");

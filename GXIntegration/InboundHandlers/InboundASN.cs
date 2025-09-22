@@ -296,7 +296,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						if (fields.Length > 1) rowDict["DocumentType"] = fields[1];
 						if (fields.Length > 2) rowDict["DocumentLineType"] = fields[2];
 						if (fields.Length > 3) rowDict["AutoReceiveFlag"] = fields[3];
-						if (fields.Length > 4) rowDict["StoreCode"] = fields[4];
+						if (fields.Length > 4) rowDict["StoreCode"] = fields[4].TrimStart('0');
 						if (fields.Length > 5) rowDict["DeliveryLocation"] = fields[5];
 						if (fields.Length > 6) rowDict["ProductCode"] = fields[6];
 						if (fields.Length > 7) rowDict["ProductReference"] = fields[7];
