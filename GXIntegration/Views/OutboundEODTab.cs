@@ -154,14 +154,15 @@ namespace GXIntegration_Levis.Views
 				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
 				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
-				//await ExecuteStoreInventoryCountAsync();
+				await ExecuteStoreInventoryCountAsync();
 				await ExecuteAllAndSaveToSingleXmlAsync();
 				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				//await UploadToSftpAsync();
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				await UploadToSftpAsync();
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
 
+				MessageBox.Show($"OUTBOUND EOD Processed Successfully.");
 			}
 			finally
 			{
@@ -341,16 +342,62 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
+		//private async Task ExecuteStoreInventoryCountAsync()
+		//{
+		//	var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+		//	var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+		//	foreach (var store in prismStores)
+		//	{
+		//		string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
+		//		await OutboundStoreInventoryCount.Execute(repositories.StoreInventoryCountRepository, config, "xml", storeCode);
+		//	}
+		//}
+
 		private async Task ExecuteStoreInventoryCountAsync()
 		{
 			var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
 			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+
+			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating INVENTORYCOUNT...");
 			foreach (var store in prismStores)
 			{
-				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
-				await OutboundStoreInventoryCount.Execute(repositories.StoreInventoryCountRepository, config, "xml", storeCode);
+				if (store is IDictionary<string, object> dict && dict.TryGetValue("ADDRESS4", out var addr) && addr != null)
+				{
+					string storeCode = addr.ToString();
+
+					try
+					{
+						// Fetch inventory count first
+						var items = await repositories.StoreInventoryCountRepository
+													  .GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
+
+						// Convert/filter to valid fragments (your business logic goes here)
+						var validFragments = items.Where(x => x != null).ToList();
+
+						if (!validFragments.Any())
+						{
+							Logger.Log($"[OUTBOUND - EOD] [XML]		No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
+							continue;
+						}
+
+						await OutboundStoreInventoryCount.Execute(
+							repositories.StoreInventoryCountRepository,
+							config,
+							"xml",
+							storeCode);
+					}
+					catch (Exception ex)
+					{
+						Logger.Log($"[OUTBOUND - EOD] Failed for StoreCode: {storeCode} | {ex}");
+					}
+				}
+				else
+				{
+					Logger.Log("[OUTBOUND - EOD] Store skipped due to missing ADDRESS4 field");
+				}
 			}
 		}
+
 
 		private async Task UploadToSftpAsync()
 		{	

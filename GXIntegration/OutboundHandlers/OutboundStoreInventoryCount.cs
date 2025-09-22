@@ -19,9 +19,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				DateTime from_date = DateTime.Today; // 00:00:00
-				DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
-				var items = await repository.GetStoreInventoryCountAsync(from_date, to_date, storeCode);
+				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var items = await repository.GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
+				if (!items.Any()) { return; }
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
