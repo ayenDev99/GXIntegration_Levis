@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -13,7 +14,6 @@ using static GXIntegration_Levis.Helpers.GlobalHelper;
 
 namespace GXIntegration_Levis.InboundHandlers
 {
-	
 	public class GlobalInbound
 	{
 		public async Task<string> Authenticate(string prismAddress, string prismUsername, string prismPassword, string workstationName)
@@ -91,7 +91,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						var errorResponse = reader.ReadToEnd();
 						errorMessage += $" Response: {errorResponse}";
 						Logger.Log(errorMessage + ex);
-						return errorResponse;
+						return null;
 					}
 				}
 

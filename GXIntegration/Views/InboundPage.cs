@@ -5,6 +5,7 @@ using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.InboundHandlers;
 using GXIntegration_Levis.Properties;
 using System;
+using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -34,12 +35,53 @@ namespace GXIntegration_Levis.Views
 
 			InitializeComponent();
 			InitializeGrid();
+			ProcessedInboundFilesDatabase();
 			InitializeControls();
 		}
 
 		// ***************************************************
 		// Initialization Methods
 		// ***************************************************
+		private void ProcessedInboundFilesDatabase()
+		{
+			string folderPath = Path.Combine(Application.StartupPath, "AppData");
+			if (!Directory.Exists(folderPath))
+			{
+				Directory.CreateDirectory(folderPath);
+				Logger.Log($"[INBOUND] Created AppData folder at: {folderPath}");
+			}
+
+			string dbPath = Path.Combine(folderPath, "TempProcessedInboundFiles.db");
+			if (!File.Exists(dbPath))
+			{
+				SQLiteConnection.CreateFile(dbPath);
+			}
+
+			string connectionString = $"Data Source={dbPath};Version=3;";
+			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+			{
+				conn.Open();
+
+				string createTableQuery = @"
+				CREATE TABLE IF NOT EXISTS TempProcessedInboundFiles (
+					Id                      INTEGER PRIMARY KEY AUTOINCREMENT
+					, CreatedDate				TEXT
+					, ModuleType				TEXT
+					, FileName					TEXT
+					, Status					TEXT
+					, DeletedDate				TEXT
+				);";
+
+				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
+				{
+					cmd.ExecuteNonQuery();
+					Logger.Log($"[INBOUND] 'TempProcessedInboundFiles' table created or already exists. Path : {folderPath}");
+				}
+
+				Logger.Log("[INBOUND] Database initialization complete.");
+			}
+		}
+
 		private void InitializeGrid()
 		{
 			guna1DataGridView1 = new GunaDataGridView

@@ -374,7 +374,8 @@ namespace GXIntegration_Levis.Data.Access
 				{ "ATTRIBUTE", "INV" },
 				{ "ITEM_SIZE", "INV" },
 				{ "SBS_NO", "SBS" },
-				{ "PRICE_LVL_NAME", "PL" }
+				{ "PRICE_LVL_NAME", "PL" },
+				{ "SBS_SID", "INV" }
 			};
 
 			var whereClauses = new List<string>();

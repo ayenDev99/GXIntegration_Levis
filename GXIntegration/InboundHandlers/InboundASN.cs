@@ -41,8 +41,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 						// Check if PO_NO already exist on DB.
 						var isPONumExist = await IsPONumExistAsync(repository, documentNumber);
-
-						if(isPONumExist)
+						if (isPONumExist)
 						{
 							Logger.Log($"[INBOUND - ASN]		PO already exists.");
 
@@ -53,16 +52,19 @@ namespace GXIntegration_Levis.InboundHandlers
 							var productCodes = group
 											.Where(row => row.ContainsKey("ProductCode")
 													   && row.ContainsKey("ColorCode")
-													   && row.ContainsKey("SizeCode"))
+													   && row.ContainsKey("SizeCode")
+													   && row.ContainsKey("StoreCode"))
 											.Select(row => new ProductCodeInfo
 											{
 												ProductCode = row["ProductCode"],
 												ColorCode = row["ColorCode"],
-												SizeCode = row["SizeCode"]
+												SizeCode = row["SizeCode"],
+												StoreCode = row["StoreCode"]
 											})
 											.Where(item => !string.IsNullOrWhiteSpace(item.ProductCode)
 														&& !string.IsNullOrWhiteSpace(item.ColorCode)
-														&& !string.IsNullOrWhiteSpace(item.SizeCode))
+														&& !string.IsNullOrWhiteSpace(item.StoreCode)
+														&& !string.IsNullOrWhiteSpace(item.ColorCode))
 											.Distinct()
 											.ToList();
 
@@ -77,8 +79,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							// Check if PO ProductCode exist in DB
 							bool isPOItemsExist = await IsPOItemsExistAsync(repository, documentNumber, productCodes, acceptPartial);
-							//Logger.Log($"{isPOItemsExist}");
-							if (!isPOItemsExist)
+							if (isPOItemsExist)
 							{
 								// Create PO
 								foreach (var row in group)
@@ -86,12 +87,8 @@ namespace GXIntegration_Levis.InboundHandlers
 									Logger.Log($"[INBOUND - ASN]		ROW DATA: {string.Join(", ", row.Select(kv => $"{kv.Key}={kv.Value}"))}");
 									await createRpsPOAsync(repository, session, row);
 								}
-
-
 							}
-
 						}
-
 						continue;
 					}
 				}
@@ -134,11 +131,23 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			foreach (var productCode in productCodes)
 			{
+				var storeCode = productCode.StoreCode;
+				var prismStore = await repository.GetRpsStore("ADDRESS5", storeCode);
+				var sbs_sid = prismStore?.Count > 0 ? prismStore[0].SBS_SID.ToString() : null;
+
+				if (prismStore == null || prismStore.Count == 0)
+				{
+					Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
+					return false;
+				}
+
+				var ALU = productCode.ProductCode + productCode.SizeCode + productCode.ColorCode;
 				var filters = new Dictionary<string, object>
 				{
 					{ "DESCRIPTION1", productCode.ProductCode },
 					{ "ATTRIBUTE", productCode.ColorCode },
-					{ "ITEM_SIZE",  productCode.SizeCode }
+					{ "ITEM_SIZE",  productCode.SizeCode },
+					{ "SBS_SID",  sbs_sid }
 				};
 
 				var results = await repository.GetInboundItemsAsync(filters);
@@ -151,12 +160,12 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 				else
 				{
-					Logger.Log($"[INBOUND - ASN]			Missing items detected. ProductCode: {productCode.ProductCode} IS EXIST on Prism DB");
+					//Logger.Log($"[INBOUND - ASN]			Missing items detected. ProductCode: {productCode.ProductCode} IS EXIST on Prism DB");
 
-					if (!isAcceptPartial)
+					if (isAcceptPartial)
 					{
 						// If partial not accepted, missing even 1 productCode → no insert
-						Logger.Log($"[INBOUND - ASN]		Missing items detected. Skipping PO insertion. ProductCode : {productCode} does NOT EXIST on Prism DB");
+						Logger.Log($"[INBOUND - ASN]		Skipping PO insertion. Missing items detected. ALU : {ALU} and SBS : {sbs_sid} does NOT EXIST on Prism DB");
 
 						return false;
 					}
@@ -175,8 +184,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		// ***************************************************
 		private async Task<string> createRpsPOAsync(dynamic repo, string session, IDictionary<string, string> item)
 		{
-			Logger.Log($"[INBOUND - PRICE]		[CREATE] PO");
-			//Logger.Log("[INBOUND - PRICE] [CREATE] PO - Item Details:");
+			//Logger.Log("[INBOUND - ASN] [CREATE] PO - Item Details:");
 			//item?.ToList().ForEach(kv => Logger.Log($"   {kv.Key} = {kv.Value}"));
 
 			var storeCode		= GlobalHelper.GetStringValue(item, "StoreCode");
@@ -203,46 +211,47 @@ namespace GXIntegration_Levis.InboundHandlers
 			var colorCode			= GlobalHelper.GetStringValue(item, "ColorCode");
 			var itemAlu				= productCode + sizeCode + colorCode;
 
+			// CREATE RPS.PO
+			var poPayload = new Dictionary<string, object>
+			{
+				["billtostoreno"]		= billtostoreno ?? 0
+				, ["createddatetime"]	= orderDate ?? ""
+				, ["originapplication"] = "RProPrismWeb"
+				, ["sbssid"]			= sbs_sid ?? string.Empty
+				, ["shippingDate"]		= shippingDate ?? ""
+				, ["status"]			= 1
+				, ["potype"]			= 0
+				, ["pono"]				= poNo ?? string.Empty
+				, ["ordqty"]			= orderQty ?? 0
+				, ["instruction1"]		= instruction1 ?? string.Empty
+			};
+
+			// CREATE RPS.PO_ITEM
 			var prismInvnSbsItem = await repo.GetRpsInvnSbsItem("ALU", itemAlu);
 			var activeItems = new List<dynamic>();
 			foreach (var x in prismInvnSbsItem)
 				if (((IDictionary<string, object>)x)["SBS_SID"]?.ToString() == sbs_sid)
 					activeItems.Add(x);
 
-			// CREATE RPS.PO
-			var poPayload = new Dictionary<string, object>
-			{
-				["billtostoreno"]		= billtostoreno
-				, ["createddatetime"]	= orderDate
-				, ["originapplication"] = "RProPrismWeb"
-				, ["sbssid"]			= sbs_sid
-				, ["shippingDate"]		= shippingDate
-				, ["status"]			= 1
-				, ["potype"]			= 0
-				, ["pono"]				= poNo
-				, ["ordqty"]			= orderQty
-				, ["instruction1"]		= instruction1
-			};
-
-			// CREATE RPS.PO_ITEM
 			var itemSid = ((IDictionary<string, object>)activeItems.First())["SID"]?.ToString();
 			if (!string.IsNullOrWhiteSpace(itemSid))
 			{
-				poPayload["poitem"] = new[] 
-				{ 
-					new { 
-						itemsid		= itemSid
-						, price		= purchasePrice
-						, cost		= landedCost
-						, taxamount = taxCost
-						, ordqty	= orderQty
-					} 
-				};
+				poPayload["poitem"] = new[]
+				{
+				new {
+					itemsid		= itemSid
+					, price     = purchasePrice ?? 0
+					, cost      = landedCost ?? 0
+					, taxamount = taxCost ?? 0
+					, ordqty    = orderQty ?? 0
+				}
+			};
 			}
 
-			var payload = new { data = new[] { poPayload }};
+			var payload = new { data = new[] { poPayload } };
 			string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
+			Logger.Log($"[INBOUND - ASN]		[CREATE] PO");
 			// Call API to CREATE RPS.PO
 			string endpointCreate = "/api/backoffice/purchaseorder";
 			string responseJson = GlobalInbound.CallPrismAPI(
@@ -252,7 +261,7 @@ namespace GXIntegration_Levis.InboundHandlers
 									, out bool issuccessful
 									, "POST"
 									, 1
-								);
+									);
 			return responseJson;	
 		}
 
@@ -339,6 +348,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			public string ProductCode { get; set; }
 			public string ColorCode { get; set; }
 			public string SizeCode { get; set; }
+			public string StoreCode { get; set; }
 		}
 
 	}
