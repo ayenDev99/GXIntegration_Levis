@@ -1,13 +1,14 @@
 ﻿using Dapper;
 using GXIntegration;
+using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using GXIntegration_Levis.Model;
 using System.Threading.Tasks;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -19,14 +20,13 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<PriceModel>> GetPriceAsync(DateTime date)
+		public async Task<List<PriceModel>> GetPriceAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-
 					string sql = @"
 						SELECT
 						  '1'						AS SalesOrg
@@ -43,11 +43,20 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = RPS.ADJ_ITEM.ITEM_SID
 						LEFT JOIN RPS.PRICE_LEVEL PLVL		ON PLVL.SID = ADJ.PRICE_LVL_SID
 						WHERE
-							TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-09-16' AND DATE '2025-09-16'
+							ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
 							AND ADJ.ADJ_TYPE = 1
 						";
 
-					return (await connection.QueryAsync<PriceModel>(sql, new { CreatedDate = date })).ToList();
+					//ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
+
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date
+					};
+
+					var sales = await connection.QueryAsync<PriceModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{

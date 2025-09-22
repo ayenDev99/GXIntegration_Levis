@@ -19,9 +19,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				DateTime date = DateTime.Today;
-				var items = await repository.GetInventoryAsync(date);
+				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var items = await repository.GetInventoryAsync(fromDate, toDate);
 				string countryCode = config.CountryCode ?? "XX";
+				if (!items.Any())
+				{
+					Logger.Log("[OUTBOUND - EOD] [TXT] No INTRANSIT data was found in Prism for today.");
+					return;
+				}
 
 				// Outbound directory setup
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
@@ -44,7 +49,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_INTRANSIT_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[OUTBOUND - EOD] [TXT] InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[OUTBOUND - EOD] [TXT]	InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
 
 				string output = Format(items, "|");
 

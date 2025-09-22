@@ -45,6 +45,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		public static string GenerateXml(List<StoreSaleModel> items, string filePath, string generate_type)
 		{
+			if (!items.Any()) { return null; }
+
 			var settings = new XmlWriterSettings
 			{
 				Indent = true,

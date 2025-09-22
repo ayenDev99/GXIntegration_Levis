@@ -18,8 +18,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				DateTime date = DateTime.Today;
-				var items = await repository.GetPriceAsync(date);
+				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var items = await repository.GetPriceAsync(fromDate, toDate);
+				if (!items.Any())
+				{
+					Logger.Log("[OUTBOUND - EOD] [TXT] No PRICE data was found in Prism for today.");
+					return;
+				}
 
 				// Outbound directory setup
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");

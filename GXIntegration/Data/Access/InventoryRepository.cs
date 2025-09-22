@@ -19,7 +19,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<InventoryModel>> GetInventoryAsync(DateTime date)
+		public async Task<List<InventoryModel>> GetInventoryAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -74,17 +74,23 @@ namespace GXIntegration_Levis.Data.Access
 							) LM
 						ON ISI.SID = LM.ITEM_SID AND ISIQ.STORE_SID = LM.STORE_SID 
 						WHERE 
-						ISI.active = 1
+							ISI.active = 1
 							AND S.ACTIVE = 1
-							AND TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-09-30'
+							AND S.ADDRESS4 = :StoreCode
+							AND ISI.POST_DATE BETWEEN :FromDate AND :ToDate
 					";
 
-					//TRUNC(ISI.post_date) BETWEEN
-					//		TO_DATE('01-MAR-25', 'DD-MON-YY') AND
-					//		TO_DATE('31-MAR-25', 'DD-MON-YY')
+					//TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-09-30'
 
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date,
+						StoreCode = storeCode
+					};
 
-					return (await connection.QueryAsync<InventoryModel>(sql, new { CreatedDate = date })).ToList();
+					var sales = await connection.QueryAsync<InventoryModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{

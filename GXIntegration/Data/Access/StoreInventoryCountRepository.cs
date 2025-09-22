@@ -61,12 +61,13 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.CURRENCY			ON CURRENCY.SID = SUBSIDIARY.BASE_CURRENCY_SID
 							LEFT JOIN RPS.COUNTRY			ON COUNTRY.SID = SUBSIDIARY.COUNTRY_SID
 							WHERE 
-								PI_SHEET.ACTIVE = 1
+								PI_SHEET.POST_DATE BETWEEN :FromDate AND :ToDate
+								AND PI_SHEET.ACTIVE = 1
 								AND STORE.ADDRESS4 = :StoreCode
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate
+					//AND PI_SHEET.POST_DATE BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{

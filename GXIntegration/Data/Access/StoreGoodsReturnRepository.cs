@@ -79,7 +79,7 @@ namespace GXIntegration_Levis.Data.Access
     
 								, VOU.SID							    AS VouSid							
 							FROM
-											RPS.VOUCHER VOU
+								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
 							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
 							LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
@@ -90,15 +90,16 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
-											TRUNC(VOU.POST_DATE) BETWEEN DATE '2020-08-20' AND DATE '2025-08-20'
-											AND VOU.VOU_TYPE = 1
-											AND VOU.VOU_CLASS = 0
-											AND VOU.STATUS = 4
-								AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)					
+								VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+								AND VOU.VOU_TYPE = 1
+								AND VOU.VOU_CLASS = 0
+								AND VOU.STATUS = 4
+							AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)					
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
 					//AND VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+					// TRUNC(VOU.POST_DATE) BETWEEN DATE '2020-08-20' AND DATE '2025-08-20'
 
 					var parameters = new
 					{

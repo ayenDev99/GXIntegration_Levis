@@ -96,7 +96,7 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 							WHERE
-								TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-01-01' AND DATE '2025-08-31'
+								VOU.POST_DATE BETWEEN :FromDate AND :ToDate
 								AND VOU.VOU_CLASS = 0
 								-- AND VOU.VOU_TYPE = 0
 								AND VOU.SLIP_FLAG = 1
@@ -106,7 +106,7 @@ namespace GXIntegration_Levis.Data.Access
 
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate
+					//AND VOU.POST_DATE BETWEEN :FromDate AND :ToDate
 
 					var parameters = new
 					{

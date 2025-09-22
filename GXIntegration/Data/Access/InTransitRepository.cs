@@ -1,11 +1,12 @@
 ﻿using Dapper;
+using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -16,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<InTransitModel>> GetInventoryAsync(DateTime date)
+		public async Task<List<InTransitModel>> GetInventoryAsync(DateTime from_date, DateTime to_date)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -45,17 +46,23 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.REGION ON RPS.REGION.SID = RPS.REGION_SUBSIDIARY.REGION_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = RPS.VOU_ITEM.ITEM_SID
 						WHERE 
-							TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-07-20' AND DATE '2025-09-16'
+							VOU.POST_DATE BETWEEN :FromDate AND :ToDate
 							AND VOU.STATUS IN (1, 3)
 							AND ISI.active = 1
 							AND STORE.ACTIVE = 1
 					";
 
-					//AND TRUNC(VOU.POST_DATE) BETWEEN
-					//			TO_DATE('01-JAN-25', 'DD-MON-YY') AND
-					//			TO_DATE('31-DEC-25', 'DD-MON-YY')
+					//VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+					//TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-07-20' AND DATE '2025-09-16'
 
-					return (await connection.QueryAsync<InTransitModel>(sql, new { CreatedDate = date })).ToList();
+					var parameters = new
+					{
+						FromDate = from_date,
+						ToDate = to_date
+					};
+
+					var sales = await connection.QueryAsync<InTransitModel>(sql, parameters);
+					return sales.ToList();
 				}
 				catch (Exception ex)
 				{

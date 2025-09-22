@@ -72,15 +72,16 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.EMPLOYEE EMP			ON EMP.SID = ADJ.CLERK_SID
 							LEFT JOIN RPS.WORKSTATION WS		ON WS.SID = ADJ.WORKSTATION_SID
 							WHERE
-								TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-01-20' AND DATE '2025-08-20'
+								ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
 								AND ADJ.ADJ_TYPE = 0
-								AND S.ADDRESS4 = '6450'
+								AND S.ADDRESS4 = :StoreCode
 							ORDER BY 
 								ADJ.POST_DATE DESC
 					";
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.POST_DATE BETWEEN :FromDate AND :ToDate
+					//AND ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
+					// TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-01-20' AND DATE '2025-08-20'
 
 					var parameters = new
 					{

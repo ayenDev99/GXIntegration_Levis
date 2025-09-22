@@ -15,30 +15,33 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInventorySnapshots
 	{
-		public static async Task Execute(InventoryRepository repository, GXConfig config)
+		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores)
 		{
 			try
 			{
-				DateTime date = DateTime.Today;
-				var items = await repository.GetInventoryAsync(date);
-
-				// Outbound directory setup
-				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-				Directory.CreateDirectory(outboundDir);
-				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
-
-				// Archive directory setup
-				string archiveRootDir = Path.Combine(outboundDir, "ARCHIVE");
-				string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
-				Directory.CreateDirectory(archiveDateDir);
-
-				// Grouped by StoreCode
-				var grouped = items.GroupBy(i => (i.StoreCode ?? "UNKNOWN").Trim());
-
-				foreach (var group in grouped)
+				foreach (var store in prismStores)
 				{
-					string storeCode = group.Key ?? "XX";
+					string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
+					var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+					var items = await repository.GetInventoryAsync(fromDate, toDate, storeCode);
+					if (!items.Any())
+					{
+						Logger.Log("[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today.");
+						return;
+					}
+
+					// Outbound directory setup
+					string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+					Directory.CreateDirectory(outboundDir);
+					string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+
+					// Archive directory setup
+					string archiveRootDir = Path.Combine(outboundDir, "ARCHIVE");
+					string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+					Directory.CreateDirectory(archiveDateDir);
+
+			
 					string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
 					var existingFiles = Directory.GetFiles(archiveDateDir, $"AMA_PH_{storeCode}_*.txt")
 										.Where(f => Path.GetFileName(f).Contains(todayPrefix))
@@ -50,9 +53,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
-					Logger.Log($"[OUTBOUND - EOD] [TXT] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {group.Count()} | File Name: {fileName}");
+					Logger.Log($"[OUTBOUND - EOD] [TXT] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count()} | File Name: {fileName}");
 
-					string output = Format(group.ToList(), config.Delimiter ?? "|");
+					string output = Format(items, config.Delimiter ?? "|");
+
 					//Logger.Log($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
 
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);

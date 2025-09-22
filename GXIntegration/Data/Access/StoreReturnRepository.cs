@@ -147,7 +147,7 @@ namespace GXIntegration_Levis.Data.Access
                                 DOC.STATUS = 4
                                 AND DOC.RECEIPT_TYPE = 1
                                 AND DOC.DOC_NO IS NOT NULL
-                                AND TRUNC(DOC.POST_DATE) BETWEEN DATE '2025-01-15' AND DATE '2025-09-20'
+                                AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
                                 AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
                                 STORE.STORE_NO ASC
@@ -157,7 +157,8 @@ namespace GXIntegration_Levis.Data.Access
 
 
 					//FETCH FIRST 1 ROWS ONLY
-					//AND D.CREATED_DATETIME BETWEEN :FromDate AND :ToDate
+					//AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
+					//AND TRUNC(DOC.POST_DATE) BETWEEN DATE '2025-01-15' AND DATE '2025-09-20'
 
 					var parameters = new
 					{

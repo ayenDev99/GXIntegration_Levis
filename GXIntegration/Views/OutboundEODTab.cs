@@ -33,7 +33,7 @@ namespace GXIntegration_Levis.Views
 			this.repositories = repositories;
 
 			InitializeComponent();
-			InitializeDownloadActions();
+			//InitializeDownloadActions();
 			InitializeGrid();
 			InitializeProcessAllButton();
 		}
@@ -115,23 +115,23 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 
-		private void InitializeDownloadActions()
-		{
-			downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
-			{
-				["ASN - RECEIVING"] = () => OutboundStoreGoods.Execute(repositories.StoreGoodsRepository, config, "xml"),
-				["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(repositories.StoreGoodsReturnRepository, config, "xml"),
-				["RETAIL_SALE"] = () => OutboundStoreSale.Execute(repositories.StoreSaleRepository, config, "xml"),
-				["RETURN_SALE"] = () => OutboundStoreReturn.Execute(repositories.StoreReturnRepository, config, "xml"),
-				["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(repositories.StoreInventoryAdjustmentRepository, config, "xml"),
-				["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(repositories.StoreShippingRepository, config, "xml"),
-				["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
-				["INVENTORY_COUNT"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
-				["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config),
-				["INTRANSIT"] = () => OutboundInTransit.Execute(repositories.InTransitRepository, config),
-				["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)
-			};
-		}
+		//private void InitializeDownloadActions()
+		//{
+		//	downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
+		//	{
+		//		["ASN - RECEIVING"] = () => OutboundStoreGoods.Execute(repositories.StoreGoodsRepository, config, "xml"),
+		//		["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(repositories.StoreGoodsReturnRepository, config, "xml"),
+		//		["RETAIL_SALE"] = () => OutboundStoreSale.Execute(repositories.StoreSaleRepository, config, "xml"),
+		//		["RETURN_SALE"] = () => OutboundStoreReturn.Execute(repositories.StoreReturnRepository, config, "xml"),
+		//		["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(repositories.StoreInventoryAdjustmentRepository, config, "xml"),
+		//		["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(repositories.StoreShippingRepository, config, "xml"),
+		//		["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
+		//		["INVENTORY_COUNT"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
+		//		["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config),
+		//		["INTRANSIT"] = () => OutboundInTransit.Execute(repositories.InTransitRepository, config),
+		//		["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)
+		//	};
+		//}
 
 		// ***************************************************
 		// Process Methods
@@ -145,20 +145,22 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				//Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
-				//await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config);
-				//await OutboundPrice.Execute(repositories.PriceRepository, config);
-				//await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				//Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
+				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+
+				Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores);
+				await OutboundPrice.Execute(repositories.PriceRepository, config);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
 
 				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
-				await ExecuteStoreInventoryCountAsync();
-				//await ExecuteAllAndSaveToSingleXmlAsync();
+				//await ExecuteStoreInventoryCountAsync();
+				await ExecuteAllAndSaveToSingleXmlAsync();
 				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
 
-				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				await UploadToSftpAsync();
-				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				//await UploadToSftpAsync();
+				//Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
 
 			}
 			finally
@@ -193,10 +195,10 @@ namespace GXIntegration_Levis.Views
 				{
 					// Fetch data per store
 					var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode);
+					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
 					var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate, storeCode);
 					var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate, storeCode);
 					var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode);
-					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
 					var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode);
 					var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate, storeCode);
 
@@ -204,10 +206,10 @@ namespace GXIntegration_Levis.Views
 					var xmlFragments = new[]
 					{
 						OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
+						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
 						OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
 						OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
-						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
 						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
 						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
 					};
@@ -215,10 +217,10 @@ namespace GXIntegration_Levis.Views
 					string[] xmlTypes = new[]
 					{
 						"StoreSale",
+						"StoreReturn",
 						"StoreShipping",
 						"StoreReceiving",
 						"StoreInventoryAdjustment",
-						"StoreReturn",
 						"StoreGoodsReturn",
 						"StoreGoods",
 					};
@@ -226,10 +228,10 @@ namespace GXIntegration_Levis.Views
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
 					{
 						("StoreSale", storeSaleItems as IEnumerable<object>),
+						("StoreReturn", storeReturnItems as IEnumerable<object>),
 						("StoreShipping", storeShippingItems as IEnumerable<object>),
 						("StoreReceiving", storeReceivingItems as IEnumerable<object>),
 						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
-						("StoreReturn", storeReturnItems as IEnumerable<object>),
 						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
 						("StoreGoods", storeGoodsItems as IEnumerable<object>),
 					};
@@ -252,23 +254,23 @@ namespace GXIntegration_Levis.Views
 								validFragments.Add(parsedFragment);
 
 								int count = countsByType.ContainsKey(xmlType) ? countsByType[xmlType] : 0;
-								Logger.Log($"[OUTBOUND - EOD]		Successfully generated {xmlType} XML. Item count: {count}");
+								Logger.Log($"[OUTBOUND - EOD] [XML]		Successfully generated {xmlType} XML. Item count: {count}");
 							}
 							catch (Exception ex)
 							{
-								Logger.Log($"[XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
+								Logger.Log($"[OUTBOUND - EOD] [XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
 							}
 						}
 						else
 						{
-							Logger.Log($"[XML] {xmlType} data for store {storeCode} is empty. Skipping.");
+							Logger.Log($"[OUTBOUND - EOD] [XML]		No {xmlType} data for store {storeCode} was found in Prism for today. Skipping.");
 						}
 					}
 
 					// Skip file generation if no data at all
 					if (!validFragments.Any())
 					{
-						Logger.Log($"[INFO] No outbound data generated for store {storeCode}. File will not be created.");
+						Logger.Log($"[OUTBOUND - EOD] [XML] No POSLOG data generated for store {storeCode}. File will not be created.");
 						continue;
 					}
 
@@ -330,7 +332,7 @@ namespace GXIntegration_Levis.Views
 					}
 
 
-					Logger.Log($"[OUTBOUND - EOD] [FILE] Downloaded successfully | File Name: {fileName}");
+					Logger.Log($"[OUTBOUND - EOD] [XML] Downloaded successfully | File Name: {fileName}");
 				}
 				catch (Exception ex)
 				{
