@@ -132,7 +132,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			foreach (var productCode in productCodes)
 			{
 				var storeCode = productCode.StoreCode;
-				var prismStore = await repository.GetRpsStore("ADDRESS5", storeCode);
+				var prismStore = await repository.GetRpsStore("ADDRESS4", storeCode);
 				var sbs_sid = prismStore?.Count > 0 ? prismStore[0].SBS_SID.ToString() : null;
 
 				if (prismStore == null || prismStore.Count == 0)
@@ -188,7 +188,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			//item?.ToList().ForEach(kv => Logger.Log($"   {kv.Key} = {kv.Value}"));
 
 			var storeCode		= GlobalHelper.GetStringValue(item, "StoreCode");
-			var prismStore		= await repo.GetRpsStore("ADDRESS5", storeCode);
+			var prismStore		= await repo.GetRpsStore("ADDRESS4", storeCode);
 
 			if (prismStore == null || prismStore.Count == 0) 
 			{ 

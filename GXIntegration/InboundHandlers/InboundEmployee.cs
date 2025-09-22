@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						}
 
 						var storeCode = row["StoreCode"]?.ToString();
-						var prism_store = await repository.GetRpsStore("ADDRESS5", storeCode);
+						var prism_store = await repository.GetRpsStore("ADDRESS4", storeCode);
 
 						if (prism_store == null || prism_store.Count == 0)
 						{
