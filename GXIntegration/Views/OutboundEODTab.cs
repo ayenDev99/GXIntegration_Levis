@@ -61,24 +61,37 @@ namespace GXIntegration_Levis.Views
 				Theme = GunaDataGridViewPresetThemes.Guna
 			};
 
+			// Style
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
 			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-			guna1DataGridView1.ColumnCount = 5;
-			guna1DataGridView1.Columns[0].Name = "ID";
-			guna1DataGridView1.Columns[1].Name = "Name";
-			guna1DataGridView1.Columns[2].Name = "File Name Format";
-			guna1DataGridView1.Columns[3].Name = "Generate by";
-			guna1DataGridView1.Columns[4].Name = "Type";
+			// Add checkbox column FIRST
+			var checkBoxColumn = new DataGridViewCheckBoxColumn
+			{
+				Name = "Select",
+				HeaderText = "",
+				Width = 40,
+				AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+			};
+			guna1DataGridView1.Columns.Add(checkBoxColumn);
 
-			guna1DataGridView1.Columns[0].Width = 20;
-			guna1DataGridView1.Columns[1].Width = 170;
-			guna1DataGridView1.Columns[2].Width = 600;
-			guna1DataGridView1.Columns[3].Width = 80;
-			guna1DataGridView1.Columns[4].Width = 50;
+			// Then add your columns
+			guna1DataGridView1.Columns.Add("ID", "ID");
+			guna1DataGridView1.Columns.Add("Name", "Name");
+			guna1DataGridView1.Columns.Add("FileNameFormat", "File Name Format");
+			guna1DataGridView1.Columns.Add("GenerateBy", "Generate by");
+			guna1DataGridView1.Columns.Add("Type", "Type");
 
+			// Set widths
+			guna1DataGridView1.Columns["ID"].Width = 20;
+			guna1DataGridView1.Columns["Name"].Width = 170;
+			guna1DataGridView1.Columns["FileNameFormat"].Width = 600;
+			guna1DataGridView1.Columns["GenerateBy"].Width = 80;
+			guna1DataGridView1.Columns["Type"].Width = 50;
+
+			// Add Action button column
 			var imageColumn = new DataGridViewImageColumn
 			{
 				Name = "Action",
@@ -87,13 +100,16 @@ namespace GXIntegration_Levis.Views
 				Width = 50,
 				ImageLayout = DataGridViewImageCellLayout.Zoom
 			};
+			guna1DataGridView1.Columns.Add(imageColumn);
 
+			// Add events
 			guna1DataGridView1.CellContentClick += CellContentClick;
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
 
+			// Helper method for adding rows (checkbox defaults to unchecked)
 			void AddRow(string id, string name, string format, string generate, string type)
-				=> guna1DataGridView1.Rows.Add(id, name, format, generate, type);
+				=> guna1DataGridView1.Rows.Add(false, id, name, format, generate, type, Resources.icon_download);
 
 			AddRow("1", "PRICE", "[Region]_[CountryCode]_PRICING_[DaySequence]_[yyyymmddhhmmss]", "by Market", ".txt");
 			AddRow("2", "INVENTORY SNAPSHOTS", "[Region]_[CountryCode]_[StoreCode]_PSSTKR_[DaySequence]_[yyyymmddhhmmss]", "by Store", ".txt");
@@ -138,7 +154,16 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private async Task ProcessAllDownloads()
 		{
-			Logger.Log($"--------------------------------------------------------------------------");
+			var selectedRows = guna1DataGridView1.Rows
+				.Cast<DataGridViewRow>()
+				.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
+				.ToList();
+
+			if (!selectedRows.Any())
+			{
+				MessageBox.Show("Please select at least one process.");
+				return;
+			}
 
 			btnSendXml.Enabled = false;
 			Cursor.Current = Cursors.WaitCursor;
@@ -147,22 +172,44 @@ namespace GXIntegration_Levis.Views
 			{
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
-				Logger.Log("[OUTBOUND - EOD] [TXT] Start Downloading files on local dir...");
-				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores);
-				await OutboundPrice.Execute(repositories.PriceRepository, config);
-				await OutboundInTransit.Execute(repositories.InTransitRepository, config);
-				Logger.Log("[OUTBOUND - EOD] [TXT] Download process completed.");
+				foreach (var row in selectedRows)
+				{
+					string processName = row.Cells["Name"].Value.ToString();
+					Logger.Log($"[OUTBOUND - EOD] Processing {processName}...");
 
-				Logger.Log("[OUTBOUND - EOD] [XML] Starting Downloading files on local dir...");
-				await ExecuteStoreInventoryCountAsync();
-				await ExecuteAllAndSaveToSingleXmlAsync();
-				Logger.Log("[OUTBOUND - EOD] [XML] Download process completed.");
+					switch (processName.ToUpper())
+					{
+						case "PRICE":
+							await OutboundPrice.Execute(repositories.PriceRepository, config);
+							break;
+
+						case "INVENTORY SNAPSHOTS":
+							await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores);
+							break;
+
+						case "INTRANSIT":
+							await OutboundInTransit.Execute(repositories.InTransitRepository, config);
+							break;
+
+						case "INVENTORYCOUNT":
+							await ExecuteStoreInventoryCountAsync();
+							break;
+
+						case "POSLOG":
+							await ExecuteAllAndSaveToSingleXmlAsync();
+							break;
+
+						default:
+							Logger.Log($"No action defined for {processName}");
+							break;
+					}
+				}
 
 				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
 				await UploadToSftpAsync();
-				Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
+		
 
-				MessageBox.Show($"OUTBOUND EOD Processed Successfully.");
+				MessageBox.Show("OUTBOUND EOD Processed Successfully.");
 			}
 			finally
 			{
@@ -415,7 +462,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (!Directory.Exists(localDirectory))
 					{
-						Logger.Log($"Local directory does not exist: {localDirectory}");
+						Logger.Log($"[OUTBOUND - EOD] [SFTP] Local directory does not exist: {localDirectory}");
 						return;
 					}
 
@@ -426,7 +473,7 @@ namespace GXIntegration_Levis.Views
 
 					if (!files.Any())
 					{
-						Logger.Log("No outbound files found to upload.");
+						Logger.Log("[OUTBOUND - EOD] [SFTP] No outbound files found to upload.");
 						return;
 					}
 
@@ -465,6 +512,8 @@ namespace GXIntegration_Levis.Views
 
 						sftp.Disconnect();
 					}
+
+					Logger.Log("[OUTBOUND - EOD] [SFTP] Upload to SFTP process completed.");
 				}
 				catch (Exception ex)
 				{
@@ -522,6 +571,17 @@ namespace GXIntegration_Levis.Views
 			}
 
 			return directoryMap.ContainsKey("DEFAULT") ? directoryMap["DEFAULT"] : "/IN/OTHERS/";
+		}
+
+		private void HeaderCheckBox_CheckedChanged(object sender, EventArgs e)
+		{
+			bool isChecked = ((CheckBox)sender).Checked;
+
+			foreach (DataGridViewRow row in guna1DataGridView1.Rows)
+			{
+				DataGridViewCheckBoxCell chk = (DataGridViewCheckBoxCell)row.Cells["Select"];
+				chk.Value = isChecked;
+			}
 		}
 
 
