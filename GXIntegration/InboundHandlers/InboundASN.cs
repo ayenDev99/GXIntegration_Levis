@@ -4,8 +4,11 @@ using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Linq;
 
 
@@ -39,6 +42,25 @@ namespace GXIntegration_Levis.InboundHandlers
 					{
 						var documentNumber = group.Key;
 
+						var productCodes = group
+										.Where(row => row.ContainsKey("ProductCode")
+												   && row.ContainsKey("ColorCode")
+												   && row.ContainsKey("SizeCode")
+												   && row.ContainsKey("StoreCode"))
+										.Select(row => new ProductCodeInfo
+										{
+											ProductCode = row["ProductCode"],
+											ColorCode = row["ColorCode"],
+											SizeCode = row["SizeCode"],
+											StoreCode = row["StoreCode"]
+										})
+										.Where(item => !string.IsNullOrWhiteSpace(item.ProductCode)
+													&& !string.IsNullOrWhiteSpace(item.ColorCode)
+													&& !string.IsNullOrWhiteSpace(item.SizeCode)
+													&& !string.IsNullOrWhiteSpace(item.StoreCode))
+										.Distinct()
+										.ToList();
+
 						// Check if PO_NO already exist on DB.
 						var isPONumExist = await IsPONumExistAsync(repository, documentNumber);
 						if (isPONumExist)
@@ -46,50 +68,56 @@ namespace GXIntegration_Levis.InboundHandlers
 							Logger.Log($"[INBOUND - ASN]		PO already exists.");
 
 							continue;
-						} 
-						else
+						}
+
+						XDocument config = XDocument.Load("config.xml");
+						bool acceptPartial = bool.Parse(config.Descendants("AcceptPartial").First().Value);
+
+						Logger.Log($"[INBOUND - ASN]		AcceptPartial : {acceptPartial} ");
+						var validProducts = await GetValidPOItemsAsync(repository, productCodes, acceptPartial);
+						var invalidProducts = productCodes
+											   .Where(pc => !validProducts.Any(v =>
+												   v.ProductCode == pc.ProductCode &&
+												   v.ColorCode == pc.ColorCode &&
+												   v.SizeCode == pc.SizeCode &&
+												   v.StoreCode == pc.StoreCode))
+											   .ToList();
+
+						foreach (var invalid in invalidProducts)
 						{
-							var productCodes = group
-											.Where(row => row.ContainsKey("ProductCode")
-													   && row.ContainsKey("ColorCode")
-													   && row.ContainsKey("SizeCode")
-													   && row.ContainsKey("StoreCode"))
-											.Select(row => new ProductCodeInfo
-											{
-												ProductCode = row["ProductCode"],
-												ColorCode = row["ColorCode"],
-												SizeCode = row["SizeCode"],
-												StoreCode = row["StoreCode"]
-											})
-											.Where(item => !string.IsNullOrWhiteSpace(item.ProductCode)
-														&& !string.IsNullOrWhiteSpace(item.ColorCode)
-														&& !string.IsNullOrWhiteSpace(item.SizeCode)
-														&& !string.IsNullOrWhiteSpace(item.StoreCode))
-											.Distinct()
-											.ToList();
+							Logger.Log($"[INBOUND - ASN]		Invalid item detected for PO {documentNumber} → " +
+									   $"ProductCode={invalid.ProductCode}, Color={invalid.ColorCode}, Size={invalid.SizeCode}, Store={invalid.StoreCode}");
+						}
 
-							//Logger.Log($"[INBOUND - ASN] SKU Count: {productCodes.Count}\n" +
-							//		   string.Join("\n", productCodes.Select(productCode =>
-							//			   $"  ProductCode: {productCode.ProductCode} | ColorCode: {productCode.ColorCode} | SizeCode: {productCode.SizeCode}")));
+						if (!acceptPartial && validProducts.Count != productCodes.Count)
+						{
+							Logger.Log($"[INBOUND - ASN] Rejecting new PO {documentNumber}. Invalid items detected and partial not accepted.");
+							continue;
+						}
 
-							XDocument config = XDocument.Load("config.xml");
-							bool acceptPartial = bool.Parse(config.Descendants("AcceptPartial").First().Value);
+						if (!validProducts.Any())
+						{
+							Logger.Log($"[INBOUND - ASN] No valid items found. Skipping new PO {documentNumber} creation.");
+							continue;
+						}
 
-							Logger.Log($"[INBOUND - ASN]		AcceptPartial : {acceptPartial} ");
+						// ✅ Create new PO with only valid products
+						var po_sid = await createRpsPOAsync(repository, session, group.First());
 
-							// Check if PO ProductCode exist in DB
-							bool isPOItemsExist = await IsPOItemsExistAsync(repository, documentNumber, productCodes, acceptPartial);
-							if (isPOItemsExist)
+						foreach (var row in group)
+						{
+							if (validProducts.Any(v =>
+								v.ProductCode == row["ProductCode"] &&
+								v.ColorCode == row["ColorCode"] &&
+								v.SizeCode == row["SizeCode"] &&
+								v.StoreCode == row["StoreCode"]))
 							{
-								// Create PO
-								foreach (var row in group)
-								{
-									Logger.Log($"[INBOUND - ASN]		ROW DATA: {string.Join(", ", row.Select(kv => $"{kv.Key}={kv.Value}"))}");
-									await createRpsPOAsync(repository, session, row);
-								}
+								Logger.Log($"[INBOUND - ASN]		[CREATE] PO_ITEM");
+								Logger.Log($"[INBOUND - ASN]		Adding item to new PO {documentNumber}: " +
+									$"{string.Join(", ", row.Select(kv => $"{kv.Key}={kv.Value}"))}");
+								await createRpsPOItemsAsync(repository, session, row, po_sid);
 							}
 						}
-						continue;
 					}
 				}
 
@@ -119,15 +147,12 @@ namespace GXIntegration_Levis.InboundHandlers
 			return count > 0;
 		}
 		
-		private async Task<bool> IsPOItemsExistAsync(dynamic repository, string documentNumber, List<ProductCodeInfo> productCodes, bool isAcceptPartial)
+		private async Task<List<ProductCodeInfo>> GetValidPOItemsAsync(
+		dynamic repository,
+		List<ProductCodeInfo> productCodes,
+		bool isAcceptPartial)
 		{
-			if (string.IsNullOrWhiteSpace(documentNumber))
-			{
-				Logger.Log("[INBOUND - ASN]		Document number is null or empty.");
-				return false;
-			}
-
-			bool anyItemExists = false;
+			var validProducts = new List<ProductCodeInfo>();
 
 			foreach (var productCode in productCodes)
 			{
@@ -137,11 +162,11 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (prismStore == null || prismStore.Count == 0)
 				{
-					Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
-					return false;
+					Logger.Log($"[INBOUND - ASN] StoreCode : {storeCode} does not exist in Prism DB.");
+					if (!isAcceptPartial) return new List<ProductCodeInfo>(); // invalid → return empty
+					continue;
 				}
 
-				var ALU = productCode.ProductCode + productCode.SizeCode + productCode.ColorCode;
 				var filters = new Dictionary<string, object>
 				{
 					{ "DESCRIPTION1", productCode.ProductCode },
@@ -155,28 +180,23 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (resultList.Count > 0)
 				{
-					Logger.Log($"[INBOUND - ASN]			ProductCode: {productCode.ProductCode} | ColorCode: {productCode.ColorCode} | SizeCode: {productCode.SizeCode} IS EXIST on Prism DB");
-					anyItemExists = true;
+					Logger.Log($"[INBOUND - ASN]		ProductCode: {productCode.ProductCode} | " +
+							   $"ColorCode: {productCode.ColorCode} | SizeCode: {productCode.SizeCode} EXISTS in Prism DB");
+					validProducts.Add(productCode);
 				}
 				else
 				{
-					//Logger.Log($"[INBOUND - ASN]			Missing items detected. ProductCode: {productCode.ProductCode} IS EXIST on Prism DB");
-
-					if (isAcceptPartial)
+					if (!isAcceptPartial)
 					{
-						// If partial not accepted, missing even 1 productCode → no insert
-						Logger.Log($"[INBOUND - ASN]		Skipping PO insertion. Missing items detected. ALU : {ALU} and SBS : {sbs_sid} does NOT EXIST on Prism DB");
-
-						return false;
+						Logger.Log($"[INBOUND - ASN] Rejecting PO. " +
+								   $"ALU: {productCode.ProductCode}{productCode.SizeCode}{productCode.ColorCode} " +
+								   $"does NOT exist in Prism DB.");
+						return new List<ProductCodeInfo>(); // immediately stop
 					}
-
-					continue;
 				}
 			}
 
-			// If partial accepted, insert only if at least one product exists.
-			// If partial not accepted, at this point all productCodes exist.
-			return isAcceptPartial ? anyItemExists : true;
+			return validProducts;
 		}
 
 		// ***************************************************
@@ -203,13 +223,6 @@ namespace GXIntegration_Levis.InboundHandlers
 			var instruction1		= GlobalHelper.GetStringValue(item, "StoreOrderNumber");
 			string shippingDate		= GlobalHelper.FormatDateToIso8601(item?["ShipmentDate"]);
 			string orderDate		= GlobalHelper.FormatDateToIso8601(item?["OrderDate"]);
-			decimal? purchasePrice	= GlobalHelper.GetDecimalValue(item, "PurchasePrice", 4);
-			decimal? landedCost		= GlobalHelper.GetDecimalValue(item, "LandedCost", 4);
-			decimal? taxCost		= GlobalHelper.GetDecimalValue(item, "TaxtCost", 4);
-			var productCode			= GlobalHelper.GetStringValue(item, "ProductCode");
-			var sizeCode			= GlobalHelper.GetStringValue(item, "SizeCode");
-			var colorCode			= GlobalHelper.GetStringValue(item, "ColorCode");
-			var itemAlu				= productCode + sizeCode + colorCode;
 
 			// CREATE RPS.PO
 			var poPayload = new Dictionary<string, object>
@@ -226,28 +239,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				, ["instruction1"]		= instruction1 ?? string.Empty
 			};
 
-			// CREATE RPS.PO_ITEM
-			var prismInvnSbsItem = await repo.GetRpsInvnSbsItem("ALU", itemAlu);
-			var activeItems = new List<dynamic>();
-			foreach (var x in prismInvnSbsItem)
-				if (((IDictionary<string, object>)x)["SBS_SID"]?.ToString() == sbs_sid)
-					activeItems.Add(x);
-
-			var itemSid = ((IDictionary<string, object>)activeItems.First())["SID"]?.ToString();
-			if (!string.IsNullOrWhiteSpace(itemSid))
-			{
-				poPayload["poitem"] = new[]
-				{
-				new {
-					itemsid		= itemSid
-					, price     = purchasePrice ?? 0
-					, cost      = landedCost ?? 0
-					, taxamount = taxCost ?? 0
-					, ordqty    = orderQty ?? 0
-				}
-			};
-			}
-
 			var payload = new { data = new[] { poPayload } };
 			string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
@@ -262,7 +253,67 @@ namespace GXIntegration_Levis.InboundHandlers
 									, "POST"
 									, 1
 									);
-			return responseJson;	
+
+			var sid = JsonConvert.DeserializeObject<dynamic>(responseJson)?.data[0]?.sid;
+			Logger.Log($"[INBOUND - ASN]		PO SID: {sid}");
+
+			return sid;	
+		}
+
+		private async Task<string> createRpsPOItemsAsync(dynamic repo, string session, IDictionary<string, string> item, string poSid)
+		{
+			var storeCode = GlobalHelper.GetStringValue(item, "StoreCode");
+			var prismStore = await repo.GetRpsStore("ADDRESS4", storeCode);
+
+			if (prismStore == null || prismStore.Count == 0)
+			{
+				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
+				return null;
+			}
+
+			decimal? purchasePrice = GlobalHelper.GetDecimalValue(item, "PurchasePrice", 4);
+			decimal? landedCost = GlobalHelper.GetDecimalValue(item, "LandedCost", 4);
+			decimal? taxCost = GlobalHelper.GetDecimalValue(item, "TaxtCost", 4);
+			var productCode = GlobalHelper.GetStringValue(item, "ProductCode");
+			var sizeCode = GlobalHelper.GetStringValue(item, "SizeCode");
+			var colorCode = GlobalHelper.GetStringValue(item, "ColorCode");
+			var itemAlu = productCode + sizeCode + colorCode;
+			var sbs_sid = prismStore?.Count > 0 ? prismStore[0].SBS_SID.ToString() : null;
+			int? orderQty = GlobalHelper.GetIntValue(item, "Quantity");
+
+			// CREATE RPS.PO_ITEM
+			var prismInvnSbsItem = await repo.GetRpsInvnSbsItem("ALU", itemAlu);
+			var activeItems = new List<dynamic>();
+			foreach (var x in prismInvnSbsItem)
+				if (((IDictionary<string, object>)x)["SBS_SID"]?.ToString() == sbs_sid)
+					activeItems.Add(x);
+
+			var itemSid = ((IDictionary<string, object>)activeItems.First())["SID"]?.ToString();
+
+			var poItemPayload = new Dictionary<string, object>
+			{
+				["originapplication"] = "RProPrismWeb"
+				, ["itemsid"] = itemSid ?? string.Empty
+				, ["price"] = purchasePrice ?? 0
+				, ["cost"] = landedCost ?? 0
+				, ["taxamount"] = taxCost ?? 0
+				, ["ordqty"] = orderQty ?? 0
+			};
+			
+			var payload = new { data = new[] { poItemPayload } };
+			string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
+
+			// Call API to CREATE RPS.PO
+			string endpointCreate = $"/api/backoffice/purchaseorder/{poSid}/poitem";
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, endpointCreate
+									, json
+									, out bool issuccessful
+									, "POST"
+									, 1
+									);
+			return responseJson;
 		}
 
 		// ***************************************************
