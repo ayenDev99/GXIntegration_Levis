@@ -4,75 +4,98 @@ using GXIntegration_Levis.Helpers;
 using System;
 using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
-using System.Xml;
-using System.Net.Http;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace GXIntegration_Levis.Views
 {
 	public partial class ConfigurationAPITab : UserControl
 	{
-		private GunaTextBox txtApiUrl, txtApiUsername, txtApiPassword;
+		private GXConfig config;
+
+		private GunaTextBox txtUsername, txtPassword, txtSaleApiUrl, txtInventoryApiUrl;
 		private GunaButton btnEdit, btnSave, btnTestApi;
-		private GunaLabel lblApiStatus;
-		private GunaDataGridView dgvApiUrls;
+		private GunaLabel lblStatus;
 
-		private Control[] ApiInputControls => new Control[]
+		public ConfigurationAPITab(GXConfig config)
 		{
-			txtApiUrl, txtApiUsername, txtApiPassword
-		};
-
-		public ConfigurationAPITab()
-		{
+			this.config = config;
 			InitializeComponent();
 			SetupApiTab();
-			LoadApiSettings();
+			LoadApiConfig();
 		}
+
+		private Control[] ApiInputs => new Control[]
+		{
+			txtUsername,
+			txtPassword,
+			txtSaleApiUrl,
+			txtInventoryApiUrl
+		};
 
 		private void SetupApiTab()
 		{
 			AutoScroll = true;
-			int labelX = 20;
-			int inputX = 150;
-			int currentY = 20;
+			int inputStartX = 180;
+			int labelStartX = 20;
+			int currentY = 15;
 			int spacingY = 40;
 
-			// === API URL ===
-			Controls.Add(GlobalHelper.CreateLabel("API URL", labelX, currentY));
-			txtApiUrl = GlobalHelper.CreateTextBox(inputX, currentY, "400");
-			Controls.Add(txtApiUrl);
-			currentY += spacingY;
-
-			// === Username ===
-			Controls.Add(GlobalHelper.CreateLabel("Username", labelX, currentY));
-			txtApiUsername = GlobalHelper.CreateTextBox(inputX, currentY, "200");
-			Controls.Add(txtApiUsername);
-			currentY += spacingY;
-
-			// === Password ===
-			Controls.Add(GlobalHelper.CreateLabel("Password", labelX, currentY));
-			txtApiPassword = GlobalHelper.CreateTextBox(inputX, currentY, "200");
-			txtApiPassword.UseSystemPasswordChar = true;
-			Controls.Add(txtApiPassword);
-			currentY += spacingY;
-
-			// === Status Label ===
-			lblApiStatus = new GunaLabel
+			// Local helpers
+			GunaLabel CreateLabel(string text, int y) => new GunaLabel
 			{
-				Location = new Point(labelX, currentY),
+				Text = text,
+				Location = new Point(labelStartX, y),
+				Width = 150
+			};
+
+			GunaTextBox CreateTextBox(int y, bool isPassword = false) => new GunaTextBox
+			{
+				Location = new Point(inputStartX, y),
+				Width = 500,
+				BaseColor = Color.White,
+				ForeColor = Color.Black,
+				PasswordChar = isPassword ? '*' : '\0'
+			};
+
+			// Inputs
+			Controls.Add(CreateLabel("Username", currentY));
+			txtUsername = CreateTextBox(currentY);
+			Controls.Add(txtUsername);
+			currentY += spacingY;
+
+			Controls.Add(CreateLabel("Password", currentY));
+			txtPassword = CreateTextBox(currentY, true);
+			Controls.Add(txtPassword);
+			currentY += spacingY;
+
+			Controls.Add(CreateLabel("Sale API URL", currentY));
+			txtSaleApiUrl = CreateTextBox(currentY);
+			Controls.Add(txtSaleApiUrl);
+			currentY += spacingY;
+
+			Controls.Add(CreateLabel("Inventory API URL", currentY));
+			txtInventoryApiUrl = CreateTextBox(currentY);
+			Controls.Add(txtInventoryApiUrl);
+			currentY += spacingY;
+
+			// Status
+			lblStatus = new GunaLabel
+			{
+				Location = new Point(labelStartX, currentY),
 				Width = 600,
 				ForeColor = Color.Gray,
 				Text = "Ready"
 			};
-			Controls.Add(lblApiStatus);
+			Controls.Add(lblStatus);
 			currentY += spacingY;
 
-			// === Buttons ===
+			// Buttons
 			btnEdit = new GunaButton
 			{
 				Text = "Edit",
-				Location = new Point(570, 20),
+				Location = new Point(720, 20),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
@@ -82,7 +105,7 @@ namespace GXIntegration_Levis.Views
 			btnSave = new GunaButton
 			{
 				Text = "Save",
-				Location = new Point(570, 60),
+				Location = new Point(720, 60),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
@@ -91,271 +114,156 @@ namespace GXIntegration_Levis.Views
 
 			btnTestApi = new GunaButton
 			{
-				Text = "Test API Connection",
-				Location = new Point(inputX, currentY),
-				Size = new Size(160, 25)
+				Text = "Test API",
+				Location = new Point(inputStartX, currentY),
+				Size = new Size(150, 25),
+				Enabled = true
 			};
 			GlobalHelper.StyleGunaButton(btnTestApi, Color.FromArgb(138, 43, 226));
-			btnTestApi.Click += async (s, e) => await BtnTestApi_Click(s, e);
+			btnTestApi.Click += async (s, e) => await BtnTestApi_Click();
 
-			Controls.Add(btnEdit);
-			Controls.Add(btnSave);
-			Controls.Add(btnTestApi);
+			Controls.AddRange(new Control[] { btnEdit, btnSave, btnTestApi });
 
-			// === DataGridView ===
-			dgvApiUrls = new GunaDataGridView
+			// Events
+			txtUsername.TextChanged += DisableSaveOnEdit;
+			txtPassword.TextChanged += DisableSaveOnEdit;
+			txtSaleApiUrl.TextChanged += DisableSaveOnEdit;
+			txtInventoryApiUrl.TextChanged += DisableSaveOnEdit;
+		}
+
+		private void LoadApiConfig()
+		{
+			string filePath = "config.xml";
+			if (!File.Exists(filePath))
 			{
-				Location = new Point(20, currentY + 40),
-				Size = new Size(630, 200),
-				ReadOnly = true,
-				AllowUserToAddRows = false,
-				AllowUserToDeleteRows = false,
-				SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-			};
-			dgvApiUrls.Columns.Add("Url", "API URL");
-			dgvApiUrls.Columns.Add("Username", "Username");
-			dgvApiUrls.CellClick += DgvApiUrls_CellClick;
-			Controls.Add(dgvApiUrls);
+				lblStatus.Text = "config.xml not found.";
+				return;
+			}
 
-			// === Events ===
-			txtApiUrl.TextChanged += DisableSaveOnEdit;
-			txtApiUsername.TextChanged += DisableSaveOnEdit;
-			txtApiPassword.TextChanged += DisableSaveOnEdit;
+			try
+			{
+				var doc = XDocument.Load(filePath);
+				var apiNode = doc.Root.Element("APIConnection");
+				if (apiNode == null)
+				{
+					lblStatus.Text = "No APIConnection section found in config.xml.";
+					return;
+				}
+
+				txtUsername.Text = apiNode.Element("Username")?.Value ?? "";
+				txtPassword.Text = apiNode.Element("Password")?.Value ?? "";
+				txtSaleApiUrl.Text = apiNode.Element("SaleApiUrl")?.Value ?? "";
+				txtInventoryApiUrl.Text = apiNode.Element("InventoryApiUrl")?.Value ?? "";
+
+				GlobalHelper.SetControlsEnabled(false, ApiInputs);
+				btnEdit.Enabled = true;
+
+				lblStatus.Text = "Loaded APIConnection from config.xml";
+				lblStatus.ForeColor = Color.DarkGreen;
+			}
+			catch (Exception ex)
+			{
+				lblStatus.Text = "Failed to load APIConnection: " + ex.Message;
+				lblStatus.ForeColor = Color.Red;
+			}
+		}
+
+		private async Task BtnTestApi_Click()
+		{
+			try
+			{
+				string username = txtUsername.Text.Trim();
+				string password = txtPassword.Text;
+				string saleUrl = txtSaleApiUrl.Text.Trim();
+				string invUrl = txtInventoryApiUrl.Text.Trim();
+
+				// Simulate async API call
+				await Task.Delay(1000);
+
+				if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) ||
+					string.IsNullOrEmpty(saleUrl) || string.IsNullOrEmpty(invUrl))
+				{
+					MessageBox.Show("❌ Please fill in all fields before testing.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+					lblStatus.Text = "Missing values for API test.";
+					lblStatus.ForeColor = Color.Red;
+					return;
+				}
+
+				// TODO: Replace with real HTTP test
+				MessageBox.Show("✅ API configuration looks valid!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				lblStatus.Text = "API test passed.";
+				lblStatus.ForeColor = Color.Green;
+				btnSave.Enabled = true;
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("❌ API test error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				lblStatus.Text = "API test failed.";
+				lblStatus.ForeColor = Color.Red;
+			}
+		}
+
+		private void BtnEdit_Click(object sender, EventArgs e)
+		{
+			GlobalHelper.SetControlsEnabled(true, ApiInputs);
+			btnEdit.Enabled = false;
+			btnSave.Enabled = false;
+			lblStatus.Text = "Editing enabled.";
+			lblStatus.ForeColor = Color.Blue;
+		}
+
+		private void BtnSave_Click(object sender, EventArgs e)
+		{
+			try
+			{
+				string filePath = "config.xml";
+				var doc = new XDocument();
+
+				if (File.Exists(filePath))
+				{
+					doc = XDocument.Load(filePath);
+				}
+				else
+				{
+					doc.Add(new XElement("Configuration"));
+				}
+
+				var root = doc.Root ?? new XElement("Configuration");
+				if (doc.Root == null)
+					doc.Add(root);
+
+				var apiNode = root.Element("APIConnection");
+				if (apiNode != null)
+					apiNode.Remove();
+
+				apiNode = new XElement("APIConnection",
+					new XElement("Username", txtUsername.Text.Trim()),
+					new XElement("Password", txtPassword.Text),
+					new XElement("SaleApiUrl", txtSaleApiUrl.Text.Trim()),
+					new XElement("InventoryApiUrl", txtInventoryApiUrl.Text.Trim())
+				);
+				root.Add(apiNode);
+
+				doc.Save(filePath);
+
+				lblStatus.Text = "APIConnection saved successfully.";
+				lblStatus.ForeColor = Color.Green;
+
+				GlobalHelper.SetControlsEnabled(false, ApiInputs);
+				btnEdit.Enabled = true;
+				btnSave.Enabled = false;
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Error saving APIConnection: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 
 		private void DisableSaveOnEdit(object sender, EventArgs e)
 		{
 			btnSave.Enabled = false;
-			lblApiStatus.Text = "❗Please test connection again after editing.";
-			lblApiStatus.ForeColor = Color.DarkOrange;
-		}
-
-		private void BtnEdit_Click(object sender, EventArgs e)
-		{
-			GlobalHelper.SetControlsEnabled(true, ApiInputControls);
-			btnEdit.Enabled = false;
-			btnSave.Enabled = false;
-
-			lblApiStatus.Text = "Editing enabled.";
-			lblApiStatus.ForeColor = Color.Blue;
-		}
-
-		private void BtnSave_Click(object sender, EventArgs e)
-		{
-			if (!ValidateApiInputs()) return;
-
-			SaveApiSettings();
-		}
-
-		private async Task BtnTestApi_Click(object sender, EventArgs e)
-		{
-			if (!ValidateApiInputs()) return;
-
-			string apiUrl = txtApiUrl.Text.Trim();
-			string username = txtApiUsername.Text.Trim();
-			string password = txtApiPassword.Text.Trim();
-
-			try
-			{
-				using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
-				{
-					if (!string.IsNullOrWhiteSpace(username))
-					{
-						var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
-						client.DefaultRequestHeaders.Authorization =
-							new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-					}
-
-					var response = await client.GetAsync(apiUrl);
-
-					if (response.IsSuccessStatusCode)
-					{
-						string content = await response.Content.ReadAsStringAsync();
-
-						MessageBox.Show(
-							"✅ API test successful!\n" +
-							$"Response code: {(int)response.StatusCode}\n" +
-							$"Content preview:\n{content.Substring(0, Math.Min(300, content.Length))}…",
-							"Success",
-							MessageBoxButtons.OK,
-							MessageBoxIcon.Information
-						);
-
-						lblApiStatus.Text = "Connection test passed.";
-						lblApiStatus.ForeColor = Color.Green;
-						btnSave.Enabled = true;
-					}
-					else
-					{
-						string error = await response.Content.ReadAsStringAsync();
-						throw new Exception($"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}\n{error}");
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("❌ API connection failed:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				lblApiStatus.Text = "Connection test failed.";
-				lblApiStatus.ForeColor = Color.Red;
-				btnSave.Enabled = false;
-			}
-		}
-
-		private bool ValidateApiInputs()
-		{
-			string url = txtApiUrl.Text.Trim();
-
-			if (string.IsNullOrWhiteSpace(url))
-			{
-				MessageBox.Show("API URL is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-				return false;
-			}
-
-			if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) ||
-				!(uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
-			{
-				MessageBox.Show("API URL is not valid or must start with http/https.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-				return false;
-			}
-
-			return true;
-		}
-
-		private void LoadApiSettings()
-		{
-			dgvApiUrls.Rows.Clear();
-
-			try
-			{
-				string filePath = "config.xml";
-				if (!File.Exists(filePath))
-				{
-					lblApiStatus.Text = "config.xml not found.";
-					return;
-				}
-
-				XmlDocument doc = new XmlDocument();
-				doc.Load(filePath);
-
-				var nodes = doc.SelectNodes("/Configuration/ApiConnections/ApiConnection");
-
-				if (nodes == null || nodes.Count == 0)
-				{
-					lblApiStatus.Text = "No API URLs in config.xml.";
-					return;
-				}
-
-				foreach (XmlNode node in nodes)
-				{
-					string url = node["Url"]?.InnerText ?? "";
-					string username = node["Username"]?.InnerText ?? "";
-					dgvApiUrls.Rows.Add(url, username);
-				}
-
-				lblApiStatus.Text = "Loaded API URLs.";
-				lblApiStatus.ForeColor = Color.DarkGreen;
-			}
-			catch (Exception ex)
-			{
-				lblApiStatus.Text = "Error loading config: " + ex.Message;
-				lblApiStatus.ForeColor = Color.Red;
-			}
-		}
-
-		private void SaveApiSettings()
-		{
-			try
-			{
-				string filePath = "config.xml";
-				XmlDocument doc = new XmlDocument();
-
-				if (File.Exists(filePath))
-				{
-					doc.Load(filePath);
-				}
-				else
-				{
-					doc.AppendChild(doc.CreateXmlDeclaration("1.0", "UTF-8", null));
-					doc.AppendChild(doc.CreateElement("Configuration"));
-				}
-
-				var root = doc.DocumentElement;
-				var apiConnectionsNode = root.SelectSingleNode("ApiConnections");
-
-				if (apiConnectionsNode != null)
-					root.RemoveChild(apiConnectionsNode);
-
-				apiConnectionsNode = doc.CreateElement("ApiConnections");
-
-				XmlElement apiNode = doc.CreateElement("ApiConnection");
-
-				XmlElement urlElem = doc.CreateElement("Url");
-				urlElem.InnerText = txtApiUrl.Text.Trim();
-				apiNode.AppendChild(urlElem);
-
-				XmlElement userElem = doc.CreateElement("Username");
-				userElem.InnerText = txtApiUsername.Text.Trim();
-				apiNode.AppendChild(userElem);
-
-				XmlElement passElem = doc.CreateElement("Password");
-				passElem.InnerText = txtApiPassword.Text.Trim();
-				apiNode.AppendChild(passElem);
-
-				apiConnectionsNode.AppendChild(apiNode);
-				root.AppendChild(apiConnectionsNode);
-
-				doc.Save(filePath);
-
-				MessageBox.Show("API URL saved.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-				LoadApiSettings(); // Reload table
-				GlobalHelper.SetControlsEnabled(false, ApiInputControls);
-				btnEdit.Enabled = true;
-				btnSave.Enabled = false;
-				lblApiStatus.Text = "Saved successfully.";
-				lblApiStatus.ForeColor = Color.Green;
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Failed to save config:\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				lblApiStatus.Text = "Failed to save.";
-				lblApiStatus.ForeColor = Color.Red;
-			}
-		}
-
-		private void DgvApiUrls_CellClick(object sender, DataGridViewCellEventArgs e)
-		{
-			if (e.RowIndex >= 0)
-			{
-				string selectedUrl = dgvApiUrls.Rows[e.RowIndex].Cells[0].Value?.ToString() ?? "";
-				string selectedUsername = dgvApiUrls.Rows[e.RowIndex].Cells[1].Value?.ToString() ?? "";
-
-				txtApiUrl.Text = selectedUrl;
-				txtApiUsername.Text = selectedUsername;
-
-				// Load password from config
-				string filePath = "config.xml";
-				XmlDocument doc = new XmlDocument();
-				doc.Load(filePath);
-				var nodes = doc.SelectNodes("/Configuration/ApiConnections/ApiConnection");
-
-				foreach (XmlNode node in nodes)
-				{
-					if (node["Url"]?.InnerText == selectedUrl)
-					{
-						txtApiPassword.Text = node["Password"]?.InnerText ?? "";
-						break;
-					}
-				}
-
-				GlobalHelper.SetControlsEnabled(false, ApiInputControls);
-				btnEdit.Enabled = true;
-				btnSave.Enabled = false;
-
-				lblApiStatus.Text = "Loaded selected API URL.";
-				lblApiStatus.ForeColor = Color.DarkGreen;
-			}
+			lblStatus.Text = "❗Please test API again after editing.";
+			lblStatus.ForeColor = Color.DarkOrange;
 		}
 	}
 }

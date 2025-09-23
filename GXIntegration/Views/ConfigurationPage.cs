@@ -39,13 +39,13 @@ namespace GXIntegration_Levis.Views
 			tabPrism.Controls.Add(new ConfigurationPrismTab(config) { Dock = DockStyle.Fill });
 			tabDb.Controls.Add(new ConfigurationDBTab(config) { Dock = DockStyle.Fill });
 			tabSftp.Controls.Add(new ConfigurationSFTPTab(config) { Dock = DockStyle.Fill });
-			//tabApi.Controls.Add(new ConfigurationAPITab() { Dock = DockStyle.Fill });
+			tabApi.Controls.Add(new ConfigurationAPITab(config) { Dock = DockStyle.Fill });
 
 			this.Controls.Add(tabControl);
 			tabControl.TabPages.Add(tabPrism);
 			tabControl.TabPages.Add(tabDb);
 			tabControl.TabPages.Add(tabSftp);
-			//tabControl.TabPages.Add(tabApi);
+			tabControl.TabPages.Add(tabApi);
 		}
 
 
