@@ -38,9 +38,9 @@ namespace GXIntegration_Levis.Data.Access
 								, VOU.POST_DATE                         AS EndDateTime
 								, EMPLOYEE.EMPL_NAME			        AS OperatorID
 								, C.ALPHABETIC_CODE                     AS CurrencyCode
-								,'true'                                 AS InventoryMovementSuccess
-								,'AMA'	                                AS Region
-								, COUNTRY.COUNTRY_CODE                  AS Country
+								, 'true'                                AS InventoryMovementSuccess
+								, 'AMA'	                                AS Region
+								, 'PHP'									AS Country
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS AlternateStoreID
 								, VOU_REASON.NAME				        AS ReasonCode
@@ -51,7 +51,8 @@ namespace GXIntegration_Levis.Data.Access
 									ELSE 'PENDING' 
 									END							        AS DocumentStatus
 								, VOU.VOU_NO					        AS DocumentID
-								, ''					                AS OriginatorName
+								, (SELECT ADDRESS4 FROM RPS.STORE 
+									WHERE SID = VOU.STORE_SID)			AS OriginatorName
 								, 'SHIPPING_RTV_FROM_DAMAGED'           AS DocumentTypeDescription
 								, 'SHIPPING'                            AS DocumentType
 								, 'RTV_to_DC '                          AS DocumentSubType
@@ -60,8 +61,10 @@ namespace GXIntegration_Levis.Data.Access
 								, '1'							        AS ShipmentSequence
 								, VOU.POST_DATE			                AS ActualDeliveryDate
 								, VOU.POST_DATE			                AS ActualShipDate
-								, ''							        AS DestinationPartyID
-								, ''							        AS DestinationRetailLocationID
+								, (SELECT ADDRESS4 FROM RPS.STORE 
+									WHERE SID = VOU.STORE_SID)			AS DestinationPartyID
+								, (SELECT ADDRESS4 FROM RPS.STORE 
+									WHERE SID = VOU.STORE_SID)			AS DestinationRetailLocationID
 								, 'SHIPPED'				                AS ShipmentStatusCode
 								, ''				                    AS City
 								, (SELECT ZIP FROM RPS.STORE 
@@ -73,7 +76,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.DESCRIPTION2				        AS Description
 								, ISB.ITEM_SIZE							AS PTDIM1
 								, ISB.ATTRIBUTE							AS PTDIM2
-								, ''									AS PTStyle
+								, ISB.DESCRIPTION1						AS PTStyle
 								, VOU.PO_NO								AS PTControlNumber
 								, ISB.DESCRIPTION1						AS PTEAN
     
