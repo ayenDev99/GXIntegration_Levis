@@ -157,10 +157,10 @@ namespace GXIntegration_Levis.Views
 
 						string inboundDir = globalInbound.EnsureInboundDirectory();
 
-						//await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
-						//await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
+						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+						await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
+						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
 						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
 					
 

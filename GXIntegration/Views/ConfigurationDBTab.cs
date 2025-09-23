@@ -3,6 +3,7 @@ using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using Oracle.ManagedDataAccess.Client;
 using System;
+using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -15,8 +16,8 @@ namespace GXIntegration_Levis.Views
 		private GXConfig config;
 
 		private GunaButton btnEdit, btnSave, btnTestConnection;
-		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort;
-		private GunaComboBox cmbDbType;
+		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort, txtDbType;
+		//private GunaComboBox cmbDbType;
 		private GunaLabel lblDbStatus;
 
 		public ConfigurationDBTab(GXConfig config)
@@ -35,17 +36,18 @@ namespace GXIntegration_Levis.Views
 			txtPassword,
 			txtHost,
 			txtPort,
-			cmbDbType
+			txtDbType
 		};
 
 		private void SetDbInputValues(string dbType, string dbName, string user, string password, string host, string port)
 		{
-			cmbDbType.SelectedItem = dbType;
+			//cmbDbType.SelectedItem = dbType;
 			txtDbName.Text = dbName;
 			txtUser.Text = user;
 			txtPassword.Text = password;
 			txtHost.Text = host;
 			txtPort.Text = port;
+			txtDbType.Text = dbType;
 		}
 
 		// ***************************************************
@@ -97,24 +99,14 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(txtHost);
 			currentY += spacingY;
 
-
 			Controls.Add(CreateLabel("Port", currentY));
 			txtPort = CreateTextBox(currentY);
 			Controls.Add(txtPort);
 			currentY += spacingY;
 
 			Controls.Add(CreateLabel("Database Type", currentY));
-			cmbDbType = new GunaComboBox
-			{
-				Location = new Point(inputStartX, currentY),
-				Width = 200,
-				BaseColor = Color.White,
-				ForeColor = Color.Black,
-				DropDownStyle = ComboBoxStyle.DropDownList
-			};
-			cmbDbType.Items.AddRange(new string[] { "Oracle", "SQLite", "MySQL", "SQL Server" });
-			cmbDbType.SelectedIndex = 0;
-			Controls.Add(cmbDbType);
+			txtDbType = CreateTextBox(currentY);
+			Controls.Add(txtDbType);
 			currentY += spacingY;
 
 			// === Status Label ===
@@ -169,7 +161,7 @@ namespace GXIntegration_Levis.Views
 			txtPassword.TextChanged += DisableSaveOnEdit;
 			txtHost.TextChanged += DisableSaveOnEdit;
 			txtPort.TextChanged += DisableSaveOnEdit;
-			cmbDbType.SelectedIndexChanged += DisableSaveOnEdit;
+			txtDbType.TextChanged += DisableSaveOnEdit;
 		}
 		private void LoadMainDbConnection()
 		{
@@ -205,7 +197,7 @@ namespace GXIntegration_Levis.Views
 						pass = part.Substring("Password=".Length);
 					else if (part.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
 					{
-						string dataSource = part.Substring("Data Source=".Length); // e.g. //localhost:1521/RPROODS
+						string dataSource = part.Substring("Data Source=".Length);
 						string trimmed = dataSource.TrimStart('/');
 						string[] hostParts = trimmed.Split(new char[] { ':', '/' }, StringSplitOptions.RemoveEmptyEntries);
 						if (hostParts.Length >= 3)
@@ -286,7 +278,7 @@ namespace GXIntegration_Levis.Views
 				string password = txtPassword.Text;
 				string host = txtHost.Text.Trim();
 				string port = txtPort.Text.Trim();
-				string dbType = cmbDbType.SelectedItem?.ToString();
+				string dbType = txtDbType.Text.Trim();
 
 				if (dbType != "Oracle")
 				{
@@ -344,7 +336,7 @@ namespace GXIntegration_Levis.Views
 				string password = txtPassword.Text;
 				string host = txtHost.Text.Trim();
 				string port = txtPort.Text.Trim();
-				string dbType = cmbDbType.SelectedItem?.ToString() ?? "Oracle";
+				string dbType = txtDbType.Text.Trim();
 
 				if (string.IsNullOrEmpty(dbName))
 				{

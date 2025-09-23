@@ -11,7 +11,7 @@ namespace GXIntegration_Levis.Views
 		private static GXConfig config;
 
 		private TabControl tabControl;
-		private TabPage tabDb, tabSftp, tabApi;
+		private TabPage tabPrism, tabDb, tabSftp, tabApi;
 
 		public ConfigurationPage()
 		{
@@ -31,16 +31,18 @@ namespace GXIntegration_Levis.Views
 				Font = new Font("Segoe UI", 9)
 			};
 
+			tabPrism = new TabPage("Prism Connection");
 			tabDb = new TabPage("Prism Database");
 			tabSftp = new TabPage("SFTP");
 			tabApi = new TabPage("API");
 
-
+			tabPrism.Controls.Add(new ConfigurationPrismTab(config) { Dock = DockStyle.Fill });
 			tabDb.Controls.Add(new ConfigurationDBTab(config) { Dock = DockStyle.Fill });
 			tabSftp.Controls.Add(new ConfigurationSFTPTab(config) { Dock = DockStyle.Fill });
 			//tabApi.Controls.Add(new ConfigurationAPITab() { Dock = DockStyle.Fill });
 
 			this.Controls.Add(tabControl);
+			tabControl.TabPages.Add(tabPrism);
 			tabControl.TabPages.Add(tabDb);
 			tabControl.TabPages.Add(tabSftp);
 			//tabControl.TabPages.Add(tabApi);

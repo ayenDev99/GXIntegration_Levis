@@ -189,6 +189,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Views\ConfigurationPrismTab.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Views\ConfigurationPrismTab.Designer.cs">
+      <DependentUpon>ConfigurationPrismTab.cs</DependentUpon>
+    </Compile>
     <Compile Include="Views\ConfigurationSFTPTab.cs">
       <SubType>UserControl</SubType>
     </Compile>

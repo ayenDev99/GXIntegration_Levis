@@ -63,8 +63,8 @@ namespace GXIntegration_Levis.InboundHandlers
 											})
 											.Where(item => !string.IsNullOrWhiteSpace(item.ProductCode)
 														&& !string.IsNullOrWhiteSpace(item.ColorCode)
-														&& !string.IsNullOrWhiteSpace(item.StoreCode)
-														&& !string.IsNullOrWhiteSpace(item.ColorCode))
+														&& !string.IsNullOrWhiteSpace(item.SizeCode)
+														&& !string.IsNullOrWhiteSpace(item.StoreCode))
 											.Distinct()
 											.ToList();
 
