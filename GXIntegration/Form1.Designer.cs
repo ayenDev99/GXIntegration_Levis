@@ -61,6 +61,7 @@ namespace GXIntegration
 			this.gunaPanel3.SuspendLayout();
 			this.gunaPanel2.SuspendLayout();
 			this.gunaPanel9.SuspendLayout();
+			this.MainContentPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// Elipse_Form
@@ -315,26 +316,26 @@ namespace GXIntegration
 			// 
 			// Close_Button
 			// 
+			this.Close_Button.BackColor = System.Drawing.Color.White;
 			this.Close_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Close_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Close_Button.Image = global::GXIntegration_Levis.Properties.Resources.multiply_48px__;
 			this.Close_Button.ImageSize = new System.Drawing.Size(16, 16);
-			this.Close_Button.Location = new System.Drawing.Point(1070, 1);
+			this.Close_Button.Location = new System.Drawing.Point(869, 3);
 			this.Close_Button.Name = "Close_Button";
 			this.Close_Button.OnHoverImage = global::GXIntegration_Levis.Properties.Resources.multiply_48px_____;
 			this.Close_Button.OnHoverImageOffset = new System.Drawing.Point(0, 0);
-			this.Close_Button.Size = new System.Drawing.Size(35, 35);
+			this.Close_Button.Size = new System.Drawing.Size(28, 24);
 			this.Close_Button.TabIndex = 1;
 			this.Close_Button.Click += new System.EventHandler(this.Close_Button_Click);
 			// 
 			// MainContentPanel
 			// 
-			this.MainContentPanel.AutoSize = false;
 			this.MainContentPanel.BackColor = System.Drawing.Color.White;
-			this.MainContentPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.MainContentPanel.Controls.Add(this.Close_Button);
 			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
 			this.MainContentPanel.Name = "MainContentPanel";
-			this.MainContentPanel.Size = new System.Drawing.Size(1108, 494);
+			this.MainContentPanel.Size = new System.Drawing.Size(900, 494);
 			this.MainContentPanel.TabIndex = 3;
 			this.MainContentPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainContentPanel_Paint);
 			// 
@@ -343,8 +344,7 @@ namespace GXIntegration
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.BackColor = System.Drawing.Color.White;
-			this.ClientSize = new System.Drawing.Size(1108, 494);
-			this.Controls.Add(this.Close_Button);
+			this.ClientSize = new System.Drawing.Size(900, 494);
 			this.Controls.Add(this.SideBar);
 			this.Controls.Add(this.MainContentPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -360,8 +360,8 @@ namespace GXIntegration
 			this.gunaPanel3.ResumeLayout(false);
 			this.gunaPanel2.ResumeLayout(false);
 			this.gunaPanel9.ResumeLayout(false);
+			this.MainContentPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
-			this.PerformLayout();
 
 		}
 

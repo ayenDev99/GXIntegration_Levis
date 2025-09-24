@@ -80,12 +80,17 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
+		private void OutboundPage_Load(object sender, EventArgs e)
+		{
+
+		}
+
 		private void InitializeTabs()
 		{
 			tabControl = new TabControl
 			{
-				Location = new Point(225, 20),
-				Size = new Size(870, 450),
+				Location = new Point(225, 10),
+				Size = new Size(665, 440),
 				Font = new Font("Segoe UI", 9)
 			};
 

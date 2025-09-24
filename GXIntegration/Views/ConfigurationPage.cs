@@ -27,7 +27,7 @@ namespace GXIntegration_Levis.Views
 			tabControl = new TabControl
 			{
 				Location = new Point(225, 20),
-				Size = new Size(870, 450),
+				Size = new Size(660, 450),
 				Font = new Font("Segoe UI", 9)
 			};
 

@@ -44,7 +44,8 @@
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.testInventorySnapshot);
 			this.Name = "OutboundPage";
-			this.Size = new System.Drawing.Size(1108, 494);
+			this.Size = new System.Drawing.Size(900, 494);
+			this.Load += new System.EventHandler(this.OutboundPage_Load);
 			this.ResumeLayout(false);
 
 		}

@@ -8,6 +8,8 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace GXIntegration
 {
@@ -24,19 +26,12 @@ namespace GXIntegration
 
 		static GXConfig config;
 		private ConfigurationPage _configurationPage;
-		//private InventoryRepository _inventoryRepository;
-		//private InTransitRepository _inTransitRepository;
-		//private PriceRepository _priceRepository;
-		//private StoreGoodsRepository _storeGoodsRepository;
-		//private StoreGoodsReturnRepository _storeGoodsReturnRepository;
-		//private StoreSaleRepository _storeSaleRepository;
-		//private StoreReturnRepository _storeReturnRepository;
-		//private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
-		//private StoreShippingRepository _storeShippingRepository;
-		//private StoreReceivingRepository _storeReceivingRepository;
-
 		bool sideBar_Expand = true;
 		private Guna.UI.WinForms.GunaButton _activeButton = null;
+
+		private Panel topBar;
+		private System.Windows.Forms.Button closeButton;
+		private System.Windows.Forms.Button minimizeButton;
 
 		//public OutboundEODTab OutboundTab { get; private set; }
 
@@ -46,39 +41,26 @@ namespace GXIntegration
 			//InitialCreateDatabase();
 			InitialInboundPriceDatabase();
 			EnableDrag(SideBar);
+			InitializeTopBar();
 
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
 			MainContentPanel.Dock = DockStyle.Fill;
+		}
 
-			//_inventoryRepository = new InventoryRepository(config.MainDbConnection);
-			//_inTransitRepository = new InTransitRepository(config.MainDbConnection);
-			//_priceRepository = new PriceRepository(config.MainDbConnection);
-			//_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
-			//_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
-			//_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
-			//_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
-			//_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
-			//_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
-			//_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
+		private void InitializeTopBar()
+		{
+			topBar = new Panel();
+			topBar.Height = 30;
+			topBar.Dock = DockStyle.Top;
+			topBar.BackColor = Color.FromArgb(35, 40, 45);
+			this.Controls.Add(topBar);
 
-			//var repositories = new OutboundRepositories(
-			//_inventoryRepository,
-			//_inTransitRepository,
-			//_priceRepository,
-			//_storeGoodsRepository,
-			//_storeGoodsReturnRepository,
-			//_storeSaleRepository,
-			//_storeReturnRepository,
-			//_storeInventoryAdjustmentRepository,
-			//_storeShippingRepository,
-			//_storeReceivingRepository);
+			// Enable drag (so the user can still move the form by dragging top bar)
+			EnableDrag(topBar);
 
-
-			////Logger.Log(">>> Start FORM Process...");
-			//OutboundTab = new OutboundEODTab(config, repositories);
-			//this.Controls.Add(OutboundTab);
+			InitializeCustomButtons();
 		}
 
 		private void EnableDrag(Control control)
@@ -92,6 +74,63 @@ namespace GXIntegration
 				}
 			};
 		}
+
+		private void InitializeCustomButtons()
+		{
+			// Close button
+			closeButton = new System.Windows.Forms.Button();
+			closeButton.Text = "x";
+			closeButton.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+			closeButton.ForeColor = Color.White;
+			closeButton.BackColor = Color.Transparent;
+			closeButton.FlatStyle = FlatStyle.Flat;
+			closeButton.FlatAppearance.BorderSize = 0;
+			closeButton.Size = new Size(40, 40);
+			closeButton.Location = new Point(this.Width - 40, -5);
+			closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+			closeButton.Click += (s, e) => this.Close();
+
+			// Hover effects
+			closeButton.MouseEnter += (s, e) =>
+			{
+				closeButton.BackColor = Color.FromArgb(60, 60, 60);
+				closeButton.ForeColor = Color.White;
+			};
+			closeButton.MouseLeave += (s, e) =>
+			{
+				closeButton.BackColor = Color.Transparent;
+				closeButton.ForeColor = Color.White;
+			};
+
+			// Minimize button
+			minimizeButton = new System.Windows.Forms.Button();
+			minimizeButton.Text = "–"; // en dash looks like a minus
+			minimizeButton.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+			minimizeButton.ForeColor = Color.White;
+			minimizeButton.BackColor = Color.Transparent;
+			minimizeButton.FlatStyle = FlatStyle.Flat;
+			minimizeButton.FlatAppearance.BorderSize = 0;
+			minimizeButton.Size = new Size(40, 40);
+			minimizeButton.Location = new Point(this.Width - 75, -5);
+			minimizeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+			minimizeButton.Click += (s, e) => this.WindowState = FormWindowState.Minimized;
+
+			// Hover effects
+			minimizeButton.MouseEnter += (s, e) =>
+			{
+				minimizeButton.BackColor = Color.FromArgb(60, 60, 60);
+				minimizeButton.ForeColor = Color.White;
+			};
+			minimizeButton.MouseLeave += (s, e) =>
+			{
+				minimizeButton.BackColor = Color.Transparent;
+				minimizeButton.ForeColor = Color.White;
+			};
+
+			topBar.Controls.Add(closeButton);
+			topBar.Controls.Add(minimizeButton);
+		}
+
 
 		private void Form1_MouseDown(object sender, MouseEventArgs e)
 		{

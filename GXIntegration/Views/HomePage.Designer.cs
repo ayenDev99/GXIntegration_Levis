@@ -32,8 +32,7 @@ namespace GXIntegration_Levis.Views
 			this.labelTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(120)))));
 			this.labelTitle.Location = new System.Drawing.Point(340, 116);
 			this.labelTitle.Name = "labelTitle";
-			//this.labelTitle.Size = new System.Drawing.Size(372, 37);
-			this.labelTitle.AutoSize = true;
+			this.labelTitle.Size = new System.Drawing.Size(372, 37);
 			this.labelTitle.TabIndex = 0;
 			this.labelTitle.Text = "Retail Pro Prism and S4 ERP";
 			// 
@@ -54,7 +53,7 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(this.labelTitle);
 			this.Controls.Add(this.labelSubtitle);
 			this.Name = "HomePage";
-			this.Size = new System.Drawing.Size(800, 500);
+			this.Size = new System.Drawing.Size(900, 500);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

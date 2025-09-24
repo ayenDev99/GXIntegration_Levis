@@ -87,7 +87,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1 = new GunaDataGridView
 			{
 				Location = new Point(250, 50),
-				Size = new Size(820, 180),
+				Size = new Size(620, 180),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -115,15 +115,15 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.Columns[3].Width = 85;
 			guna1DataGridView1.Columns[4].Width = 85;
 
-			var imageColumn = new DataGridViewImageColumn
-			{
-				Name = "Action",
-				HeaderText = "Action",
-				Image = Resources.icon_download,
-				Width = 50,
-				ImageLayout = DataGridViewImageCellLayout.Zoom
-			};
-			guna1DataGridView1.Columns.Add(imageColumn);
+			//var imageColumn = new DataGridViewImageColumn
+			//{
+			//	Name = "Action",
+			//	HeaderText = "Action",
+			//	Image = Resources.icon_download,
+			//	Width = 50,
+			//	ImageLayout = DataGridViewImageCellLayout.Zoom
+			//};
+			//guna1DataGridView1.Columns.Add(imageColumn);
 
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;

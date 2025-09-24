@@ -51,7 +51,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1 = new GunaDataGridView
 			{
 				Location = new Point(20, 20),
-				Size = new Size(704, 140),
+				Size = new Size(520, 140),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -92,15 +92,15 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.Columns["Type"].Width = 50;
 
 			// Add Action button column
-			var imageColumn = new DataGridViewImageColumn
-			{
-				Name = "Action",
-				HeaderText = "Action",
-				Image = Resources.icon_download,
-				Width = 50,
-				ImageLayout = DataGridViewImageCellLayout.Zoom
-			};
-			guna1DataGridView1.Columns.Add(imageColumn);
+			//var imageColumn = new DataGridViewImageColumn
+			//{
+			//	Name = "Action",
+			//	HeaderText = "Action",
+			//	Image = Resources.icon_download,
+			//	Width = 50,
+			//	ImageLayout = DataGridViewImageCellLayout.Zoom
+			//};
+			//guna1DataGridView1.Columns.Add(imageColumn);
 
 			// Add events
 			guna1DataGridView1.CellContentClick += CellContentClick;
@@ -124,7 +124,7 @@ namespace GXIntegration_Levis.Views
 		{
 			btnSendXml = GlobalHelper.CreateButton(
 				text: "Download All and Send to SFTP",
-				location: new Point(20, 300),
+				location: new Point(20, 250),
 				clickAction: async () => await ProcessAllDownloads()
 			);
 

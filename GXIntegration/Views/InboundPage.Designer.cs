@@ -35,7 +35,7 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Name = "InboundPage";
-			this.Size = new System.Drawing.Size(805, 494);
+			this.Size = new System.Drawing.Size(900, 494);
 			this.ResumeLayout(false);
 
 		}
