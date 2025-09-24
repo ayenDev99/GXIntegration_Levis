@@ -33,7 +33,6 @@ namespace GXIntegration_Levis.Views
 			this.repositories = repositories;
 
 			InitializeComponent();
-			//InitializeDownloadActions();
 			InitializeGrid();
 			InitializeProcessAllButton();
 		}
@@ -77,37 +76,22 @@ namespace GXIntegration_Levis.Views
 			};
 			guna1DataGridView1.Columns.Add(checkBoxColumn);
 
-			// Then add your columns
 			guna1DataGridView1.Columns.Add("ID", "ID");
 			guna1DataGridView1.Columns.Add("Name", "Name");
 			guna1DataGridView1.Columns.Add("FileNameFormat", "File Name Format");
 			guna1DataGridView1.Columns.Add("GenerateBy", "Generate by");
 			guna1DataGridView1.Columns.Add("Type", "Type");
 
-			// Set widths
 			guna1DataGridView1.Columns["ID"].Width = 20;
 			guna1DataGridView1.Columns["Name"].Width = 170;
 			guna1DataGridView1.Columns["FileNameFormat"].Width = 600;
 			guna1DataGridView1.Columns["GenerateBy"].Width = 80;
 			guna1DataGridView1.Columns["Type"].Width = 50;
 
-			// Add Action button column
-			//var imageColumn = new DataGridViewImageColumn
-			//{
-			//	Name = "Action",
-			//	HeaderText = "Action",
-			//	Image = Resources.icon_download,
-			//	Width = 50,
-			//	ImageLayout = DataGridViewImageCellLayout.Zoom
-			//};
-			//guna1DataGridView1.Columns.Add(imageColumn);
-
-			// Add events
 			guna1DataGridView1.CellContentClick += CellContentClick;
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
 
-			// Helper method for adding rows (checkbox defaults to unchecked)
 			void AddRow(string id, string name, string format, string generate, string type)
 				=> guna1DataGridView1.Rows.Add(false, id, name, format, generate, type, Resources.icon_download);
 
@@ -130,24 +114,6 @@ namespace GXIntegration_Levis.Views
 
 			this.Controls.Add(btnSendXml);
 		}
-
-		//private void InitializeDownloadActions()
-		//{
-		//	downloadActions = new Dictionary<string, Func<Task>>(StringComparer.OrdinalIgnoreCase)
-		//	{
-		//		["ASN - RECEIVING"] = () => OutboundStoreGoods.Execute(repositories.StoreGoodsRepository, config, "xml"),
-		//		["RETURN_TO_DC"] = () => OutboundStoreGoodsReturn.Execute(repositories.StoreGoodsReturnRepository, config, "xml"),
-		//		["RETAIL_SALE"] = () => OutboundStoreSale.Execute(repositories.StoreSaleRepository, config, "xml"),
-		//		["RETURN_SALE"] = () => OutboundStoreReturn.Execute(repositories.StoreReturnRepository, config, "xml"),
-		//		["ADJUSTMENT"] = () => OutboundStoreInventoryAdjustment.Execute(repositories.StoreInventoryAdjustmentRepository, config, "xml"),
-		//		["STORE_TRANSFER - SHIPPING"] = () => OutboundStoreShipping.Execute(repositories.StoreShippingRepository, config, "xml"),
-		//		["STORE_TRANSFER - RECEIVING"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
-		//		["INVENTORY_COUNT"] = () => OutboundStoreReceiving.Execute(repositories.StoreReceivingRepository, config, "xml"),
-		//		["INVENTORY SNAPSHOTS"] = () => OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config),
-		//		["INTRANSIT"] = () => OutboundInTransit.Execute(repositories.InTransitRepository, config),
-		//		["PRICE"] = () => OutboundPrice.Execute(repositories.PriceRepository, config)
-		//	};
-		//}
 
 		// ***************************************************
 		// Process Methods

@@ -49,7 +49,7 @@ namespace GXIntegration_Levis.Views
 			// 
 			// HomePage
 			// 
-			this.BackColor = System.Drawing.Color.White;
+			this.BackColor = System.Drawing.SystemColors.Menu;
 			this.Controls.Add(this.labelTitle);
 			this.Controls.Add(this.labelSubtitle);
 			this.Name = "HomePage";

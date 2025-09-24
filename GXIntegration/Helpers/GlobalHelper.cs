@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace GXIntegration_Levis.Helpers
 {
@@ -305,6 +306,25 @@ namespace GXIntegration_Levis.Helpers
 
 				if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
 					result[key] = value;
+			}
+
+			return result;
+		}
+
+		public static Dictionary<string, string> LoadApiConnection()
+		{
+			var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			var doc = new System.Xml.XmlDocument();
+			doc.Load("config.xml");
+
+			var node = doc.SelectSingleNode("//APIConnection");
+			if (node != null)
+			{
+				foreach (System.Xml.XmlNode child in node.ChildNodes)
+				{
+					if (!string.IsNullOrWhiteSpace(child.Name) && !string.IsNullOrWhiteSpace(child.InnerText))
+						result[child.Name] = child.InnerText.Trim();
+				}
 			}
 
 			return result;
