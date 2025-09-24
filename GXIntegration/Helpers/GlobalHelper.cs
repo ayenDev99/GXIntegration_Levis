@@ -14,7 +14,10 @@ namespace GXIntegration_Levis.Helpers
 		private static readonly Dictionary<DataGridView, int> HoveredRowIndices = new Dictionary<DataGridView, int>();
 		public static async Task HandleDownloadClick(DataGridView dataGrid, Dictionary<string, Func<Task>> downloadActions, int rowIndex, int columnIndex, string actionColumnName)
 		{
-			if (rowIndex < 0 || columnIndex != dataGrid.Columns[actionColumnName].Index) return;
+			var column = dataGrid.Columns[actionColumnName];
+			if (rowIndex < 0 || column == null || columnIndex != column.Index)
+				return;
+
 
 			var name = dataGrid.Rows[rowIndex].Cells[1].Value.ToString();
 
