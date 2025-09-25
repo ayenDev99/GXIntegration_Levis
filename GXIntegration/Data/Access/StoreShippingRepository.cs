@@ -76,7 +76,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.ATTRIBUTE							AS PTDIM2
 								, ''									AS PTStyle
 								, VOU.PO_NO								AS PTControlNumber
-								, ISB.DESCRIPTION1						AS PTEAN
+								, ISB.UPC								AS PTEAN
                                 , VI.QTY 						        AS QuantityShipped
 								, VI.ITEM_POS							AS LineNumber
 								, ISB.DESCRIPTION2						AS Description

@@ -37,7 +37,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , CURRENCY.ALPHABETIC_CODE          AS CurrencyCode
                                 , 'true'                            AS InventoryMovementSuccess
                                 , 'AMA'	                            AS Region
-                                , COUNTRY.COUNTRY_CODE              AS Country
+                                , 'PHP'								AS Country
                                 , S.ADDRESS4			            AS AlternateStoreID
                                 , ''							    AS CountID
                                 , 'ADJUSTMENT'					    AS CountType
@@ -54,8 +54,8 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'ON_HAND'							AS InventoryBucketID
                                 , ISI.ITEM_SIZE						AS PTDIM1
 								, ISI.ATTRIBUTE						AS PTDIM2
-								, ''								AS PTStyle
-								, ISI.ALU							AS PTEAN                               
+								, ISI.DESCCRIPTION1					AS PTStyle
+								, ISI.UPC							AS PTEAN                               
 								, ADJ.SID							AS AdjSid
 							FROM
 								RPS.ADJUSTMENT ADJ

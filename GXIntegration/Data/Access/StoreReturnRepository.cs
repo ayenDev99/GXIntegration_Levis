@@ -75,7 +75,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , ISI.ITEM_SIZE						    AS PTDIM1
                                 , ISI.ATTRIBUTE						    AS PTDIM2
                                 , ''								    AS PTStyle
-                                , ISI.ALU							    AS PTEAN   
+                                , ISI.UPC							    AS PTEAN   
                                 , '10'                                  AS MerchHierarchyDivision
                                 , '00674'                               AS MerchHierarchyDepartment
                                 , '00054'                               AS MerchHierarchySubDepartment
