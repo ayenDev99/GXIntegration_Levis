@@ -171,8 +171,8 @@ namespace GXIntegration_Levis.Views
 					}
 				}
 
-				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				await UploadToSftpAsync();
+				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				//await UploadToSftpAsync();
 		
 
 				MessageBox.Show("OUTBOUND EOD Processed Successfully.");

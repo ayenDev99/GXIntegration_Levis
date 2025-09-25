@@ -30,7 +30,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC.WORKSTATION_NO				    AS WorkstationID
                                 , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TillID
                                 , DOC.DOC_NO				            AS SequenceNo
-				                , DOC.CREATED_DATETIME				    AS BusinessDayDate
+                                , DOC.CREATED_DATETIME				    AS BusinessDayDate
                                 , DOC.CREATED_DATETIME				    AS BeginDateTime
                                 , DOC.INVC_POST_DATE				    AS EndDateTime
                                 , DOC.CASHIER_LOGIN_NAME				AS OperatorID
@@ -38,13 +38,13 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'PAPER'                               AS ReceiptDeliveryMethod
                                 , 'true'                                AS InventoryMovementSuccess 
                                 , 'AMA'                                 AS Region
-                                , COUNTRY.COUNTRY_CODE                  AS Country
-				                , STORE.ADDRESS4			            AS AlternateStoreID
+                                , 'PHP'                                 AS Country
+                                , STORE.ADDRESS4			            AS AlternateStoreID
                                 , DOC.DOC_NO                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                     AS Barcode
                                 , DOC_ITEM.ITEM_POS                     AS LineItemSequenceNo
                                 , DOC_ITEM.ITEM_POS                     AS LineItemLineNumber
-				                , DOC_ITEM.CREATED_DATETIME             AS LineItemBeginDateTime
+                                , DOC_ITEM.CREATED_DATETIME             AS LineItemBeginDateTime
                                 , DOC_ITEM.POST_DATE                    AS LineItemEndDateTime
                                 , DOC_ITEM.ALU                          AS SaleItemID
                                 , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
@@ -57,20 +57,20 @@ namespace GXIntegration_Levis.Data.Access
                                 , '00054'                               AS SubDepartment
                                 , '02'                                  AS Class
                                 , DOC_ITEM.SCAN_UPC                     AS ScannedItemID
-                                , ''                                    AS GiftReceiptFlag
-                                , ''                                    AS AssociateID
-                                , ''                                    AS Percentage
-                                , ''                                    AS TaxAuthority
-                                , DOC.TRANSACTION_TOTAL_TAX_AMT         AS TaxableAmount
-                                , DOC.TRANSACTION_TOTAL_AMT             AS Amount
+                                , 'false'                               AS GiftReceiptFlag
+                                , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
+                                , '100'                                 AS Percentage
+                                , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
+                                , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
+                                , DOC_ITEM.DIP_PRICE                    AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
                                 , DOC.TAX_AREA_PERC                     AS RawTaxPercentage
                                 , ''                                    AS TaxGroupID
                                 , 'yes'                                 AS DealItemPercentOff
                                 , ISI.ITEM_SIZE						    AS PTDIM1
                                 , ISI.ATTRIBUTE						    AS PTDIM2
-                                , ''								    AS PTStyle
-                                , ISI.ALU							    AS PTEAN   
+                                , ISI.DESCRIPTION1						AS PTStyle
+                                , ISI.UPC							    AS PTEAN   
                                 , TENDER.TENDER_POS                     AS TenderSequenceNo
                                 , TENDER.TENDER_POS                     AS TenderLineNumber
                                 , TENDER.CREATED_DATETIME               AS TenderBeginDateTime
@@ -113,7 +113,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , ROUND(TO_NUMBER(TENDER.AMOUNT))       AS RoundedTotal
                                 , DOC.SID					            AS DocSid
                             FROM 
-				                RPS.DOCUMENT DOC
+                                RPS.DOCUMENT DOC
                             LEFT JOIN RPS.STORE			            ON STORE.SID = DOC.STORE_SID
                             LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM	ON DOC_ITEM.DOC_SID = DOC.SID
                             LEFT JOIN RPS.INVN_SBS_ITEM ISI         ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
@@ -123,10 +123,10 @@ namespace GXIntegration_Levis.Data.Access
                             LEFT JOIN RPS.SUBSIDIARY SBS	        ON SBS.SID = DOC.SUBSIDIARY_SID
                             LEFT JOIN RPS.COUNTRY 		            ON COUNTRY.SID = SBS.COUNTRY_SID
                             WHERE 
-				                DOC.STATUS = 4
-				                AND DOC.RECEIPT_TYPE IN (0,2)
-				                AND DOC.DOC_NO IS NOT NULL
-                                AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
+                                DOC.STATUS = 4
+                                AND DOC.RECEIPT_TYPE IN (0,2)
+                                AND DOC.DOC_NO IS NOT NULL
+                             
                                 AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
 				                STORE.STORE_NO ASC
