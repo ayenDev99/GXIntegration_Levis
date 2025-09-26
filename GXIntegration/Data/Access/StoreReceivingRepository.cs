@@ -26,81 +26,80 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 							SELECT
-								'1'										AS OrganizationID
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS RetailStoreID
-								, VOU.WORKSTATION						AS WorkstationID
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID) 
-									|| VOU.WORKSTATION					AS TillID
-								, VOU.VOU_NO							AS SequenceNo
-								, TRUNC(VOU.CREATED_DATETIME)			AS BusinessDayDate
-								, VOU.CREATED_DATETIME					AS BeginDateTime
-								, VOU.POST_DATE							AS EndDateTime
-								, EMPLOYEE.EMPL_NAME					AS OperatorID
-								, C.ALPHABETIC_CODE						AS CurrencyCode
-								, 'true'								AS InventoryMovementSuccess
-								, 'AMA'									AS Region
-								, COUNTRY.COUNTRY_CODE					AS Country
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS AlternateStoreId
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.SLIP_STORE_SID)		AS DestinationAlternateStoreId
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS OriginAlternateStoreId
-                        		, CASE WHEN VOU.STATUS = 4 
-									THEN 'CLOSED' 
-									ELSE 'PENDING' 
-									END									AS DocumentStatus
-								, VOU.VOU_NO							AS DocumentID
-								, ''									AS OriginatorID
-								, ''									AS OriginatorName
-								, 'SHIPPING_STORE_TRANSFER'				AS DocumentTypeDescription
-								, 'SHIPPING'							AS DocumentType
-								, 'STORE_TRANSFER'						AS DocumentSubType
-								, 'STORE'								AS RecordCreationType
-								, VOU.CREATED_DATETIME					AS CreationTimestamp
-								, VOU.MODIFIED_DATETIME					AS CompletionTimestamp
-								, VOU.MODIFIED_DATETIME					AS LastActivityTimestamp
-								, '1'									AS ShipmentSequence
-								, (SELECT UDF4_STRING FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS DestinationRetailLocationId
-								, ''									AS ShippingCarrier
-								, VOU.PO_NO								AS TrackingNumber
-								, ''									AS StatusCode
-								, VI.ITEM_POS							AS LineNumber
-								, ISB.DESCRIPTION1						AS ItemID
-								, ''									AS ActualCount
-								, ''									AS ExpectedCount
-								, ''									AS PostedCount
-								, VI.QTY								AS QuantityOrdered
-								, ''									AS QuantityReceived
-								, ISB.DESCRIPTION2						AS Description
-								, ISB.ITEM_SIZE							AS PTDIM1
-								, ISB.ATTRIBUTE							AS PTDIM2
-								, ''									AS PTStyle
-								, VOU.PO_NO								AS PTControlNumber
-								, ISB.UPC								AS PTEAN
-								, VOU.SID								AS VouSid				    
-								, ''									AS CartonNumber
-							FROM
-								RPS.VOUCHER VOU
-							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
-							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-							LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
-							LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
-							LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
-							LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
-							INNER JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
-							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
-							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
-							WHERE
-								TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
-								AND VOU.VOU_CLASS = 0
-								-- AND VOU.VOU_TYPE = 0
-								AND VOU.SLIP_FLAG = 1
-								AND VOU.STATUS = 4
-								AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 =  :StoreCode)
+								'1'										    AS ORGANIZATIONID
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS RETAILSTOREID
+								, VOU.WORKSTATION						    AS WORKSTATIONID
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)
+										|| VOU.WORKSTATION					AS TILLID
+								, VOU.VOU_NO							    AS SEQUENCENO
+								, TRUNC(VOU.CREATED_DATETIME)				AS BUSINESSDAYDATE
+								, VOU.CREATED_DATETIME						AS BEGINDATETIME
+								, VOU.POST_DATE								AS ENDDATETIME
+								, EMPLOYEE.EMPL_NAME					    AS OPERATORID
+								, C.ALPHABETIC_CODE						    AS CURRENCYCODE
+								, 'true'									AS INVENTORYMOVEMENTSUCCESS
+								, 'AMA'										AS REGION
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS ALTERNATESTOREID
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS DESTINATIONALTERNATESTOREID
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS ORIGINALTERNATESTOREID
+								, 'CLOSED'									AS DOCUMENTSTATUS
+								, VOU.VOU_NO  								AS DOCUMENTID
+								, (SELECT ADDRESS4 FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS ORIGINATORID
+								, (SELECT STORE_NAME FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS ORIGINATORNAME
+								, 'SHIPPING_STORE_TRANSFER'					AS DOCUMENTTYPEDESCRIPTION
+								, 'SHIPPING'							    AS DOCUMENTTYPE
+								, 'STORE_TRANSFER'							AS DOCUMENTSUBTYPE
+								, 'STORE'								    AS RECORDCREATIONTYPE
+								, VOU.CREATED_DATETIME						AS CREATIONTIMESTAMP
+								, VOU.MODIFIED_DATETIME						AS COMPLETIONTIMESTAMP
+								, VOU.MODIFIED_DATETIME						AS LASTACTIVITYTIMESTAMP
+								, '1'										AS SHIPMENTSEQUENCE
+								, VOU.CREATED_DATETIME						AS ACTUALDELIVERYDATE                                
+								, VOU.CREATED_DATETIME						AS ACTUALSHIPDATE                                
+								, (SELECT UDF4_STRING FROM RPS.STORE
+										WHERE SID = VOU.STORE_SID)			AS DESTINATIONRETAILLOCATIONID
+								, ''										AS SHIPPINGCARRIER
+								, VOU.TRACKING_NO							AS TRACKINGNUMBER
+								, 'SHIPPED'									AS STATUSCODE
+								, ''										AS POSTALCODE
+								, 'PHP'										AS COUNTRY
+								, ISB.DESCRIPTION1							AS ITEMID
+								, ISB.ITEM_SIZE								AS PTDIM1
+								, ISB.ATTRIBUTE								AS PTDIM2
+								, ISB.DESCRIPTION1							AS PTSTYLE
+								, VOU.VOU_NO								AS PTCONTROLNUMBER
+								, ISB.UPC									AS PTEAN
+								, VI.QTY 									AS QUANTITYSHIPPED
+								, VI.ITEM_POS								AS LINENUMBER
+								, ISB.DESCRIPTION2							AS DESCRIPTION
+								FROM
+									RPS.VOUCHER VOU
+								LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
+								LEFT JOIN RPS.STORE	S					ON S.SID = VOU.STORE_SID
+								LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
+								LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
+								LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
+								LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
+								LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
+								LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
+								LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
+								LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
+								WHERE
+									VOU.VOU_CLASS = 0
+									AND VOU.VOU_TYPE = 0
+									AND VOU.SLIP_FLAG = 0
+									AND VOU.STATUS = 4						
+									AND TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
+									AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 =  :StoreCode)
+								ORDER BY 
+									VOU.POST_DATE DESC
 					";
 
 
