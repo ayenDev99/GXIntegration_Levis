@@ -96,7 +96,7 @@ namespace GXIntegration_Levis.Data.Access
 									VOU.VOU_CLASS = 0
 									AND VOU.SLIP_FLAG = 1
 									AND VOU.STATUS = 4						
-									AND VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+									AND TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
 									AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
 

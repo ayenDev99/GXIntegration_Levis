@@ -54,7 +54,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'ON_HAND'							AS InventoryBucketID
                                 , ISI.ITEM_SIZE						AS PTDIM1
 								, ISI.ATTRIBUTE						AS PTDIM2
-								, ISI.DESCCRIPTION1					AS PTStyle
+								, ISI.DESCRIPTION1					AS PTStyle
 								, ISI.UPC							AS PTEAN                               
 								, ADJ.SID							AS AdjSid
 							FROM

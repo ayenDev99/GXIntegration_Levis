@@ -147,7 +147,7 @@ namespace GXIntegration_Levis.Data.Access
                                 DOC.STATUS = 4
                                 AND DOC.RECEIPT_TYPE = 1
                                 AND DOC.DOC_NO IS NOT NULL
-                                AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
+                                AND TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate
                                 AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
                                 STORE.STORE_NO ASC

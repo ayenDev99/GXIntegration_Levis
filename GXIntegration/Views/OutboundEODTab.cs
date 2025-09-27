@@ -171,9 +171,9 @@ namespace GXIntegration_Levis.Views
 					}
 				}
 
-				//Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
-				//await UploadToSftpAsync();
-		
+				Logger.Log("[OUTBOUND - EOD] [SFTP] Start Uploading generated files to SFTP...");
+				await UploadToSftpAsync();
+
 
 				MessageBox.Show("OUTBOUND EOD Processed Successfully.");
 			}
@@ -187,7 +187,8 @@ namespace GXIntegration_Levis.Views
 		private async Task ExecuteAllAndSaveToSingleXmlAsync(CancellationToken cancellationToken = default)
 		{
 			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-			var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+			var fromDate = DateTime.Today;
+			var toDate = DateTime.Today;
 			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 			string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
 
@@ -368,7 +369,8 @@ namespace GXIntegration_Levis.Views
 
 		private async Task ExecuteStoreInventoryCountAsync()
 		{
-			var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+			var fromDate = DateTime.Today;
+			var toDate = DateTime.Today;
 			var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
 			Logger.Log($"[OUTBOUND - EOD] [XML] Start Generating INVENTORYCOUNT...");
