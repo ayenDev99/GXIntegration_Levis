@@ -23,11 +23,12 @@ namespace GXIntegration_Levis.OutboundHandlers
 				{
 					string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+					var fromDate = DateTime.Today;
+					var toDate = DateTime.Today;
 					var items = await repository.GetInventoryAsync(fromDate, toDate, storeCode);
 					if (!items.Any())
 					{
-						Logger.Log("[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today.");
+						Logger.Log($"[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}");
 						return;
 					}
 

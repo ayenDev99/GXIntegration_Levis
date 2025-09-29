@@ -1,13 +1,14 @@
 ﻿using Dapper;
 using GXIntegration;
+using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using GXIntegration_Levis.Model;
 using System.Threading.Tasks;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -75,9 +76,9 @@ namespace GXIntegration_Levis.Data.Access
 						WHERE 
 							ISI.active = 1
 							AND S.ADDRESS4 = :StoreCode
-							AND TRUNC(ISI.POST_DATE) BETWEEN :FromDate AND :ToDate
 					";
 
+					//AND TRUNC(ISI.POST_DATE) BETWEEN: FromDate AND :ToDate
 					//TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-09-30'
 
 					var parameters = new

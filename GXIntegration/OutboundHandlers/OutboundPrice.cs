@@ -18,7 +18,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var fromDate = DateTime.Today;
+				var toDate = DateTime.Today;
 				var items = await repository.GetPriceAsync(fromDate, toDate);
 				if (!items.Any())
 				{

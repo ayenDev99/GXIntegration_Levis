@@ -19,7 +19,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var fromDate = DateTime.Today;
+				var toDate = DateTime.Today;
 				var items = await repository.GetInventoryAsync(fromDate, toDate);
 				string countryCode = config.CountryCode ?? "XX";
 				if (!items.Any())
