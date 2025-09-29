@@ -28,7 +28,7 @@ namespace GXIntegration_Levis.Data.Access
 								'1'								AS OrganizationID
 								, STORE.ADDRESS4				AS RetailStoreID
 								, ''							AS WorkstationID
-								,  STORE.ADDRESS4				AS TillID
+								, STORE.ADDRESS4				AS TillID
 								, PI_SHEET.NAME					AS SequenceNo
 								, PI_SHEET.CREATED_DATETIME		AS BusinessDayDate
 								, PI_SHEET.CREATED_DATETIME		AS BeginDateTime
@@ -62,10 +62,9 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.COUNTRY			ON COUNTRY.SID = SUBSIDIARY.COUNTRY_SID
 							WHERE 
 								TRUNC(PI_SHEET.POST_DATE) BETWEEN :FromDate AND :ToDate
-								AND PI_SHEET.ACTIVE = 1
 								AND STORE.ADDRESS4 = :StoreCode
 					";
-
+					//AND PI_SHEET.ACTIVE = 1
 					//FETCH FIRST 1 ROWS ONLY
 					//AND PI_SHEET.POST_DATE BETWEEN :FromDate AND :ToDate
 

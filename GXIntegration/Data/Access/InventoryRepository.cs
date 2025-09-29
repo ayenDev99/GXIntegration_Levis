@@ -25,9 +25,7 @@ namespace GXIntegration_Levis.Data.Access
 			{
 				try
 				{
-
 					await connection.OpenAsync();
-
 					string sql = @"
 						SELECT 
 							'PHP'						        AS CurrencyId
@@ -48,12 +46,13 @@ namespace GXIntegration_Levis.Data.Access
 							, ISI.UPC							AS ManufactureUpc
 							, ISI.UDF5_STRING					AS Division
 							, ISI.SID
-						FROM rps.INVN_SBS_ITEM ISI
-						LEFT JOIN rps.INVN_SBS_ITEM_QTY ISIQ ON ISIQ.INVN_SBS_ITEM_SID = ISI.SID
-						LEFT JOIN rps.STORE S ON S.SID = ISIQ.STORE_SID
-						LEFT JOIN rps.CURRENCY C ON C.SID = ISI.CURRENCY_SID
-						LEFT JOIN rps.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
-						LEFT JOIN rps.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
+						FROM 
+							RPS.INVN_SBS_ITEM ISI
+						LEFT JOIN RPS.INVN_SBS_ITEM_QTY ISIQ ON ISIQ.INVN_SBS_ITEM_SID = ISI.SID
+						LEFT JOIN RPS.STORE S ON S.SID = ISIQ.STORE_SID
+						LEFT JOIN RPS.CURRENCY C ON C.SID = ISI.CURRENCY_SID
+						LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = ISI.SBS_SID
+						LEFT JOIN RPS.COUNTRY CT ON CT.SID = SBS.COUNTRY_SID
 						LEFT JOIN RPS.INVN_SBS_PRICE ISP ON ISP.INVN_SBS_ITEM_SID = ISI.SID
 						LEFT JOIN
 						  (SELECT ITEM_SID, DT , SBS_SID, STORE_SID
@@ -75,9 +74,8 @@ namespace GXIntegration_Levis.Data.Access
 						ON ISI.SID = LM.ITEM_SID AND ISIQ.STORE_SID = LM.STORE_SID 
 						WHERE 
 							ISI.active = 1
-							AND S.ACTIVE = 1
 							AND S.ADDRESS4 = :StoreCode
-							AND ISI.POST_DATE BETWEEN :FromDate AND :ToDate
+							AND TRUNC(ISI.POST_DATE) BETWEEN :FromDate AND :ToDate
 					";
 
 					//TRUNC(ISI.POST_DATE) BETWEEN DATE '2025-07-01' AND DATE '2025-09-30'

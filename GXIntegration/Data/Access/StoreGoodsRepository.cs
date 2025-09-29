@@ -19,11 +19,6 @@ namespace GXIntegration_Levis.Data.Access
 		}
 		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date, string storeCode)
 		{
-			//var fromDateLiteral = GlobalHelper.ToOracleTimestampTZLiteral(from_date);
-			//var toDateLiteral = GlobalHelper.ToOracleTimestampTZLiteral(to_date);
-						//Logger.Log("From Date: " + fromDateLiteral);
-			//Logger.Log("To Date: " + toDateLiteral);
-
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
@@ -104,8 +99,6 @@ namespace GXIntegration_Levis.Data.Access
 								AND VOU.STATUS = 4
                                 AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
-
-					// TO CONFIRM STATUS
 
 					//FETCH FIRST 1 ROWS ONLY
 					// TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'

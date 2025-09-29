@@ -46,9 +46,9 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.REGION ON RPS.REGION.SID = RPS.REGION_SUBSIDIARY.REGION_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = RPS.VOU_ITEM.ITEM_SID
 						WHERE 
-							VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+							TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
 							AND VOU.STATUS IN (1, 3)
-							AND ISI.active = 1
+							AND ISI.ACTIVE = 1
 							AND STORE.ACTIVE = 1
 					";
 

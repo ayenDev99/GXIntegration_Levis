@@ -72,7 +72,7 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.EMPLOYEE EMP			ON EMP.SID = ADJ.CLERK_SID
 							LEFT JOIN RPS.WORKSTATION WS		ON WS.SID = ADJ.WORKSTATION_SID
 							WHERE
-								ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
+								TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate
 								AND ADJ.ADJ_TYPE = 0
 								AND S.ADDRESS4 = :StoreCode
 							ORDER BY 

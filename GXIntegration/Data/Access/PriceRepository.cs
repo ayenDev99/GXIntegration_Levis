@@ -34,7 +34,7 @@ namespace GXIntegration_Levis.Data.Access
 						  , PLVL.PRICE_LVL_NAME		AS PriceLevel
 						  , 'REG'					AS ConditionType
 						  , ADJ.CREATED_DATETIME	AS PriceStartDate
-						  , ''						AS PriceEndDate
+						  , ADJ.POST_DATE			AS PriceEndDate
 						  , ADJ_ITEM.ADJ_VALUE		AS Price
 						  , 'REG'					AS Flag
 						FROM
@@ -43,7 +43,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = RPS.ADJ_ITEM.ITEM_SID
 						LEFT JOIN RPS.PRICE_LEVEL PLVL		ON PLVL.SID = ADJ.PRICE_LVL_SID
 						WHERE
-							ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
+							TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate
 							AND ADJ.ADJ_TYPE = 1
 						";
 
