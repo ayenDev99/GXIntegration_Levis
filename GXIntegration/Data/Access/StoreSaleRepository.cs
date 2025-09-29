@@ -105,6 +105,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'false'                               AS ChangeFlag
                                 , CASE 
                                     WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
+                                    WHEN TENDER.TENDER_TYPE = 0 THEN 'CASH'
                                     ELSE ''
                                     END                                 AS TenderID
                                 , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency 

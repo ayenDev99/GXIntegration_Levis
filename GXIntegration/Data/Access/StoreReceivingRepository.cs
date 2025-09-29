@@ -63,22 +63,30 @@ namespace GXIntegration_Levis.Data.Access
 								, '1'										AS SHIPMENTSEQUENCE
 								, VOU.CREATED_DATETIME						AS ACTUALDELIVERYDATE                                
 								, VOU.CREATED_DATETIME						AS ACTUALSHIPDATE                                
-								, (SELECT UDF4_STRING FROM RPS.STORE
+								, (SELECT ADDRESS4 FROM RPS.STORE
 										WHERE SID = VOU.STORE_SID)			AS DESTINATIONRETAILLOCATIONID
 								, ''										AS SHIPPINGCARRIER
 								, VOU.TRACKING_NO							AS TRACKINGNUMBER
 								, 'SHIPPED'									AS STATUSCODE
 								, ''										AS POSTALCODE
-								, 'PHP'										AS COUNTRY
+								, VI.ITEM_POS								AS LINENUMBER
 								, ISB.DESCRIPTION1							AS ITEMID
+
+								, VI.QTY									AS ActualCount
+								, VI.ORIG_QTY								AS ExpectedCount
+								, VI.QTY									AS PostedCount
+								, VI.ORIG_QTY								AS QuantityOrdered
+								, VI.QTY									AS QuantityReceived
+								, ''										AS CartonNumber
+
+								, ISB.DESCRIPTION2							AS DESCRIPTION
 								, ISB.ITEM_SIZE								AS PTDIM1
 								, ISB.ATTRIBUTE								AS PTDIM2
 								, ISB.DESCRIPTION1							AS PTSTYLE
 								, VOU.VOU_NO								AS PTCONTROLNUMBER
+								, 'PHP'										AS COUNTRY
 								, ISB.UPC									AS PTEAN
-								, VI.QTY 									AS QUANTITYSHIPPED
-								, VI.ITEM_POS								AS LINENUMBER
-								, ISB.DESCRIPTION2							AS DESCRIPTION
+								
 								FROM
 									RPS.VOUCHER VOU
 								LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID

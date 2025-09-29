@@ -163,8 +163,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 							GlobalOutbound.WriteCDataElement(writer, "ActualCount", lineItem.ActualCount);
 							GlobalOutbound.WriteCDataElement(writer, "ExpectedCount", lineItem.ExpectedCount);
 							GlobalOutbound.WriteCDataElement(writer, "PostedCount", lineItem.PostedCount);
-							writer.WriteElementString("RecordCreationType", "");
-							writer.WriteElementString("StatusCode", "");
+							GlobalOutbound.WriteCDataElement(writer, "RecordCreationType", item.RecordCreationType);
+							GlobalOutbound.WriteCDataElement(writer, "StatusCode", item.StatusCode);
 							GlobalOutbound.WriteCDataElement(writer, "QuantityOrdered", lineItem.QuantityOrdered);
 							GlobalOutbound.WriteCDataElement(writer, "QuantityReceived", lineItem.QuantityReceived);
 							GlobalOutbound.WriteCDataElement(writer, "CartonNumber", lineItem.CartonNumber);

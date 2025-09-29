@@ -63,7 +63,7 @@ namespace GXIntegration_Levis.Data.Access
 								, '1'												AS SHIPMENTSEQUENCE
 								, SLIP.CREATED_DATETIME								AS ACTUALDELIVERYDATE                                
 								, SLIP.CREATED_DATETIME								AS ACTUALSHIPDATE                                
-								, (SELECT UDF4_STRING FROM RPS.STORE 
+								, (SELECT ADDRESS4 FROM RPS.STORE 
 										WHERE SID = SLIP.IN_STORE_SID)				AS DESTINATIONRETAILLOCATIONID
 								, ''												AS SHIPPINGCARRIER
 								, SLIP.TRACKING_NO									AS TRACKINGNUMBER
