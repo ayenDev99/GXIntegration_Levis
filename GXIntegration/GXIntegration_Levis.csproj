@@ -139,7 +139,6 @@
     <Compile Include="Data\Access\PrismRepository.cs" />
     <Compile Include="Data\Access\StoreInventoryCountRepository.cs" />
     <Compile Include="Helpers\GlobalHelper.cs" />
-    <Compile Include="Helpers\TimeHelper.cs" />
     <Compile Include="InboundHandlers\GlobalInbound.cs" />
     <Compile Include="InboundHandlers\InboundASN.cs" />
     <Compile Include="InboundHandlers\InboundEmployee.cs" />

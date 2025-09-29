@@ -209,7 +209,7 @@ namespace GXIntegration_Levis.Views
 				try
 				{
 					// Fetch data per store
-					var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode);
+					var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode, "EOD");
 					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
 					var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate, storeCode);
 					var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate, storeCode);

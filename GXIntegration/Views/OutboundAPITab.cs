@@ -9,9 +9,10 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Linq;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GXIntegration_Levis.Views
 {
@@ -28,6 +29,7 @@ namespace GXIntegration_Levis.Views
 			_config = config;
 			_repositories = repositories;
 
+			InitializeComponent();
 			InitializeControls();
 			InitializeGrid();
 		}
@@ -117,16 +119,19 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private async Task SendXmlFilesToApi()
 		{
-			// ✅ Commit any pending edits before reading checkbox values
 			guna1DataGridView1.EndEdit();
 
 			var apiConfig = GlobalHelper.LoadApiConnection();
-			string username = apiConfig["Username"];
-			string password = apiConfig["Password"];
-			string saleApiUrl = apiConfig["SaleApiUrl"];
-			string inventoryApiUrl = apiConfig["InventoryApiUrl"];
 
-			// ✅ Safer checkbox selection
+			if (!apiConfig.TryGetValue("Username", out string username) ||
+				!apiConfig.TryGetValue("Password", out string password) ||
+				!apiConfig.TryGetValue("SaleApiUrl", out string saleApiUrl) ||
+				!apiConfig.TryGetValue("InventoryApiUrl", out string inventoryApiUrl))
+			{
+				MessageBox.Show("API configuration is missing. Please navigate to the 'Configuration API' tab to set up the API connection.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
 			var selectedDocTypes = guna1DataGridView1.Rows
 								.Cast<DataGridViewRow>()
 								.Where(r => r.Cells["Select"].Value is bool b && b)
@@ -154,7 +159,11 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				var timeRange = TimeHelper.GetPhilippineTimeRange(60);
+				var config = GXConfig.Load("config.xml"); // make sure path is correct
+				var reprocessMinutes = config.ReprocessMinutes;
+				Logger.Log($">>> Config ReprocessMinutes = {reprocessMinutes}");
+
+				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
 				foreach (var store in prismStores)
@@ -162,40 +171,40 @@ namespace GXIntegration_Levis.Views
 					var storeCode = ((IDictionary<string, object>)store)
 						.TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					Logger.Log($"[STORE] {storeCode}");
+					Logger.Log($"StoreCode : {storeCode}");
+					Logger.Log($"DateRange FROM : {fromDate}");
+					Logger.Log($"DateRange TO :  {toDate}");
 
-					// ✅ fetch data safely (always fallback to empty list)
-					var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeInventoryAdjustmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
-					var storeGoodsItems = await _repositories.StoreGoodsRepository.GetStoreGoodsAsync(timeRange.from_date, timeRange.to_date, storeCode) ?? Enumerable.Empty<object>();
+					var storeSaleItems = await _repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode, "API") ?? Enumerable.Empty<object>();
+					//var storeShippingItems = await _repositories.StoreShippingRepository.GetStoreShippingAsync(from_date.DateTime, toDate, storeCode) ?? Enumerable.Empty<object>();
+					//var storeReceivingItems = await _repositories.StoreReceivingRepository.GetStoreReceivingAsync(timeRange.from_date, toDate, storeCode) ?? Enumerable.Empty<object>();
+					//var storeInventoryAdjustmentItems = await _repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(timeRange.from_date, toDate, storeCode) ?? Enumerable.Empty<object>();
+					//var storeReturnItems = await _repositories.StoreReturnRepository.GetStoreReturnAsync(timeRange.from_date, toDate, storeCode) ?? Enumerable.Empty<object>();
+					//var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(timeRange.from_date, toDate, storeCode) ?? Enumerable.Empty<object>();
+					//var storeGoodsItems = await _repositories.StoreGoodsRepository.GetStoreGoodsAsync(timeRange.from_date, toDate, storeCode) ?? Enumerable.Empty<object>();
 
-					// ✅ config setup
 					var outboundConfigs = new List<OutboundConfig>
 					{
-						new OutboundConfig
-						{
-							Items = storeGoodsItems,
-							GetSid = i => ((StoreGoodsModel)i).VouSid.ToString(),
-							GetDocNo = i => ((StoreGoodsModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreGoodsModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreGoods.GenerateXml(list.Cast<StoreGoodsModel>().ToList(), null, "template"),
-							DocType = "storegoods",
-							ApiUrl = inventoryApiUrl
-						},
-						new OutboundConfig
-						{
-							Items = storeGoodsReturnItems,
-							GetSid = i => ((StoreGoodsReturnModel)i).VouSid.ToString(),
-							GetDocNo = i => ((StoreGoodsReturnModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreGoodsReturnModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreGoodsReturn.GenerateXml(list.Cast<StoreGoodsReturnModel>().ToList(), null, "template"),
-							DocType = "storegoodsreturn",
-							ApiUrl = inventoryApiUrl
-						},
+						//new OutboundConfig
+						//{
+						//	Items = storeGoodsItems,
+						//	GetSid = i => ((StoreGoodsModel)i).VouSid.ToString(),
+						//	GetDocNo = i => ((StoreGoodsModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreGoodsModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreGoods.GenerateXml(list.Cast<StoreGoodsModel>().ToList(), null, "template"),
+						//	DocType = "storegoods",
+						//	ApiUrl = inventoryApiUrl
+						//},
+						//new OutboundConfig
+						//{
+						//	Items = storeGoodsReturnItems,
+						//	GetSid = i => ((StoreGoodsReturnModel)i).VouSid.ToString(),
+						//	GetDocNo = i => ((StoreGoodsReturnModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreGoodsReturnModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreGoodsReturn.GenerateXml(list.Cast<StoreGoodsReturnModel>().ToList(), null, "template"),
+						//	DocType = "storegoodsreturn",
+						//	ApiUrl = inventoryApiUrl
+						//},
 						new OutboundConfig
 						{
 							Items = storeSaleItems,
@@ -206,49 +215,49 @@ namespace GXIntegration_Levis.Views
 							DocType = "storesale",
 							ApiUrl = saleApiUrl
 						},
-						new OutboundConfig
-						{
-							Items = storeReturnItems,
-							GetSid = i => ((StoreReturnModel)i).DocSid.ToString(),
-							GetDocNo = i => ((StoreReturnModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreReturnModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreReturn.GenerateXml(list.Cast<StoreReturnModel>().ToList(), null, "template"),
-							DocType = "storereturn",
-							ApiUrl = saleApiUrl
-						},
-						new OutboundConfig
-						{
-							Items = storeInventoryAdjustmentItems,
-							GetSid = i => ((StoreInventoryAdjustmentModel)i).AdjSid.ToString(),
-							GetDocNo = i => ((StoreInventoryAdjustmentModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreInventoryAdjustmentModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreInventoryAdjustment.GenerateXml(list.Cast<StoreInventoryAdjustmentModel>().ToList(), null, "template"),
-							DocType = "storeinventoryadjustment",
-							ApiUrl = inventoryApiUrl
-						},
-						new OutboundConfig
-						{
-							Items = storeShippingItems,
-							GetSid = i => ((StoreShippingModel)i).VouSid.ToString(),
-							GetDocNo = i => ((StoreShippingModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreShippingModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreShipping.GenerateXml(list.Cast<StoreShippingModel>().ToList(), null, "template"),
-							DocType = "storeshipping",
-							ApiUrl = inventoryApiUrl
-						},
-						new OutboundConfig
-						{
-							Items = storeReceivingItems,
-							GetSid = i => ((StoreReceivingModel)i).VouSid.ToString(),
-							GetDocNo = i => ((StoreReceivingModel)i).SequenceNo.ToString(),
-							GetDate = i => ((StoreReceivingModel)i).BusinessDayDate.DateTime,
-							XmlGen = list => OutboundStoreReceiving.GenerateXml(list.Cast<StoreReceivingModel>().ToList(), null, "template"),
-							DocType = "storereceiving",
-							ApiUrl = inventoryApiUrl
-						}
+						//new OutboundConfig
+						//{
+						//	Items = storeReturnItems,
+						//	GetSid = i => ((StoreReturnModel)i).DocSid.ToString(),
+						//	GetDocNo = i => ((StoreReturnModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreReturnModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreReturn.GenerateXml(list.Cast<StoreReturnModel>().ToList(), null, "template"),
+						//	DocType = "storereturn",
+						//	ApiUrl = saleApiUrl
+						//},
+						//new OutboundConfig
+						//{
+						//	Items = storeInventoryAdjustmentItems,
+						//	GetSid = i => ((StoreInventoryAdjustmentModel)i).AdjSid.ToString(),
+						//	GetDocNo = i => ((StoreInventoryAdjustmentModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreInventoryAdjustmentModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreInventoryAdjustment.GenerateXml(list.Cast<StoreInventoryAdjustmentModel>().ToList(), null, "template"),
+						//	DocType = "storeinventoryadjustment",
+						//	ApiUrl = inventoryApiUrl
+						//},
+						//new OutboundConfig
+						//{
+						//	Items = storeShippingItems,
+						//	GetSid = i => ((StoreShippingModel)i).VouSid.ToString(),
+						//	GetDocNo = i => ((StoreShippingModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreShippingModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreShipping.GenerateXml(list.Cast<StoreShippingModel>().ToList(), null, "template"),
+						//	DocType = "storeshipping",
+						//	ApiUrl = inventoryApiUrl
+						//},
+						//new OutboundConfig
+						//{
+						//	Items = storeReceivingItems,
+						//	GetSid = i => ((StoreReceivingModel)i).VouSid.ToString(),
+						//	GetDocNo = i => ((StoreReceivingModel)i).SequenceNo.ToString(),
+						//	GetDate = i => ((StoreReceivingModel)i).BusinessDayDate.DateTime,
+						//	XmlGen = list => OutboundStoreReceiving.GenerateXml(list.Cast<StoreReceivingModel>().ToList(), null, "template"),
+						//	DocType = "storereceiving",
+						//	ApiUrl = inventoryApiUrl
+						//}
 					};
 
-					Logger.Log($"[FETCH] {storeCode} | Sales: {storeSaleItems.Count()} | Shipping: {storeShippingItems.Count()} | Receiving: {storeReceivingItems.Count()} ...");
+					//Logger.Log($"[FETCH] {storeCode} | Sales: {storeSaleItems.Count()} | Shipping: {storeShippingItems.Count()} | Receiving: {storeReceivingItems.Count()} ...");
 
 					var filteredConfigs = outboundConfigs.Where(cfg => selectedDocTypes.Contains(cfg.DocType.ToLowerInvariant()));
 
@@ -409,7 +418,7 @@ namespace GXIntegration_Levis.Views
 				}
 			}
 
-			MessageBox.Show($"{docType.ToUpper()} data processed. Full API responses saved to AppData folder.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			//MessageBox.Show($"{docType.ToUpper()} data processed. Full API responses saved to AppData folder.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		private bool IsSidAlreadyProcessed(string sid)

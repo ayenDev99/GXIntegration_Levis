@@ -16,14 +16,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, string storeCode, string type)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (type == "EOD")
+					{
+						dateCondition = "TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (type == "API")
+					{
+                        dateCondition = "DOC.INVC_POST_DATE BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 							SELECT 
                                 '1'                                     AS OrganizationID
                                 , STORE.ADDRESS4			            AS RetailStoreID
@@ -124,10 +139,10 @@ namespace GXIntegration_Levis.Data.Access
                             LEFT JOIN RPS.SUBSIDIARY SBS	        ON SBS.SID = DOC.SUBSIDIARY_SID
                             LEFT JOIN RPS.COUNTRY 		            ON COUNTRY.SID = SBS.COUNTRY_SID
                             WHERE 
-                                DOC.STATUS = 4
+                                {dateCondition}
+                                AND DOC.STATUS = 4
                                 AND DOC.RECEIPT_TYPE IN (0,2)
                                 AND DOC.DOC_NO IS NOT NULL
-                                AND TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate
                                 AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
 				                STORE.STORE_NO ASC
@@ -135,9 +150,9 @@ namespace GXIntegration_Levis.Data.Access
 				                , DOC.DOC_NO ASC
 					";
 
-					//FETCH FIRST 1 ROWS ONLY
-					//AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
-					//AND TRUNC(DOC.POST_DATE) BETWEEN DATE '2025-09-15' AND DATE '2025-09-20'
+					//Logger.Log($"Generated SQL: {sql}");
+                    //AND TRUNC(DOC.INVC_POST_DATE) BETWEEN: FromDate AND :ToDate
+                    //FETCH FIRST 1 ROWS ONLY
 
 					var parameters = new
 					{

@@ -13,7 +13,7 @@ namespace GXIntegration.Properties
 		public string CountryCode { get; set; }
 		public string Delimiter { get; set; }
 
-		public int ReprocessMinutes { get; set; } = 5;
+		public int ReprocessMinutes { get; set; }
 
 		public static GXConfig Load(string filePath)
 		{

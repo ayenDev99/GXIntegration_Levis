@@ -161,6 +161,14 @@ namespace GXIntegration_Levis.Helpers
 			return dt.ToString("dd-MMM-yy hh.mm.ss.ffffff tt").ToUpper() + " " + timezoneOffset;
 		}
 
+		public static (DateTime FromDate, DateTime ToDate) GetSystemTimeRange(int minutesAgo)
+		{
+			// Get current local system time
+			DateTime toDate = DateTime.Now;
+			DateTime fromDate = toDate.AddMinutes(-minutesAgo);
+
+			return (fromDate, toDate);
+		} 
 		// ***************************************************
 		// Parsing Methods
 		// ***************************************************
