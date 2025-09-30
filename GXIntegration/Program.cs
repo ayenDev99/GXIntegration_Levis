@@ -51,7 +51,6 @@ class Program
 		await tcsApp.Task;
 	}
 
-
 	static async Task RunIterationLoop()
 	{
 		int iteration = 0;
@@ -67,9 +66,15 @@ class Program
 
 				Logger.Log($">>> ReprocessMinutes = {config.ReprocessMinutes}");
 
+				// Condition: INBOUND is triggered every [config.processMinutes] minutes. Process if the SFTP folder has files.
+				// Condition: OUTBOUND EOD is triggered every [config.morningProcess, config.eveningProcess]. Process as EOD.
+				// Condition: OUTBOUND API is triggered every [config.processMinutes] minutes and check if prism has transaction within the range.
+
 				//Logger.Log(">>> Starting OUTBOUND Process...");
 				//await form.OutboundTab.TriggerDownloadAsync();
 				//Logger.Log(">>> OUTBOUND completed");
+
+				await form.OutboundAPITab.TriggerAPIAsync();
 			}
 			catch (Exception ex)
 			{

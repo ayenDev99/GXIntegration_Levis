@@ -14,45 +14,21 @@ namespace GXIntegration_Levis.Views
 	{
 		private static GXConfig config;
 
-		private PrismRepository _prismRepository;
-		private InventoryRepository _inventoryRepository;
-		private InTransitRepository _inTransitRepository;
-		private PriceRepository _priceRepository;
-		private StoreGoodsRepository _storeGoodsRepository;
-		private StoreGoodsReturnRepository _storeGoodsReturnRepository;
-		private StoreSaleRepository _storeSaleRepository;
-		private StoreReturnRepository _storeReturnRepository;
-		private StoreInventoryAdjustmentRepository _storeInventoryAdjustmentRepository;
-		private StoreShippingRepository _storeShippingRepository;
-		private StoreReceivingRepository _storeReceivingRepository;
-		private StoreInventoryCountRepository _storeInventoryCountRepository;
-
 		private TabControl tabControl;
 		private TabPage tabEod, tabApi;
 
-		public OutboundPage()
+		private readonly OutboundRepositories repositories;
+
+		public OutboundPage(OutboundRepositories repositories)
 		{
-			Logger.Log("--------------------------------------------------------------------------");
-			Logger.Log("Starting OUTBOUND Process...");
+			//Logger.Log("--------------------------------------------------------------------------");
+			//Logger.Log("Starting OUTBOUND Process...");
 
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
-			_prismRepository = new PrismRepository(config.MainDbConnection);
-			_inventoryRepository = new InventoryRepository(config.MainDbConnection);
-			_inTransitRepository = new InTransitRepository(config.MainDbConnection);
-			_priceRepository = new PriceRepository(config.MainDbConnection);
-			_storeGoodsRepository = new StoreGoodsRepository(config.MainDbConnection);
-			_storeGoodsReturnRepository = new StoreGoodsReturnRepository(config.MainDbConnection);
-			_storeSaleRepository = new StoreSaleRepository(config.MainDbConnection);
-			_storeReturnRepository = new StoreReturnRepository(config.MainDbConnection);
-			_storeInventoryAdjustmentRepository = new StoreInventoryAdjustmentRepository(config.MainDbConnection);
-			_storeShippingRepository = new StoreShippingRepository(config.MainDbConnection);
-			_storeReceivingRepository = new StoreReceivingRepository(config.MainDbConnection);
-			_storeInventoryCountRepository = new StoreInventoryCountRepository(config.MainDbConnection);
-
 			InitializeComponent();
-			InitializeTabs();
+			InitializeTabs(repositories);
 		}
 
 		// ***************************************************
@@ -85,7 +61,7 @@ namespace GXIntegration_Levis.Views
 
 		}
 
-		private void InitializeTabs()
+		private void InitializeTabs(OutboundRepositories repositories)
 		{
 			tabControl = new TabControl
 			{
@@ -96,21 +72,6 @@ namespace GXIntegration_Levis.Views
 
 			tabEod = new TabPage("EOD");
 			tabApi = new TabPage("API");
-
-			var repositories = new OutboundRepositories(
-				_prismRepository,
-				_inventoryRepository,
-				_inTransitRepository,
-				_priceRepository,
-				_storeGoodsRepository,
-				_storeGoodsReturnRepository,
-				_storeSaleRepository,
-				_storeReturnRepository,
-				_storeInventoryAdjustmentRepository,
-				_storeShippingRepository,
-				_storeReceivingRepository,
-				_storeInventoryCountRepository
-				);
 
 			tabEod.Controls.Add(new OutboundEODTab(config, repositories) { Dock = DockStyle.Fill });
 			tabApi.Controls.Add(new OutboundAPITab(config, repositories) { Dock = DockStyle.Fill });

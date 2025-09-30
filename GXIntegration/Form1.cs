@@ -34,19 +34,40 @@ namespace GXIntegration
 		private System.Windows.Forms.Button minimizeButton;
 
 		//public OutboundEODTab OutboundTab { get; private set; }
+		public OutboundAPITab OutboundAPITab { get; private set; }
 
 		public Form1()
 		{
-			InitializeComponent();
-			//InitialCreateDatabase();
-			InitialInboundPriceDatabase();
-			EnableDrag(SideBar);
-			InitializeTopBar();
-
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
+			var repositories = InitializeRepositories(config.MainDbConnection);
+
+			InitializeComponent();
+			InitialInboundPriceDatabase();
+			EnableDrag(SideBar);
+			InitializeTopBar();
 			MainContentPanel.Dock = DockStyle.Fill;
+
+			OutboundAPITab = new OutboundAPITab(config, repositories);
+		}
+
+		private OutboundRepositories InitializeRepositories(string connectionString)
+		{
+			return new OutboundRepositories(
+				new PrismRepository(connectionString),
+				new InventoryRepository(connectionString),
+				new InTransitRepository(connectionString),
+				new PriceRepository(connectionString),
+				new StoreGoodsRepository(connectionString),
+				new StoreGoodsReturnRepository(connectionString),
+				new StoreSaleRepository(connectionString),
+				new StoreReturnRepository(connectionString),
+				new StoreInventoryAdjustmentRepository(connectionString),
+				new StoreShippingRepository(connectionString),
+				new StoreReceivingRepository(connectionString),
+				new StoreInventoryCountRepository(connectionString)
+			);
 		}
 
 		private void InitializeTopBar()
@@ -57,7 +78,6 @@ namespace GXIntegration
 			topBar.BackColor = Color.FromArgb(35, 40, 45);
 			this.Controls.Add(topBar);
 
-			// Enable drag (so the user can still move the form by dragging top bar)
 			EnableDrag(topBar);
 
 			InitializeCustomButtons();
@@ -130,7 +150,6 @@ namespace GXIntegration
 			topBar.Controls.Add(closeButton);
 			topBar.Controls.Add(minimizeButton);
 		}
-
 
 		private void Form1_MouseDown(object sender, MouseEventArgs e)
 		{
@@ -227,7 +246,9 @@ namespace GXIntegration
 
 		private void Outbound_Button_Click(object sender, EventArgs e)
 		{
-			LoadPage(new OutboundPage());
+			var repositories = InitializeRepositories(config.MainDbConnection);
+
+			LoadPage(new OutboundPage(repositories));
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 		}
 		private void About_Button_Click(object sender, EventArgs e)
