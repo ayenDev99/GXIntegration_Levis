@@ -48,7 +48,7 @@ namespace GXIntegration_Levis.Data.Access
 								, (SELECT ADDRESS4 FROM RPS.STORE
 										WHERE SID = VOU.STORE_SID)			AS ORIGINALTERNATESTOREID
 								, 'CLOSED'									AS DOCUMENTSTATUS
-								, VOU.VOU_NO  								AS DOCUMENTID
+								, VOU.PKG_NO 								AS DOCUMENTID
 								, (SELECT ADDRESS4 FROM RPS.STORE
 										WHERE SID = VOU.STORE_SID)			AS ORIGINATORID
 								, (SELECT STORE_NAME FROM RPS.STORE
@@ -71,14 +71,12 @@ namespace GXIntegration_Levis.Data.Access
 								, ''										AS POSTALCODE
 								, VI.ITEM_POS								AS LINENUMBER
 								, ISB.DESCRIPTION1							AS ITEMID
-
 								, VI.QTY									AS ActualCount
 								, VI.ORIG_QTY								AS ExpectedCount
 								, VI.QTY									AS PostedCount
 								, VI.ORIG_QTY								AS QuantityOrdered
 								, VI.QTY									AS QuantityReceived
 								, ''										AS CartonNumber
-
 								, ISB.DESCRIPTION2							AS DESCRIPTION
 								, ISB.ITEM_SIZE								AS PTDIM1
 								, ISB.ATTRIBUTE								AS PTDIM2
@@ -86,7 +84,6 @@ namespace GXIntegration_Levis.Data.Access
 								, VOU.VOU_NO								AS PTCONTROLNUMBER
 								, 'PHP'										AS COUNTRY
 								, ISB.UPC									AS PTEAN
-								
 								FROM
 									RPS.VOUCHER VOU
 								LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -100,12 +97,12 @@ namespace GXIntegration_Levis.Data.Access
 								LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 								LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 								WHERE
-									VOU.VOU_CLASS = 0
+									VOU.SLIP_FLAG = 1
 									AND VOU.VOU_TYPE = 0
-									AND VOU.SLIP_FLAG = 0
+									AND VOU.VOU_CLASS = 0
 									AND VOU.STATUS = 4						
 									AND TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
-									AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 =  :StoreCode)
+									AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 								ORDER BY 
 									VOU.POST_DATE DESC
 					";

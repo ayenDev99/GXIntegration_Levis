@@ -39,7 +39,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'AMA'	                            AS Region
                                 , 'PHP'								AS Country
                                 , S.ADDRESS4			            AS AlternateStoreID
-                                , ''							    AS CountID
+                                , ADJ.ADJ_NO						AS CountID
                                 , 'ADJUSTMENT'					    AS CountType
                                 , CASE WHEN ADJ.STATUS = 4 
 									THEN 'CLOSED' 

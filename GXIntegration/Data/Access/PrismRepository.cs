@@ -70,6 +70,7 @@ namespace GXIntegration_Levis.Data.Access
 							RPS.STORE STORE
 						WHERE 
 							STORE.{columnName} = :ColumnValue
+							AND STORE.ADDRESS4 IS NOT NULL
 					";
 
 					//Logger.Log(columnName);
