@@ -19,7 +19,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 		{
 			try
 			{
-				var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
+				var fromDate = DateTime.Today;
+				var toDate = DateTime.Today;
 				var items = await repository.GetStoreInventoryCountAsync(fromDate, toDate, storeCode);
 				if (!items.Any()) { return; }
 
@@ -43,7 +44,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[OUTBOUND - EOD] [XML] StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.Log($"[OUTBOUND - EOD] [XML]			StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
 				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)

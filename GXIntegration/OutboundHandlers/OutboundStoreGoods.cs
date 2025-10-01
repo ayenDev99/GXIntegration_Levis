@@ -156,8 +156,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 							GlobalOutbound.WriteCDataElement(writer, "PostedCount", lineItem.PostedCount);
 
 							writer.WriteStartElement("SaleLineItem");
-							GlobalOutbound.WriteCDataElement(writer, "RetailLocationID", "");
-							GlobalOutbound.WriteCDataElement(writer, "WorkstationID", "");
+							GlobalOutbound.WriteCDataElement(writer, "RetailLocationID", lineItem.RetailStoreID);
+							GlobalOutbound.WriteCDataElement(writer, "WorkstationID", lineItem.WorkstationID);
 							GlobalOutbound.WriteCDataElement(writer, "BusinessDate", GlobalOutbound.FormatDate(lineItem.SaleLineBusinessDayDate, true));
 							GlobalOutbound.WriteCDataElement(writer, "TransactionSequence", lineItem.TransactionSequence);
 							GlobalOutbound.WriteCDataElement(writer, "LineItemSequence", lineItem.LineItemSequence);

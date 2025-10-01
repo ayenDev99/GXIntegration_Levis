@@ -43,7 +43,8 @@ namespace GXIntegration_Levis.Data.Access
 								, 'PHP'									AS Country
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS AlternateStoreID
-								, VOU_REASON.NAME				        AS ReasonCode
+								, TRIM(REGEXP_SUBSTR(
+									VOU_COMMENT.COMMENTS, '^[^-]+'))	AS ReasonCode
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS OriginAlternateStoreID
 								, CASE WHEN VOU.STATUS = 4 
@@ -91,7 +92,7 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
 							INNER JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
-							LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
+							LEFT JOIN RPS.VOU_COMMENT				ON VOU_COMMENT.VOU_SID = VOU.SID
 							WHERE
 								TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
 								AND VOU.VOU_TYPE = 1

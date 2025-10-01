@@ -346,7 +346,6 @@ namespace GXIntegration_Levis.Views
 						await writer.FlushAsync();
 					}
 
-
 					Logger.Log($"[OUTBOUND - EOD] [XML] Downloaded successfully | File Name: {fileName}");
 				}
 				catch (Exception ex)
@@ -355,17 +354,6 @@ namespace GXIntegration_Levis.Views
 				}
 			}
 		}
-
-		//private async Task ExecuteStoreInventoryCountAsync()
-		//{
-		//	var (fromDate, toDate) = GlobalHelper.GetProcessingTimeWindow(config);
-		//	var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-		//	foreach (var store in prismStores)
-		//	{
-		//		string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
-		//		await OutboundStoreInventoryCount.Execute(repositories.StoreInventoryCountRepository, config, "xml", storeCode);
-		//	}
-		//}
 
 		private async Task ExecuteStoreInventoryCountAsync()
 		{
