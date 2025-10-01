@@ -27,10 +27,12 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
 						SELECT
-							SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)	AS ProductCode
-							, ISI.DESCRIPTION1 
-								|| ISI.ITEM_SIZE
-								|| ISI.ATTRIBUTE        AS Sku	
+							CASE 
+								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+								ELSE ISI.DESCRIPTION1
+							END 						AS ProductCode
+							, ISI.ALU					AS Sku	
 							, ISI.ITEM_SIZE				AS Waist
 							, ISI.ATTRIBUTE				AS Inseam
 							, TO_CHAR(STORE.ADDRESS4)	AS StoreCode
@@ -46,10 +48,9 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.REGION ON RPS.REGION.SID = RPS.REGION_SUBSIDIARY.REGION_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = RPS.VOU_ITEM.ITEM_SID
 						WHERE 
-							TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
-							AND VOU.STATUS IN (1, 3)
+							(VOU.SLIP_FLAG = 1 AND VOU.STATUS = 3)
+								OR (VOU.PO_NO IS NOT NULL AND VOU.STATUS = 3)
 							AND ISI.ACTIVE = 1
-							AND STORE.ACTIVE = 1
 					";
 
 					//VOU.POST_DATE BETWEEN :FromDate AND :ToDate

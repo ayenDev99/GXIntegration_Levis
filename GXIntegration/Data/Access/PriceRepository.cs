@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -28,26 +27,38 @@ namespace GXIntegration_Levis.Data.Access
 				{
 					await connection.OpenAsync();
 					string sql = @"
-						SELECT
-						  '1'						AS SalesOrg
-						  , ISB.DESCRIPTION1		AS PC9
-						  , PLVL.PRICE_LVL_NAME		AS PriceLevel
-						  , 'REG'					AS ConditionType
-						  , ADJ.CREATED_DATETIME	AS PriceStartDate
-						  , ADJ.POST_DATE			AS PriceEndDate
-						  , ADJ_ITEM.ADJ_VALUE		AS Price
-						  , 'REG'					AS Flag
+						SELECT 
+							'1' AS SALESORG,
+							CASE 
+								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+								ELSE ISI.DESCRIPTION1
+							END AS PC9,
+							PL.PRICE_LVL_NAME AS PriceLevel,
+							'REG' AS ConditionType,
+							MAX(ISIP.CREATED_DATETIME) AS PriceStartDate,
+							MAX(ISIP.POST_DATE) AS PriceEndDate,
+							TO_CHAR(MAX(ISIP.PRICE)) AS Price,
+							'REG' AS Flag
 						FROM
-						  RPS.ADJUSTMENT ADJ
-						LEFT JOIN RPS.ADJ_ITEM				ON ADJ.SID = RPS.ADJ_ITEM.ADJ_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISB		ON ISB.SID = RPS.ADJ_ITEM.ITEM_SID
-						LEFT JOIN RPS.PRICE_LEVEL PLVL		ON PLVL.SID = ADJ.PRICE_LVL_SID
-						WHERE
-							TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate
-							AND ADJ.ADJ_TYPE = 1
-						";
+							RPS.STORE
+						LEFT JOIN RPS.INVN_SBS_PRICE ISIP ON ISIP.PRICE_LVL_SID = STORE.ACTIVE_PRICE_LVL_SID
+						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = ISIP.INVN_SBS_ITEM_SID
+						LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SID = ISIP.PRICE_LVL_SID
+						WHERE 
+							STORE.ACTIVE = 1
+							AND ISI.ACTIVE = 1
+							AND STORE.ADDRESS4 IS NOT NULL
+						GROUP BY 
+							CASE 
+								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+								ELSE ISI.DESCRIPTION1
+							END,
+							PL.PRICE_LVL_NAME
+						ORDER BY MAX(ISIP.CREATED_DATETIME) DESC
 
-					//ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
+					";
 
 					var parameters = new
 					{
@@ -60,8 +71,8 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching inventory data: {ex.Message}");
-					Console.WriteLine($"Error fetching inventory data: {ex.Message}");
+					Logger.Log($"Error fetching price data: {ex.Message}");
+					Console.WriteLine($"Error fetching price data: {ex.Message}");
 					return new List<PriceModel>();
 				}
 			}
