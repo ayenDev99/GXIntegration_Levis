@@ -43,7 +43,8 @@ namespace GXIntegration
 		public Form1()
 		{
 			InitializeComponent();
-			InitialCreateDatabase();
+			//InitialCreateDatabase();
+			InitialInboundPriceDatabase();
 			EnableDrag(SideBar);
 
 			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
@@ -275,6 +276,72 @@ namespace GXIntegration
 				}
 
 				string countQuery = "SELECT COUNT(*) FROM TRANSACTION_PROCESS;";
+				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
+				{
+					long count = (long)countCmd.ExecuteScalar();
+					Logger.Log($"[INIT] DB Record count: {count}");
+				}
+
+				Logger.Log("[INIT] Database initialization complete.");
+			}
+		}
+
+		private void InitialInboundPriceDatabase()
+		{
+			string folderPath = Path.Combine(Application.StartupPath, "AppData");
+			if (!Directory.Exists(folderPath))
+			{
+				Directory.CreateDirectory(folderPath);
+				Logger.Log($"[INIT] Created AppData folder at: {folderPath}");
+			}
+
+			string dbPath = Path.Combine(folderPath, "TempInboundPriceData.db");
+			if (!File.Exists(dbPath))
+			{
+				SQLiteConnection.CreateFile(dbPath);
+			}
+
+			string connectionString = $"Data Source={dbPath};Version=3;";
+			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+			{
+				conn.Open();
+
+				string createTableQuery = @"
+				CREATE TABLE IF NOT EXISTS TempInboundPriceData (
+					Id                      INTEGER PRIMARY KEY AUTOINCREMENT
+					, CreatedDate				TEXT
+					, CountryCode				TEXT
+					, StoreCode					TEXT
+					, ProductCode				TEXT
+					, ColorCode					TEXT
+					, SizeCode					TEXT
+					, SKU						TEXT
+					, PriceType					TEXT
+					, Currency					TEXT
+					, Price						REAL
+					, EffectivityDate			TEXT
+					, ProductReference			TEXT
+					, Brand						TEXT
+					, PriceListCode				TEXT
+					, SerialNumber				TEXT
+					, PriceSource				TEXT
+					, Price2					REAL
+					, EffectivePriceEndDate		TEXT
+					, DiscountCode				TEXT
+					, DiscountDesc				TEXT
+					, ReasonCode				TEXT
+					, ReasonDesc				TEXT
+					, Level1Code				TEXT
+					, DeletedDate				TEXT
+				);";
+
+				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
+				{
+					cmd.ExecuteNonQuery();
+					Logger.Log("[INIT] 'TempInboundPriceData' table created or already exists.");
+				}
+
+				string countQuery = "SELECT COUNT(*) FROM TempInboundPriceData;";
 				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
 				{
 					long count = (long)countCmd.ExecuteScalar();

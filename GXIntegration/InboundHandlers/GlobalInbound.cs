@@ -268,11 +268,11 @@ namespace GXIntegration_Levis.InboundHandlers
 			{
 				string[] files = Directory.GetFiles(inboundDir, filePattern);
 
-				if (files.Length == 0)
-				{
-					Logger.Log($"No '{filePattern}' files found in: {inboundDir}");
-					return new List<string>();
-				}
+				//if (files.Length == 0)
+				//{
+				//	Logger.Log($"No '{filePattern}' files found in: {inboundDir}");
+				//	return new List<string>();
+				//}
 
 				//Logger.Log("Files to be processed : ");
 				var fileList = new List<string>();

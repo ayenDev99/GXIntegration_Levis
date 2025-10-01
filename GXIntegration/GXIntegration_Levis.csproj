@@ -135,6 +135,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\Access\InboundPriceRepository.cs" />
     <Compile Include="Data\Access\PrismRepository.cs" />
     <Compile Include="Data\Access\StoreInventoryCountRepository.cs" />
     <Compile Include="Helpers\GlobalHelper.cs" />

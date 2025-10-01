@@ -321,12 +321,12 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Whitelisted column names with their table aliases
 			var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-				{
-					{ "DESCRIPTION1", "INV" },
-					{ "ACTIVE", "INV" },
-					{ "SBS_NO", "SBS" },
-					{ "PRICE_LVL_NAME", "PL" }
-				};
+			{
+				{ "DESCRIPTION1", "INV" },
+				{ "ACTIVE", "INV" },
+				{ "SBS_NO", "SBS" },
+				{ "PRICE_LVL_NAME", "PL" }
+			};
 
 			var whereClauses = new List<string>();
 			var parameters = new DynamicParameters();
@@ -343,16 +343,23 @@ namespace GXIntegration_Levis.Data.Access
 				parameters.Add(paramName, filter.Value);
 			}
 
+			string whereSql = whereClauses.Count > 0 ? $"WHERE {string.Join(" AND ", whereClauses)}" : "";
+
 			string sql = $@"
-							SELECT 
-								*
-							FROM 
-								RPS.INVN_SBS_ITEM INV
-							LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID
-							LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SBS_SID = SBS.SID
-							WHERE 
-								{string.Join(" AND ", whereClauses)}
-						";
+					SELECT 
+						INV.DESCRIPTION1,
+						INV.ACTIVE,
+						SBS.SBS_NO,
+						PL.PRICE_LVL_NAME,
+						PL.SID AS ACTIVE_PRICE_LVL_SID,
+						SBS.SID AS SBS_SID,
+						INV.SID
+					FROM 
+						RPS.INVN_SBS_ITEM INV
+					LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID
+					LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SBS_SID = SBS.SID
+					{whereSql}
+				";
 
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -363,11 +370,11 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Query error: {ex.Message}");
-					return null;
+					Logger.Log($"[ERROR] Failed to query inbound items: {ex.Message}");
+					return Enumerable.Empty<dynamic>();
 				}
 			}
-
 		}
+
 	}
 }
