@@ -204,51 +204,50 @@ namespace GXIntegration_Levis.Views
 			{
 				string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 				Logger.Log($"[OUTBOUND - EOD] [XML] STORE_CODE : {storeCode}...");
-				//Logger.Log($"[OUTBOUND - EOD] [XML] >> STORE CODE : {storeCode} <<");
 
 				try
 				{
 					// Fetch data per store
 					var storeSaleItems = await repositories.StoreSaleRepository.GetStoreSaleAsync(fromDate, toDate, storeCode, "EOD");
-					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode);
-					var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate, storeCode);
-					var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate, storeCode);
-					var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode);
-					var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode);
-					var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate, storeCode);
+					var storeReturnItems = await repositories.StoreReturnRepository.GetStoreReturnAsync(fromDate, toDate, storeCode, "EOD");
+					var storeGoodsItems = await repositories.StoreGoodsRepository.GetStoreGoodsAsync(fromDate, toDate, storeCode, "EOD");
+					var storeGoodsReturnItems = await repositories.StoreGoodsReturnRepository.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode, "EOD");
+					var storeShippingItems = await repositories.StoreShippingRepository.GetStoreShippingAsync(fromDate, toDate, storeCode, "EOD");
+					var storeReceivingItems = await repositories.StoreReceivingRepository.GetStoreReceivingAsync(fromDate, toDate, storeCode, "EOD");
+					var storeInventoryAdjustmentItems = await repositories.StoreInventoryAdjustmentRepository.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode, "EOD");
 
 					// Generate XML fragments
 					var xmlFragments = new[]
 					{
 						OutboundStoreSale.GenerateXml(storeSaleItems, null, "template"),
 						OutboundStoreReturn.GenerateXml(storeReturnItems, null, "template"),
+						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
+						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
 						OutboundStoreShipping.GenerateXml(storeShippingItems, null, "template"),
 						OutboundStoreReceiving.GenerateXml(storeReceivingItems, null, "template"),
 						OutboundStoreInventoryAdjustment.GenerateXml(storeInventoryAdjustmentItems, null, "template"),
-						OutboundStoreGoodsReturn.GenerateXml(storeGoodsReturnItems, null, "template"),
-						OutboundStoreGoods.GenerateXml(storeGoodsItems, null, "template"),
 					};
 
 					string[] xmlTypes = new[]
 					{
 						"StoreSale",
 						"StoreReturn",
+						"StoreGoods",
+						"StoreGoodsReturn",
 						"StoreShipping",
 						"StoreReceiving",
 						"StoreInventoryAdjustment",
-						"StoreGoodsReturn",
-						"StoreGoods",
 					};
 
 					var dataModules = new List<(string Label, IEnumerable<object> Items)>
 					{
 						("StoreSale", storeSaleItems as IEnumerable<object>),
 						("StoreReturn", storeReturnItems as IEnumerable<object>),
+						("StoreGoods", storeGoodsItems as IEnumerable<object>),
+						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
 						("StoreShipping", storeShippingItems as IEnumerable<object>),
 						("StoreReceiving", storeReceivingItems as IEnumerable<object>),
-						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),
-						("StoreGoodsReturn", storeGoodsReturnItems as IEnumerable<object>),
-						("StoreGoods", storeGoodsItems as IEnumerable<object>),
+						("StoreInventoryAdjustment", storeInventoryAdjustmentItems as IEnumerable<object>),						
 					};
 
 					//var storeRoot = new XElement("OutboundData");

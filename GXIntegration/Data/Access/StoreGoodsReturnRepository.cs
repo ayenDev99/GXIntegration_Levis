@@ -16,14 +16,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 							SELECT
    								'1'										AS OrganizationID
 								, (SELECT ADDRESS4 FROM RPS.STORE 
@@ -80,30 +95,24 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.DESCRIPTION1						AS PTStyle
 								, VOU.PO_NO								AS PTControlNumber
 								, ISB.UPC								AS PTEAN
-    
 								, VOU.SID							    AS VouSid							
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
 							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-							LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
-							LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
-							LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
 							LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
-							INNER JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
+							LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.VOU_COMMENT				ON VOU_COMMENT.VOU_SID = VOU.SID
 							WHERE
-								TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
+								{dateCondition}
 								AND VOU.VOU_TYPE = 1
 								AND VOU.VOU_CLASS = 0
 								AND VOU.STATUS = 4
-							AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)					
+								AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)					
 					";
 
-					//FETCH FIRST 1 ROWS ONLY
-					//AND VOU.POST_DATE BETWEEN :FromDate AND :ToDate
-					// TRUNC(VOU.POST_DATE) BETWEEN DATE '2020-08-20' AND DATE '2025-08-20'
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

@@ -28,23 +28,23 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 					string sql = @"
 						SELECT 
-							'1' AS SALESORG,
-							CASE 
+							'1'								AS SalesOrg
+							, CASE 
 								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
 								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
 								ELSE ISI.DESCRIPTION1
-							END AS PC9,
-							PL.PRICE_LVL_NAME AS PriceLevel,
-							'REG' AS ConditionType,
-							MAX(ISIP.CREATED_DATETIME) AS PriceStartDate,
-							MAX(ISIP.POST_DATE) AS PriceEndDate,
-							TO_CHAR(MAX(ISIP.PRICE)) AS Price,
-							'REG' AS Flag
+							END								AS PC9
+							, PL.PRICE_LVL_NAME				AS PriceLevel
+							, 'REG'							AS ConditionType
+							, MAX(ISIP.CREATED_DATETIME)	AS PriceStartDate
+							, MAX(ISIP.POST_DATE)			AS PriceEndDate
+							, TO_CHAR(MAX(ISIP.PRICE))		AS Price
+							, 'REG'							AS Flag
 						FROM
 							RPS.STORE
-						LEFT JOIN RPS.INVN_SBS_PRICE ISIP ON ISIP.PRICE_LVL_SID = STORE.ACTIVE_PRICE_LVL_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = ISIP.INVN_SBS_ITEM_SID
-						LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SID = ISIP.PRICE_LVL_SID
+						LEFT JOIN RPS.INVN_SBS_PRICE ISIP	ON ISIP.PRICE_LVL_SID = STORE.ACTIVE_PRICE_LVL_SID
+						LEFT JOIN RPS.INVN_SBS_ITEM ISI		ON ISI.SID = ISIP.INVN_SBS_ITEM_SID
+						LEFT JOIN RPS.PRICE_LEVEL PL		ON PL.SID = ISIP.PRICE_LVL_SID
 						WHERE 
 							STORE.ACTIVE = 1
 							AND ISI.ACTIVE = 1
@@ -54,10 +54,10 @@ namespace GXIntegration_Levis.Data.Access
 								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
 								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
 								ELSE ISI.DESCRIPTION1
-							END,
-							PL.PRICE_LVL_NAME
-						ORDER BY MAX(ISIP.CREATED_DATETIME) DESC
-
+							END
+							, PL.PRICE_LVL_NAME
+						ORDER BY 
+							MAX(ISIP.CREATED_DATETIME) DESC
 					";
 
 					var parameters = new

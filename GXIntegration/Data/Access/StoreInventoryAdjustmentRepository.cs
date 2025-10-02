@@ -16,14 +16,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreInventoryAdjustmentModel>> GetStoreInventoryAdjustmentAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreInventoryAdjustmentModel>> GetStoreInventoryAdjustmentAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "ADJ.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 							SELECT
                                 '1'                                 AS OrganizationID
                                 , S.ADDRESS4			            AS RetailStoreID
@@ -72,16 +87,14 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.EMPLOYEE EMP			ON EMP.SID = ADJ.CLERK_SID
 							LEFT JOIN RPS.WORKSTATION WS		ON WS.SID = ADJ.WORKSTATION_SID
 							WHERE
-								TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate
+								{dateCondition}
 								AND ADJ.ADJ_TYPE = 0
 								AND S.ADDRESS4 = :StoreCode
 							ORDER BY 
 								ADJ.POST_DATE DESC
 					";
 
-					//FETCH FIRST 1 ROWS ONLY
-					//AND ADJ.POST_DATE BETWEEN :FromDate AND :ToDate
-					// TRUNC(ADJ.POST_DATE) BETWEEN DATE '2025-01-20' AND DATE '2025-08-20'
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

@@ -82,13 +82,13 @@ namespace GXIntegration_Levis.Views
 			void AddRow(string id, string name, string format, string type)
 				=> guna1DataGridView1.Rows.Add(false, id, name, format, type, Resources.icon_download);
 
-			AddRow("1", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
-			AddRow("2", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
-			AddRow("3", "RETAIL_SALE", "StoreSale_[yyyymmddhhmmss]", ".xml");
-			AddRow("4", "RETURN_SALE", "StoreReturn_[yyyymmddhhmmss]", ".xml");
-			AddRow("5", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
-			AddRow("6", "STORE_TRANSFER - SHIPPING", "StoreShipping_[yyyymmddhhmmss]", ".xml");
-			AddRow("7", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
+			AddRow("1", "RETAIL_SALE", "StoreSale_[yyyymmddhhmmss]", ".xml");
+			AddRow("2", "RETURN_SALE", "StoreReturn_[yyyymmddhhmmss]", ".xml");
+			AddRow("3", "ASN - RECEIVING", "StoreGoods_[yyyymmddhhmmss]", ".xml");
+			AddRow("4", "RETURN_TO_DC", "StoreGoodsReturn_[yyyymmddhhmmss]", ".xml");
+			AddRow("5", "STORE_TRANSFER - SHIPPING", "StoreShipping_[yyyymmddhhmmss]", ".xml");
+			AddRow("6", "STORE_TRANSFER - RECEIVING", "StoreReceiving_[yyyymmddhhmmss]", ".xml");
+			AddRow("7", "ADJUSTMENT", "StoreInventoryAdjustment_[yyyymmddhhmmss]", ".xml");
 
 			this.Controls.Add(guna1DataGridView1);
 
@@ -178,19 +178,25 @@ namespace GXIntegration_Levis.Views
 
 					Logger.Log($"[OUTBOUND API-MANUAL]		StoreCode: {storeCode}");
 
-					var (storeSaleItems,
-						 storeShippingItems,
-						 storeReceivingItems,
-						 storeInventoryAdjustmentItems,
-						 storeReturnItems,
-						 storeGoodsReturnItems,
-						 storeGoodsItems) = await GetOutboundItemsAsync(fromDate, toDate, storeCode);
+					var (storeSaleItems
+						, storeReturnItems
+						, storeGoodsItems
+						, storeGoodsReturnItems
+						, storeShippingItems
+						, storeReceivingItems
+						, storeInventoryAdjustmentItems
+						) = await GetOutboundItemsAsync(fromDate, toDate, storeCode);
 
 					var outboundConfigs = BuildOutboundConfigs(
-						storeSaleItems, storeShippingItems, storeReceivingItems,
-						storeInventoryAdjustmentItems, storeReturnItems,
-						storeGoodsReturnItems, storeGoodsItems,
-						saleApiUrl, inventoryApiUrl);
+						storeSaleItems
+						, storeReturnItems
+						, storeGoodsItems
+						, storeGoodsReturnItems
+						, storeShippingItems
+						, storeReceivingItems
+						, storeInventoryAdjustmentItems
+						, saleApiUrl
+						, inventoryApiUrl);
 
 					var filteredConfigs = outboundConfigs
 						.Where(cfg => selectedDocTypes.Contains(cfg.DocType.ToLowerInvariant()));
@@ -260,19 +266,25 @@ namespace GXIntegration_Levis.Views
 
 					Logger.Log($"[OUTBOUND API-AUTO]	StoreCode: {storeCode}");
 
-					var (storeSaleItems,
-						 storeShippingItems,
-						 storeReceivingItems,
-						 storeInventoryAdjustmentItems,
-						 storeReturnItems,
-						 storeGoodsReturnItems,
-						 storeGoodsItems) = await GetOutboundItemsAsync(fromDate, toDate, storeCode);
+					var (storeSaleItems
+						, storeReturnItems
+						, storeGoodsItems
+						, storeGoodsReturnItems
+						, storeShippingItems
+						, storeReceivingItems
+						, storeInventoryAdjustmentItems						
+						) = await GetOutboundItemsAsync(fromDate, toDate, storeCode);
 
 					var outboundConfigs = BuildOutboundConfigs(
-						storeSaleItems, storeShippingItems, storeReceivingItems,
-						storeInventoryAdjustmentItems, storeReturnItems,
-						storeGoodsReturnItems, storeGoodsItems,
-						saleApiUrl, inventoryApiUrl);
+						storeSaleItems
+						, storeReturnItems
+						, storeGoodsItems
+						, storeGoodsReturnItems
+						, storeShippingItems
+						, storeReceivingItems
+						, storeInventoryAdjustmentItems
+						, saleApiUrl
+						, inventoryApiUrl);
 
 					foreach (var cfg in outboundConfigs)
 					{
@@ -306,81 +318,68 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task<(IEnumerable<object> storeSaleItems,
-		IEnumerable<object> storeShippingItems,
-		IEnumerable<object> storeReceivingItems,
-		IEnumerable<object> storeInventoryAdjustmentItems,
-		IEnumerable<object> storeReturnItems,
-		IEnumerable<object> storeGoodsReturnItems,
-		IEnumerable<object> storeGoodsItems)>
+		private async Task<(
+			IEnumerable<object> storeSaleItems,
+			IEnumerable<object> storeReturnItems,
+			IEnumerable<object> storeGoodsItems,
+			IEnumerable<object> storeGoodsReturnItems,
+			IEnumerable<object> storeShippingItems,
+			IEnumerable<object> storeReceivingItems,
+			IEnumerable<object> storeInventoryAdjustmentItems
+			)>
 		GetOutboundItemsAsync(DateTime fromDate, DateTime toDate, string storeCode)
 		{
 			var storeSaleItems = await _repositories.StoreSaleRepository
 				.GetStoreSaleAsync(fromDate, toDate, storeCode, "API")
 				?? Enumerable.Empty<object>();
 
-			var storeShippingItems = await _repositories.StoreShippingRepository
-				.GetStoreShippingAsync(fromDate, toDate, storeCode)
-				?? Enumerable.Empty<object>();
-
-			var storeReceivingItems = await _repositories.StoreReceivingRepository
-				.GetStoreReceivingAsync(fromDate, toDate, storeCode)
-				?? Enumerable.Empty<object>();
-
-			var storeInventoryAdjustmentItems = await _repositories.StoreInventoryAdjustmentRepository
-				.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode)
-				?? Enumerable.Empty<object>();
-
 			var storeReturnItems = await _repositories.StoreReturnRepository
-				.GetStoreReturnAsync(fromDate, toDate, storeCode)
-				?? Enumerable.Empty<object>();
-
-			var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository
-				.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode)
+				.GetStoreReturnAsync(fromDate, toDate, storeCode, "API")
 				?? Enumerable.Empty<object>();
 
 			var storeGoodsItems = await _repositories.StoreGoodsRepository
-				.GetStoreGoodsAsync(fromDate, toDate, storeCode)
+				.GetStoreGoodsAsync(fromDate, toDate, storeCode, "API")
 				?? Enumerable.Empty<object>();
 
-			return (storeSaleItems, storeShippingItems, storeReceivingItems,
-					storeInventoryAdjustmentItems, storeReturnItems,
-					storeGoodsReturnItems, storeGoodsItems);
+			var storeGoodsReturnItems = await _repositories.StoreGoodsReturnRepository
+				.GetStoreGoodsReturnAsync(fromDate, toDate, storeCode, "API")
+				?? Enumerable.Empty<object>();
+
+			var storeShippingItems = await _repositories.StoreShippingRepository
+				.GetStoreShippingAsync(fromDate, toDate, storeCode, "API")
+				?? Enumerable.Empty<object>();
+
+			var storeReceivingItems = await _repositories.StoreReceivingRepository
+				.GetStoreReceivingAsync(fromDate, toDate, storeCode, "API")
+				?? Enumerable.Empty<object>();
+
+			var storeInventoryAdjustmentItems = await _repositories.StoreInventoryAdjustmentRepository
+				.GetStoreInventoryAdjustmentAsync(fromDate, toDate, storeCode, "API")
+				?? Enumerable.Empty<object>();
+
+			return (storeSaleItems
+				, storeReturnItems
+				, storeGoodsItems
+				, storeGoodsReturnItems
+				, storeShippingItems
+				, storeReceivingItems
+				, storeInventoryAdjustmentItems				
+				);
 		}
 
 		private List<OutboundConfig> BuildOutboundConfigs(
-		IEnumerable<object> storeSaleItems,
-		IEnumerable<object> storeShippingItems,
-		IEnumerable<object> storeReceivingItems,
-		IEnumerable<object> storeInventoryAdjustmentItems,
-		IEnumerable<object> storeReturnItems,
-		IEnumerable<object> storeGoodsReturnItems,
-		IEnumerable<object> storeGoodsItems,
-		string saleApiUrl,
-		string inventoryApiUrl)
+			IEnumerable<object> storeSaleItems,
+			IEnumerable<object> storeReturnItems,
+			IEnumerable<object> storeGoodsItems,
+			IEnumerable<object> storeGoodsReturnItems,
+			IEnumerable<object> storeShippingItems,
+			IEnumerable<object> storeReceivingItems,
+			IEnumerable<object> storeInventoryAdjustmentItems,
+			string saleApiUrl,
+			string inventoryApiUrl)
 		{
 			var configs = new List<OutboundConfig>
 			{
-				//new OutboundConfig
-				//{
-				//	Items = storeGoodsItems,
-				//	GetSid = i => ((StoreGoodsModel)i).VouSid.ToString(),
-				//	GetDocNo = i => ((StoreGoodsModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreGoodsModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreGoods.GenerateXml(list.Cast<StoreGoodsModel>().ToList(), null, "template"),
-				//	DocType = "storegoods",
-				//	ApiUrl = inventoryApiUrl
-				//},
-				//new OutboundConfig
-				//{
-				//	Items = storeGoodsReturnItems,
-				//	GetSid = i => ((StoreGoodsReturnModel)i).VouSid.ToString(),
-				//	GetDocNo = i => ((StoreGoodsReturnModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreGoodsReturnModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreGoodsReturn.GenerateXml(list.Cast<StoreGoodsReturnModel>().ToList(), null, "template"),
-				//	DocType = "storegoodsreturn",
-				//	ApiUrl = inventoryApiUrl
-				//},
 				new OutboundConfig
 				{
 					Items = storeSaleItems,
@@ -391,46 +390,66 @@ namespace GXIntegration_Levis.Views
 					DocType = "storesale",
 					ApiUrl = saleApiUrl
 				},
-				//new OutboundConfig
-				//{
-				//	Items = storeReturnItems,
-				//	GetSid = i => ((StoreReturnModel)i).DocSid.ToString(),
-				//	GetDocNo = i => ((StoreReturnModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreReturnModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreReturn.GenerateXml(list.Cast<StoreReturnModel>().ToList(), null, "template"),
-				//	DocType = "storereturn",
-				//	ApiUrl = saleApiUrl
-				//},
-				//new OutboundConfig
-				//{
-				//	Items = storeInventoryAdjustmentItems,
-				//	GetSid = i => ((StoreInventoryAdjustmentModel)i).AdjSid.ToString(),
-				//	GetDocNo = i => ((StoreInventoryAdjustmentModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreInventoryAdjustmentModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreInventoryAdjustment.GenerateXml(list.Cast<StoreInventoryAdjustmentModel>().ToList(), null, "template"),
-				//	DocType = "storeinventoryadjustment",
-				//	ApiUrl = inventoryApiUrl
-				//},
-				//new OutboundConfig
-				//{
-				//	Items = storeShippingItems,
-				//	GetSid = i => ((StoreShippingModel)i).VouSid.ToString(),
-				//	GetDocNo = i => ((StoreShippingModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreShippingModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreShipping.GenerateXml(list.Cast<StoreShippingModel>().ToList(), null, "template"),
-				//	DocType = "storeshipping",
-				//	ApiUrl = inventoryApiUrl
-				//},
-				//new OutboundConfig
-				//{
-				//	Items = storeReceivingItems,
-				//	GetSid = i => ((StoreReceivingModel)i).VouSid.ToString(),
-				//	GetDocNo = i => ((StoreReceivingModel)i).SequenceNo.ToString(),
-				//	GetDate = i => ((StoreReceivingModel)i).BusinessDayDate.DateTime,
-				//	XmlGen = list => OutboundStoreReceiving.GenerateXml(list.Cast<StoreReceivingModel>().ToList(), null, "template"),
-				//	DocType = "storereceiving",
-				//	ApiUrl = inventoryApiUrl
-				//}
+				new OutboundConfig
+				{
+					Items = storeReturnItems,
+					GetSid = i => ((StoreReturnModel)i).DocSid.ToString(),
+					GetDocNo = i => ((StoreReturnModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreReturnModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreReturn.GenerateXml(list.Cast<StoreReturnModel>().ToList(), null, "template"),
+					DocType = "storereturn",
+					ApiUrl = saleApiUrl
+				},
+				new OutboundConfig
+				{
+					Items = storeGoodsItems,
+					GetSid = i => ((StoreGoodsModel)i).VouSid.ToString(),
+					GetDocNo = i => ((StoreGoodsModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreGoodsModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreGoods.GenerateXml(list.Cast<StoreGoodsModel>().ToList(), null, "template"),
+					DocType = "storegoods",
+					ApiUrl = inventoryApiUrl
+				},
+				new OutboundConfig
+				{
+					Items = storeGoodsReturnItems,
+					GetSid = i => ((StoreGoodsReturnModel)i).VouSid.ToString(),
+					GetDocNo = i => ((StoreGoodsReturnModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreGoodsReturnModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreGoodsReturn.GenerateXml(list.Cast<StoreGoodsReturnModel>().ToList(), null, "template"),
+					DocType = "storegoodsreturn",
+					ApiUrl = inventoryApiUrl
+				},
+				new OutboundConfig
+				{
+					Items = storeShippingItems,
+					GetSid = i => ((StoreShippingModel)i).VouSid.ToString(),
+					GetDocNo = i => ((StoreShippingModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreShippingModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreShipping.GenerateXml(list.Cast<StoreShippingModel>().ToList(), null, "template"),
+					DocType = "storeshipping",
+					ApiUrl = inventoryApiUrl
+				},
+				new OutboundConfig
+				{
+					Items = storeReceivingItems,
+					GetSid = i => ((StoreReceivingModel)i).VouSid.ToString(),
+					GetDocNo = i => ((StoreReceivingModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreReceivingModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreReceiving.GenerateXml(list.Cast<StoreReceivingModel>().ToList(), null, "template"),
+					DocType = "storereceiving",
+					ApiUrl = inventoryApiUrl
+				}
+				new OutboundConfig
+				{
+					Items = storeInventoryAdjustmentItems,
+					GetSid = i => ((StoreInventoryAdjustmentModel)i).AdjSid.ToString(),
+					GetDocNo = i => ((StoreInventoryAdjustmentModel)i).SequenceNo.ToString(),
+					GetDate = i => ((StoreInventoryAdjustmentModel)i).BusinessDayDate.DateTime,
+					XmlGen = list => OutboundStoreInventoryAdjustment.GenerateXml(list.Cast<StoreInventoryAdjustmentModel>().ToList(), null, "template"),
+					DocType = "storeinventoryadjustment",
+					ApiUrl = inventoryApiUrl
+				},
 			};
 
 			return configs;
@@ -440,11 +459,11 @@ namespace GXIntegration_Levis.Views
 		{
 			{ "RETAIL_SALE", "storesale" },
 			{ "RETURN_SALE", "storereturn" },
-			{ "ADJUSTMENT", "storeinventoryadjustment" },
+			{ "ASN - RECEIVING", "storegoods" },
+			{ "RETURN_TO_DC", "storegoodsreturn" },
 			{ "STORE_TRANSFER - SHIPPING", "storeshipping" },
 			{ "STORE_TRANSFER - RECEIVING", "storereceiving" },
-			{ "ASN - RECEIVING", "storegoods" },
-			{ "RETURN_TO_DC", "storegoodsreturn" }
+			{ "ADJUSTMENT", "storeinventoryadjustment" }			
 		};
 
 		public class OutboundConfig

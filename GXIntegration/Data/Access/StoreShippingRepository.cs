@@ -17,14 +17,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreShippingModel>> GetStoreShippingAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreShippingModel>> GetStoreShippingAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 						SELECT
 							'1'										            AS ORGANIZATIONID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
@@ -93,18 +108,16 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 						LEFT JOIN RPS.PREF_REASON VOU_REASON	ON SLIP.TRANS_REASON_SID = VOU_REASON.SID
 						WHERE
-                            SLIP.SLIP_NO IS NOT NULL
+							{dateCondition}
+                            AND SLIP.SLIP_NO IS NOT NULL
                             AND VOU.VOU_TYPE = 0
                             AND SLIP.STATUS = 4
-							AND TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
 							AND SLIP.OUT_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 						ORDER BY 
 							VOU.POST_DATE DESC
 					";
 
-					//FETCH FIRST 1 ROWS ONLY
-					//VOU.POST_DATE BETWEEN :FromDate AND :ToDate
-					//TRUNC(VOU.POST_DATE) BETWEEN DATE '2021-01-20' AND DATE '2025-09-20'
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

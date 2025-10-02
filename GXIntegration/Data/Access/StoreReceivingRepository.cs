@@ -17,14 +17,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReceivingModel>> GetStoreReceivingAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreReceivingModel>> GetStoreReceivingAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 							SELECT
 								'1'										    AS ORGANIZATIONID
 								, (SELECT ADDRESS4 FROM RPS.STORE
@@ -97,19 +112,17 @@ namespace GXIntegration_Levis.Data.Access
 								LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 								LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID
 								WHERE
-									VOU.SLIP_FLAG = 1
+									{dateCondition}
+									AND VOU.SLIP_FLAG = 1
 									AND VOU.VOU_TYPE = 0
 									AND VOU.VOU_CLASS = 0
 									AND VOU.STATUS = 4						
-									AND TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
 									AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 								ORDER BY 
 									VOU.POST_DATE DESC
 					";
 
-
-					//FETCH FIRST 1 ROWS ONLY
-					//AND VOU.POST_DATE BETWEEN :FromDate AND :ToDate
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

@@ -16,14 +16,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "DOC.INVC_POST_DATE BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 							SELECT 
                                 '1'                                     AS OrganizationID
                                 , STORE.ADDRESS4			            AS RetailStoreID
@@ -38,7 +53,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'PAPER'		                        AS ReceiptDeliveryMethod
                                 , 'true'                                AS InventoryMovementSuccess 
                                 , 'AMA'                                 AS Region
-                                , COUNTRY.COUNTRY_CODE                  AS Country
+                                , 'PHP'                                 AS Country
                                 , STORE.ADDRESS4			            AS AlternateStoreID    
                                 , DOC.DOC_NO                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                     AS Barcode
@@ -55,11 +70,11 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.QTY                          AS SaleQuantity
                                 , PREF_REASON.NAME                      AS SaleReason
                                 , ''                                    AS SaleReturnType
-                                , ''                                    AS AssociateID
-                                , ''                                    AS Percentage
-                                , ''                                    AS TaxAuthority
-                                , DOC.TRANSACTION_TOTAL_TAX_AMT         AS TaxableAmount
-                                , DOC.TRANSACTION_TOTAL_AMT             AS Amount
+                                , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
+                                , '100'                                 AS Percentage
+                                , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
+                                , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
+                                , DOC_ITEM.DIP_PRICE                    AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
                                 , DOC.TAX_AREA_PERC                     AS RawTaxPercentage
                                 , ''                                    AS TaxGroupID
@@ -71,10 +86,10 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'yes'                                 AS DealItemPercentOff
                                 , ''                                    AS LineItemOriginalTlogSequence
                                 , STORE.ADDRESS4                        AS LineItemReturnOrgAltStoreID
-                                , ''                                    AS LineItemNum
+                                , DOC_ITEM.ITEM_POS                     AS LineItemNum
                                 , ISI.ITEM_SIZE						    AS PTDIM1
                                 , ISI.ATTRIBUTE						    AS PTDIM2
-                                , ''								    AS PTStyle
+                                , ISI.DESCRIPTION1						AS PTStyle
                                 , ISI.UPC							    AS PTEAN   
                                 , '10'                                  AS MerchHierarchyDivision
                                 , '00674'                               AS MerchHierarchyDepartment
@@ -112,10 +127,7 @@ namespace GXIntegration_Levis.Data.Access
                                     WHEN TENDER.TENDER_TYPE = 18 THEN 'CentralCustomerLoyalty'
                                     ELSE ''
                                   END                                   AS TenderType
-                                , CASE 
-                                    WHEN DOC.RECEIPT_TYPE = 1 THEN 'REFUND'
-                                    ELSE ''
-                                  END                                   AS TypeCode
+                                , 'REFUND'                              AS TypeCode
                                 , 'false'                               AS ChangeFlag
                                 , CASE 
                                     WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
@@ -123,7 +135,6 @@ namespace GXIntegration_Levis.Data.Access
                                     END                                 AS TenderID
                                 , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency 
                                 , TENDER.AMOUNT                         AS TenderAmount
-        
                                 , 'REFUND'                              AS VoucherTypeCode
                                 , ''                                    AS VoucherDescription
                                 , ''                                    AS VoucherFaceValueAmount
@@ -144,10 +155,10 @@ namespace GXIntegration_Levis.Data.Access
                             LEFT JOIN RPS.COUNTRY 		            ON COUNTRY.SID = SBS.COUNTRY_SID
                             LEFT JOIN RPS.PREF_REASON			    ON PREF_REASON.SID = DOC.REASON_CODE
                             WHERE 
-                                DOC.STATUS = 4
+                                {dateCondition}
+                                AND DOC.STATUS = 4
                                 AND DOC.RECEIPT_TYPE = 1
                                 AND DOC.DOC_NO IS NOT NULL
-                                AND TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate
                                 AND STORE.ADDRESS4 = :StoreCode
                             ORDER BY  
                                 STORE.STORE_NO ASC
@@ -155,10 +166,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC.DOC_NO ASC
 					";
 
-
-					//FETCH FIRST 1 ROWS ONLY
-					//AND DOC.POST_DATE BETWEEN :FromDate AND :ToDate
-					//AND TRUNC(DOC.POST_DATE) BETWEEN DATE '2025-01-15' AND DATE '2025-09-20'
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

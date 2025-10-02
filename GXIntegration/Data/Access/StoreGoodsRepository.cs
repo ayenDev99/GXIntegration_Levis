@@ -17,14 +17,29 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
 				try
 				{
 					await connection.OpenAsync();
-					string sql = @"
+
+					string dateCondition;
+					if (processType == "EOD")
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+					else if (processType == "API")
+					{
+						dateCondition = "VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+					}
+					else
+					{
+						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
+					}
+
+					string sql = $@"
 						SELECT
 							'1'										AS OrganizationID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
@@ -86,25 +101,18 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.PO 						ON PO.PO_NO = VOU.PO_NO
 						LEFT JOIN RPS.PO_ITEM 					ON PO_ITEM.PO_SID = PO.SID
 						LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-						LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
-						LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
-						LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
-						INNER JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
-						LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
+						LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
 						WHERE
-							TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate
+							{dateCondition}
 							AND VOU.PO_NO IS NOT NULL
 							AND VOU.VOU_TYPE = 0
 							AND VOU.VOU_CLASS = 0
 							AND VOU.STATUS = 4
-							AND PO.BILLTO_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
+							AND PO.SHIPTO_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
 
-					//FETCH FIRST 1 ROWS ONLY
-					// TRUNC(VOU.POST_DATE) BETWEEN DATE '2025-08-20' AND DATE '2025-08-20'
-
-					//Logger.Log(sql);
+					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{

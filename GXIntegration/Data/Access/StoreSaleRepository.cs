@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, string storeCode, string type)
+		public async Task<List<StoreSaleModel>> GetStoreSaleAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -25,11 +25,11 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 
 					string dateCondition;
-					if (type == "EOD")
+					if (processType == "EOD")
 					{
 						dateCondition = "TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
-					else if (type == "API")
+					else if (processType == "API")
 					{
                         dateCondition = "DOC.INVC_POST_DATE BETWEEN :FromDate AND :ToDate";
 					}
@@ -151,8 +151,6 @@ namespace GXIntegration_Levis.Data.Access
 					";
 
 					//Logger.Log($"Generated SQL: {sql}");
-                    //AND TRUNC(DOC.INVC_POST_DATE) BETWEEN: FromDate AND :ToDate
-                    //FETCH FIRST 1 ROWS ONLY
 
 					var parameters = new
 					{
