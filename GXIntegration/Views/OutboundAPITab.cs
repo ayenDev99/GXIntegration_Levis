@@ -165,7 +165,8 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				var config = GXConfig.Load("config.xml");
-				var reprocessMinutes = config.ReprocessMinutes;
+				//var reprocessMinutes = config.ReprocessMinutes;
+				var reprocessMinutes = 600;
 				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
 
 				Logger.Log($"[OUTBOUND API-MANUAL]		Process DateRange From: {fromDate}, To: {toDate}");
@@ -233,6 +234,7 @@ namespace GXIntegration_Levis.Views
 				btnSendXml.Enabled = true;
 			}
 
+			MessageBox.Show($"API processed successfully. Full API responses saved to AppData folder ProcessedPrismTransactions.db.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		public async Task AutoSendXmlFilesToApi()
@@ -439,7 +441,7 @@ namespace GXIntegration_Levis.Views
 					XmlGen = list => OutboundStoreReceiving.GenerateXml(list.Cast<StoreReceivingModel>().ToList(), null, "template"),
 					DocType = "storereceiving",
 					ApiUrl = inventoryApiUrl
-				}
+				},
 				new OutboundConfig
 				{
 					Items = storeInventoryAdjustmentItems,
@@ -526,9 +528,20 @@ namespace GXIntegration_Levis.Views
 							  </S:Body>
 							</S:Envelope>";
 
+						//Logger.Log($"SOAP Payload for SID {sid}:\n{soapEnvelope}");
+
+						string formattedDate = docDate.ToString("MMddyyyy");
+						string filePath = $@"C:\GXIntegration_Levis\GXIntegration\bin\Release\OUTBOUND\API\PERTRANSACTION\{formattedDate}_{docType}_{docNo}.txt";
+						// Save the SOAP Envelope as a text file
+						File.WriteAllText(filePath, soapEnvelope);
+						//Logger.Log($"SOAP Envelope saved to {filePath}");
+
 						var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
 						var response = await client.PostAsync(apiUrl, content);
 						string responseContent = await response.Content.ReadAsStringAsync();
+
+						string singleLineResponse = responseContent.Replace("\r", "").Replace("\n", "").Trim();
+						Logger.Log($"[OUTBOUND API]			Response for SID {sid}: {singleLineResponse}");
 
 						if (response.IsSuccessStatusCode)
 						{

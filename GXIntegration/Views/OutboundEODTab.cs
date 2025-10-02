@@ -22,10 +22,12 @@ namespace GXIntegration_Levis.Views
 	public partial class OutboundEODTab : UserControl
 	{
 		private GunaDataGridView guna1DataGridView1;
-		private GunaButton btnSendXml;
 		private Dictionary<string, Func<Task>> downloadActions;
 		private GXConfig config;
 		private readonly OutboundRepositories repositories;
+
+		private GunaButton btnSendXml;
+		private CheckBox headerCheckBox;
 
 		public OutboundEODTab(GXConfig config, OutboundRepositories repositories)
 		{
@@ -60,13 +62,19 @@ namespace GXIntegration_Levis.Views
 				Theme = GunaDataGridViewPresetThemes.Guna
 			};
 
+			headerCheckBox = new CheckBox
+			{
+				Size = new Size(15, 15),
+				BackColor = Color.Transparent
+			};
+
 			// Style
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
 			guna1DataGridView1.ThemeStyle.HeaderStyle.ForeColor = Color.White;
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-			// Add checkbox column FIRST
+			// Add checkbox column
 			var checkBoxColumn = new DataGridViewCheckBoxColumn
 			{
 				Name = "Select",
@@ -76,6 +84,11 @@ namespace GXIntegration_Levis.Views
 			};
 			guna1DataGridView1.Columns.Add(checkBoxColumn);
 
+			Point headerCellLocation = guna1DataGridView1.GetCellDisplayRectangle(0, -1, true).Location;
+			headerCheckBox.Location = new Point(headerCellLocation.X + 12, headerCellLocation.Y + 4); // Adjust as needed
+			headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
+
+			guna1DataGridView1.Controls.Add(headerCheckBox);
 			guna1DataGridView1.Columns.Add("ID", "ID");
 			guna1DataGridView1.Columns.Add("Name", "Name");
 			guna1DataGridView1.Columns.Add("FileNameFormat", "File Name Format");
@@ -499,6 +512,21 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		public async void CellContentClick(object sender, DataGridViewCellEventArgs e)
 		{
+			if (e.ColumnIndex == guna1DataGridView1.Columns["Select"].Index && e.RowIndex >= 0)
+			{
+				// Toggle the checkbox value
+				DataGridViewCheckBoxCell chk = (DataGridViewCheckBoxCell)guna1DataGridView1.Rows[e.RowIndex].Cells["Select"];
+				chk.Value = !(chk.Value != null && (bool)chk.Value);
+
+				// Sync header checkbox
+				bool allChecked = guna1DataGridView1.Rows.Cast<DataGridViewRow>()
+					.All(r => Convert.ToBoolean(r.Cells["Select"].Value));
+
+				headerCheckBox.CheckedChanged -= HeaderCheckBox_CheckedChanged;
+				headerCheckBox.Checked = allChecked;
+				headerCheckBox.CheckedChanged += HeaderCheckBox_CheckedChanged;
+			}
+
 			await GlobalHelper.HandleDownloadClick(
 				guna1DataGridView1, downloadActions, e.RowIndex, e.ColumnIndex, "Action"
 			);
@@ -537,8 +565,9 @@ namespace GXIntegration_Levis.Views
 				DataGridViewCheckBoxCell chk = (DataGridViewCheckBoxCell)row.Cells["Select"];
 				chk.Value = isChecked;
 			}
-		}
 
+			guna1DataGridView1.RefreshEdit();
+		}
 
 	}
 }
