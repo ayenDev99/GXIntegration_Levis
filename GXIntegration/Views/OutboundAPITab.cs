@@ -530,12 +530,19 @@ namespace GXIntegration_Levis.Views
 
 						//Logger.Log($"SOAP Payload for SID {sid}:\n{soapEnvelope}");
 
+						// Save to OUTBOUND\API\PERTRANSACTION
 						string formattedDate = docDate.ToString("MMddyyyy");
-						string filePath = $@"C:\GXIntegration_Levis\GXIntegration\bin\Release\OUTBOUND\API\PERTRANSACTION\{formattedDate}_{docType}_{docNo}.txt";
-						// Save the SOAP Envelope as a text file
-						File.WriteAllText(filePath, soapEnvelope);
-						//Logger.Log($"SOAP Envelope saved to {filePath}");
+						string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+						string outboundDir = Path.Combine(baseDir, "OUTBOUND", "API", "PERTRANSACTION");
 
+						if (!Directory.Exists(outboundDir))	{ Directory.CreateDirectory(outboundDir); }
+
+						string fileName = $"{formattedDate}_{docType}_{docNo}.txt";
+						string filePath = Path.Combine(outboundDir, fileName);
+
+						File.WriteAllText(filePath, soapEnvelope);
+
+						// Start sending to API
 						var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
 						var response = await client.PostAsync(apiUrl, content);
 						string responseContent = await response.Content.ReadAsStringAsync();
