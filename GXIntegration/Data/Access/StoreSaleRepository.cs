@@ -75,11 +75,11 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'false'                               AS GiftReceiptFlag
                                 , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
                                 , '100'                                 AS Percentage
-                                , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
-                                , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
+                                , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
+                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS TaxableAmount
                                 , DOC_ITEM.DIP_PRICE                    AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
-                                , DOC.TAX_AREA_PERC                     AS RawTaxPercentage
+                                , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
                                 , ''                                    AS TaxGroupID
                                 , 'yes'                                 AS DealItemPercentOff
                                 , ISI.ITEM_SIZE						    AS PTDIM1
