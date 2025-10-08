@@ -10,6 +10,7 @@ using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -583,16 +584,24 @@ namespace GXIntegration_Levis.Views
 						//Logger.Log($"SOAP Payload for SID {sid}:\n{soapEnvelope}");
 
 						// Save to OUTBOUND\API\PERTRANSACTION
-						string formattedDate = docDate.ToString("MMddyyyy");
+						string folderFormattedDate = docDate.ToString("MMddyyyy");
 						string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-						string outboundDir = Path.Combine(baseDir, "OUTBOUND", "API", "PERTRANSACTION");
+						string apiFolder = Path.Combine(baseDir, "OUTBOUND", "API");
+						string transactionFolder = Path.Combine(apiFolder, "TRANSACTION");
+						string dateFolder = Path.Combine(transactionFolder, folderFormattedDate);
 
-						if (!Directory.Exists(outboundDir))	{ Directory.CreateDirectory(outboundDir); }
+						// Ensure directories exist
+						Directory.CreateDirectory(apiFolder);
+						Directory.CreateDirectory(transactionFolder);
+						Directory.CreateDirectory(dateFolder);
 
-						string fileName = $"{formattedDate}_{docType}_{docNo}.txt";
-						string filePath = Path.Combine(outboundDir, fileName);
+						string fileFormattedDate = docDate.ToString("ddMMyyyyHHmmss");
+						string fileName = Path.Combine(dateFolder, $"{docType}_{fileFormattedDate}_{docNo}.xml");
 
-						File.WriteAllText(filePath, soapEnvelope);
+						using (var writer = new StreamWriter(fileName, false, Encoding.UTF8))
+						{
+							await writer.WriteAsync(soapEnvelope);
+						}
 
 						// Start sending to API
 						var content = new System.Net.Http.StringContent(soapEnvelope, System.Text.Encoding.UTF8, "application/xml");
