@@ -77,8 +77,7 @@ namespace GXIntegration_Levis.Data.Access
 								, '1'							        AS ShipmentSequence
 								, VOU.POST_DATE			                AS ActualDeliveryDate
 								, VOU.POST_DATE			                AS ActualShipDate
-								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS DestinationPartyID
+								, VENDOR.VEND_CODE						AS DestinationPartyID
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS DestinationRetailLocationID
 								, 'SHIPPED'				                AS ShipmentStatusCode
@@ -104,6 +103,7 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.VOU_COMMENT				ON VOU_COMMENT.VOU_SID = VOU.SID
+							LEFT JOIN RPS.VENDOR					ON VENDOR.SID = VOU.VEND_SID
 							WHERE
 								{dateCondition}
 								AND VOU.VOU_TYPE = 1

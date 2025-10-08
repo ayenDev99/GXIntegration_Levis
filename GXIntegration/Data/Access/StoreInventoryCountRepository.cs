@@ -71,7 +71,6 @@ namespace GXIntegration_Levis.Data.Access
 							WHERE 
 								TRUNC(PI_SHEET.POST_DATE) BETWEEN :FromDate AND :ToDate
 								AND STORE.ADDRESS4 = :StoreCode
-								AND PI_SHEET.ACTIVE = 1
 						) t
 					)
 					WHERE RN BETWEEN :StartRow AND :EndRow
