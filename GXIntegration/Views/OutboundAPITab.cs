@@ -614,20 +614,21 @@ namespace GXIntegration_Levis.Views
 						if (response.IsSuccessStatusCode)
 						{
 							Logger.Log($"[OUTBOUND API]			XML sent to API Mulesoft SUCCESSFULLY | Type: {docType} | SID: {sid} | DocNo: {docNo} | Status: {response.StatusCode}");
-							InsertProcessedTransaction(sid, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success", responseContent);
+							InsertProcessedTransaction(sid, docNo, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success", responseContent);
 						}
 						else
 						{
 							Logger.Log($"[OUTBOUND API]			XML sent to API Mulesoft FAILED | Type: {docType} | SID: {sid} | DocNo: {docNo} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
-							InsertProcessedTransaction(sid, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed", responseContent);
+							InsertProcessedTransaction(sid, docNo, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed", responseContent);
 						}
 
 					}
 					catch (Exception ex)
 					{
 						string sid = getSid(item);
+						string docNo = getDocNo(item);
 						Logger.Log($"[API ERROR] {docType} | SID {sid} | Exception: {ex}");
-						InsertProcessedTransaction(sid, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
+						InsertProcessedTransaction(sid, docNo, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
 					}
 				}
 			}
@@ -655,29 +656,48 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private void InsertProcessedTransaction(string sid, string type, string date, string status, string response = null)
+		private void InsertProcessedTransaction(string sid, string docNo, string type, string createdDatetime, string status, string response = null)
 		{
 			EnsureDatabase();
 
 			string dbPath = Path.Combine(Application.StartupPath, "AppData", "ProcessedPrismTransactions.db");
 			string connStr = $"Data Source={dbPath};Version=3;";
+			string currentDatetime = DateTime.Now.ToString("dd-MMM-yy hh:mm:ss tt zzz");
 
 			using (var conn = new SQLiteConnection(connStr))
 			{
 				conn.Open();
 				string insert = @"
-					INSERT INTO ProcessedPrismTransactions (SID, TYPE, DATE, STATUS, RESPONSE)
-					VALUES (@SID, @TYPE, @DATE, @STATUS, @RESPONSE)
-					ON CONFLICT(SID, TYPE) DO UPDATE SET
-						STATUS = excluded.STATUS,
-						DATE = excluded.DATE,
-						RESPONSE = excluded.RESPONSE
+					INSERT INTO ProcessedPrismTransactions 
+						(SID
+						, DOC_NO
+						, TYPE
+						, CREATED_DATETIME
+						, PROCESSED_DATETIME
+						, STATUS
+						, RESPONSE)
+					VALUES 
+						(@SID
+						, @DOCNO
+						, @TYPE
+						, @CREATEDDATETIME
+						, @PROCESSEDDATETIME
+						, @STATUS
+						, @RESPONSE)
+					ON CONFLICT(SID, TYPE) DO 
+						UPDATE 
+							SET
+								STATUS = excluded.STATUS,
+								PROCESSED_DATETIME = excluded.PROCESSED_DATETIME,
+								RESPONSE = excluded.RESPONSE
 				";
 				using (var cmd = new SQLiteCommand(insert, conn))
 				{
 					cmd.Parameters.AddWithValue("@SID", sid);
+					cmd.Parameters.AddWithValue("@DOCNO", docNo);
 					cmd.Parameters.AddWithValue("@TYPE", type);
-					cmd.Parameters.AddWithValue("@DATE", date);
+					cmd.Parameters.AddWithValue("@CREATEDDATETIME", createdDatetime);
+					cmd.Parameters.AddWithValue("@PROCESSEDDATETIME", currentDatetime);
 					cmd.Parameters.AddWithValue("@STATUS", status);
 					cmd.Parameters.AddWithValue("@RESPONSE", response ?? string.Empty);
 					cmd.ExecuteNonQuery();
@@ -699,8 +719,10 @@ namespace GXIntegration_Levis.Views
 				string createTable = @"
 					CREATE TABLE IF NOT EXISTS ProcessedPrismTransactions (
 						SID TEXT,
+						DOC_NO TEXT,
 						TYPE TEXT,
-						DATE TEXT,
+						CREATED_DATETIME TEXT,
+						PROCESSED_DATETIME TEXT,
 						STATUS TEXT,
 						RESPONSE TEXT,
 						PRIMARY KEY (SID, TYPE)
