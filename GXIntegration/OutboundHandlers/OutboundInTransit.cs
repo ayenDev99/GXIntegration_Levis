@@ -1,6 +1,5 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Model;
-using GXIntegration;
 using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
@@ -15,11 +14,11 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInTransit
 	{
-		public static async Task Execute(InTransitRepository repository, GXConfig config, DateTime fromDate, DateTime toDate)
+		public static async Task Execute(InTransitRepository repository, GXConfig config, DateTime procDate)
 		{
 			try
 			{
-				var items = await repository.GetInventoryAsync(fromDate, toDate);
+				var items = await repository.GetIntransitAsync(procDate);
 				string countryCode = config.CountryCode ?? "XX";
 				if (!items.Any())
 				{
@@ -30,14 +29,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 				// Outbound directory setup
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 				Directory.CreateDirectory(outboundDir);
-				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+				string timestamp = procDate.ToString("ddMMyyyyHHmmss");
 
 				// Archive directory setup
 				string archiveRootDir = Path.Combine(outboundDir, "ARCHIVE");
-				string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+				string archiveDateDir = Path.Combine(archiveRootDir, procDate.ToString("yyyyMMdd"));
 				Directory.CreateDirectory(archiveDateDir);
 
-				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+				string todayPrefix = procDate.ToString("ddMMyyyy");
 				var existingFiles = Directory.GetFiles(archiveDateDir, $"AMA_{countryCode}_INTRANSIT_*.txt")
 									.Where(f => Path.GetFileName(f).Contains(todayPrefix))
 									.ToList();

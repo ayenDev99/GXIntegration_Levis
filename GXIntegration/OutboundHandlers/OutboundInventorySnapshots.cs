@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInventorySnapshots
 	{
-		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores, DateTime fromDate, DateTime toDate)
+		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores, DateTime procDate)
 		{
 			try
 			{
@@ -23,7 +23,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				{
 					string storeCode = ((IDictionary<string, object>)store).TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					var items = await repository.GetInventoryAsync(fromDate, toDate, storeCode);
+					var items = await repository.GetInventoryAsync(procDate, storeCode);
 					if (!items.Any())
 					{
 						Logger.Log($"[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}");
@@ -33,15 +33,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 					// Outbound directory setup
 					string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 					Directory.CreateDirectory(outboundDir);
-					string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+					string timestamp = procDate.ToString("ddMMyyyyHHmmss");
 
 					// Archive directory setup
 					string archiveRootDir = Path.Combine(outboundDir, "ARCHIVE");
-					string archiveDateDir = Path.Combine(archiveRootDir, DateTime.Now.ToString("yyyyMMdd"));
+					string archiveDateDir = Path.Combine(archiveRootDir, procDate.ToString("yyyyMMdd"));
 					Directory.CreateDirectory(archiveDateDir);
 
 			
-					string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+					string todayPrefix = procDate.ToString("ddMMyyyy");
 					var existingFiles = Directory.GetFiles(archiveDateDir, $"AMA_PH_{storeCode}_*.txt")
 										.Where(f => Path.GetFileName(f).Contains(todayPrefix))
 										.ToList();

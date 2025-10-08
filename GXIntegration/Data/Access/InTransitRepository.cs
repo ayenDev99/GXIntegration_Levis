@@ -16,7 +16,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<InTransitModel>> GetInventoryAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<InTransitModel>> GetIntransitAsync(DateTime procDate)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -25,31 +25,68 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 
 					string sql = @"
-						SELECT
-							CASE 
-								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
-								THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
-								ELSE ISI.DESCRIPTION1
-							END 						AS ProductCode
-							, ISI.ALU					AS Sku	
-							, ISI.ITEM_SIZE				AS Waist
-							, ISI.ATTRIBUTE				AS Inseam
-							, TO_CHAR(STORE.ADDRESS4)	AS StoreCode
-							, VOU_ITEM.QTY				AS Quantity
-						FROM
-						  RPS.VOUCHER VOU
-						LEFT JOIN RPS.VOU_ITEM VOU_ITEM ON VOU.SID = RPS.VOU_ITEM.VOU_SID 
-						LEFT JOIN RPS.STORE ON RPS.STORE.SID = VOU.STORE_SID
-						LEFT JOIN RPS.SUBSIDIARY SUBS ON SUBS.SID = VOU.SBS_SID
-						LEFT JOIN RPS.COUNTRY ON RPS.COUNTRY.SID = SUBS.COUNTRY_SID
-						LEFT JOIN RPS.CURRENCY ON RPS.CURRENCY.SID = RPS.VOU_ITEM.CURRENCY_SID
-						LEFT JOIN RPS.REGION_SUBSIDIARY ON SUBS.SID = RPS.REGION_SUBSIDIARY.SBS_SID
-						LEFT JOIN RPS.REGION ON RPS.REGION.SID = RPS.REGION_SUBSIDIARY.REGION_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = RPS.VOU_ITEM.ITEM_SID
-						WHERE 
-							(VOU.SLIP_FLAG = 1 AND VOU.STATUS = 3)
-								OR (VOU.PO_NO IS NOT NULL AND VOU.STATUS = 3)
-							AND ISI.ACTIVE = 1
+					    SELECT 
+                            'PO'                            AS SourceType
+                            , CASE 
+                                WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+                                THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+                                ELSE ISI.DESCRIPTION1
+                            END                             AS ProductCode
+                            , ISI.ALU                       AS Sku
+                            , ISI.ITEM_SIZE                 AS Waist
+                            , ISI.ATTRIBUTE                 AS Inseam
+                            , TO_CHAR(STORE.ADDRESS4)       AS StoreCode
+                            , PO_ITEM.ORD_QTY               AS Quantity
+                            , PO.POST_DATE                  AS PostDate
+                            , PO.MODIFIED_DATETIME          AS ModifiedDatetime
+                        FROM 
+                            RPS.PO
+                        LEFT JOIN RPS.PO_ITEM PO_ITEM       ON PO.SID = PO_ITEM.PO_SID
+                        LEFT JOIN RPS.STORE STORE           ON STORE.SID = PO.STORE_SID
+                        LEFT JOIN RPS.INVN_SBS_ITEM ISI     ON ISI.SID = PO_ITEM.ITEM_SID
+                        WHERE 
+                            ISI.ACTIVE = 1
+                            AND STORE.ACTIVE = 1
+                            AND STORE.ADDRESS4 IS NOT NULL
+                            AND PO.PO_NO NOT IN (
+                                SELECT 
+                                    VOU.PO_NO 
+                                FROM 
+                                    RPS.VOUCHER VOU 
+                                WHERE 
+                                    VOU.PO_NO IS NOT NULL
+                                    AND VOU.STATUS = 4
+                            )
+                            AND TRUNC(PO.POST_DATE) <= :ProcDate
+                        UNION ALL
+                        SELECT 
+                            'VOUCHER'                       AS SourceType,
+                            CASE 
+                                WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+                                THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+                                ELSE ISI.DESCRIPTION1
+                            END                             AS ProductCode
+                            , ISI.ALU                       AS Sku
+                            , ISI.ITEM_SIZE                 AS Waist
+                            , ISI.ATTRIBUTE                 AS Inseam
+                            , TO_CHAR(STORE.ADDRESS4)       AS StoreCode
+                            , VOU_ITEM.QTY                  AS Quantity
+                            , VOU.POST_DATE                 AS PostDate
+                            , VOU.MODIFIED_DATETIME         AS ModifiedDatetime
+                        FROM 
+                            RPS.VOUCHER VOU
+                        LEFT JOIN RPS.VOU_ITEM VOU_ITEM     ON VOU.SID = VOU_ITEM.VOU_SID
+                        LEFT JOIN RPS.STORE STORE           ON STORE.SID = VOU.STORE_SID
+                        LEFT JOIN RPS.INVN_SBS_ITEM ISI     ON ISI.SID = VOU_ITEM.ITEM_SID
+                        WHERE 
+                            VOU.SLIP_FLAG = 1 
+                            AND VOU.STATUS = 3
+                            AND ISI.ACTIVE = 1
+                            AND STORE.ACTIVE = 1
+                            AND STORE.ADDRESS4 IS NOT NULL
+                            AND TRUNC(VOU.POST_DATE) <= :ProcDate
+
+                        ORDER BY PostDate DESC, ModifiedDatetime DESC
 					";
 
 					//AND TRUNC(VOU.POST_DATE) <= :ToDate
@@ -58,8 +95,7 @@ namespace GXIntegration_Levis.Data.Access
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date
+						ProcDate = procDate,
 					};
 
 					var sales = await connection.QueryAsync<InTransitModel>(sql, parameters);

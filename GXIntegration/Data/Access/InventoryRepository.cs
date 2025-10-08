@@ -20,7 +20,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<InventoryModel>> GetInventoryAsync(DateTime from_date, DateTime to_date, string storeCode)
+		public async Task<List<InventoryModel>> GetInventoryAsync(DateTime procDate, string storeCode)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -78,6 +78,7 @@ namespace GXIntegration_Levis.Data.Access
 							AND S.ACTIVE_PRICE_LVL_SID = ISP.PRICE_LVL_SID
 							AND ISIQ.QTY <> 0
 							AND S.ADDRESS4 = :StoreCode
+							AND TRUNC(ISI.POST_DATE) <= :ProcDate
 					";
 
 					//AND TRUNC(ISI.POST_DATE) BETWEEN: FromDate AND :ToDate
@@ -85,8 +86,7 @@ namespace GXIntegration_Levis.Data.Access
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date,
+						ProcDate = procDate,
 						StoreCode = storeCode
 					};
 

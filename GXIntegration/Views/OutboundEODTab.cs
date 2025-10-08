@@ -13,12 +13,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using System.Text.RegularExpressions;
 
 
 namespace GXIntegration_Levis.Views
@@ -215,46 +213,51 @@ namespace GXIntegration_Levis.Views
 				return;
 			}
 
+			var fromDate = datePickerFrom.Value.Date;
+			var toDate = datePickerTo.Value.Date;
+
+			if (fromDate > toDate)
+			{
+				MessageBox.Show("From Date cannot be later than To Date.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
+
 			btnSendXml.Enabled = false;
 			Cursor.Current = Cursors.WaitCursor;
 
 			try
 			{
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-				var fromDate = datePickerFrom.Value;
-				var toDate = datePickerTo.Value;
+				Logger.Log($"[OUTBOUND EOD-MANUAL] Processing Date Range From: {fromDate:yyyy-MM-dd} To: {toDate:yyyy-MM-dd}");
 
-				Logger.Log($"[OUTBOUND EOD-MANUAL]		Process DateRange From: {fromDate}, To: {toDate}");
-
-				foreach (var processName in selectedDocTypes)
+				var processActions = new Dictionary<string, Func<DateTime, Task>>(StringComparer.OrdinalIgnoreCase)
 				{
-					Logger.Log($"[OUTBOUND EOD] Processing {processName}...");
+					["PRICE"] = async (date) => await OutboundPrice.Execute(repositories.PriceRepository, config, date),
+					["INVENTORY SNAPSHOTS"] = async (date) => await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, date),
+					["INTRANSIT"] = async (date) => await OutboundInTransit.Execute(repositories.InTransitRepository, config, date),
+					["INVENTORYCOUNT"] = async (date) => await ExecuteStoreInventoryCountAsync(prismStores, date, date),
+					["POSLOG"] = async (date) => await ExecuteAllAndSaveToSingleXmlAsync(prismStores, date, date)
+				};
 
-					switch (processName.ToUpper())
+				// 🔁 Loop per date in the selected range
+				for (var date = fromDate; date <= toDate; date = date.AddDays(1))
+				{
+					Logger.Log($"[OUTBOUND EOD] Processing date: {date:yyyy-MM-dd}");
+
+					foreach (var docType in selectedDocTypes)
 					{
-						case "PRICE":
-							await OutboundPrice.Execute(repositories.PriceRepository, config, fromDate, toDate);
-							break;
-
-						case "INVENTORY SNAPSHOTS":
-							await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, fromDate, toDate);
-							break;
-
-						case "INTRANSIT":
-							await OutboundInTransit.Execute(repositories.InTransitRepository, config, fromDate, toDate);
-							break;
-
-						case "INVENTORYCOUNT":
-							await ExecuteStoreInventoryCountAsync(prismStores, fromDate, toDate);
-							break;
-
-						case "POSLOG":
-							await ExecuteAllAndSaveToSingleXmlAsync(prismStores, fromDate, toDate);
-							break;
-
-						default:
-							Logger.Log($"No action defined for {processName}");
-							break;
+						if (processActions.TryGetValue(docType, out var action))
+						{
+							Logger.Log($"[OUTBOUND EOD] Executing {docType} for {date:yyyy-MM-dd}...");
+							var sw = System.Diagnostics.Stopwatch.StartNew();
+							await action(date);
+							sw.Stop();
+							Logger.Log($"[OUTBOUND EOD] Finished {docType} for {date:yyyy-MM-dd} in {sw.ElapsedMilliseconds} ms");
+						}
+						else
+						{
+							Logger.Log($"[OUTBOUND EOD] No action defined for {docType}");
+						}
 					}
 				}
 
@@ -556,37 +559,53 @@ namespace GXIntegration_Levis.Views
 
 		private void ArchiveFile(string filePath, string localDirectory)
 		{
-			string fileName = Path.GetFileName(filePath);
-
-			var match = Regex.Match(fileName, @"_(\d{8})\d{6}\.xml$");
-			if (match.Success)
+			try
 			{
-				string datePart = match.Groups[1].Value;  // "06102025"
-				DateTime date = DateTime.ParseExact(datePart, "ddMMyyyy", null);
-				string formatted = date.ToString("yyyyMMdd");
+				if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+				{
+					Logger.Log($"[ARCHIVE] File not found: {filePath}");
+					return;
+				}
 
+				string fileName = Path.GetFileName(filePath);
+
+				var match = Regex.Match(fileName, @"_(\d{8})\d{6}\.(xml|txt)$", RegexOptions.IgnoreCase);
+				if (!match.Success)
+				{
+					Logger.Log($"[ARCHIVE] Invalid date format in filename: {fileName}");
+					return;
+				}
+
+				string datePart = match.Groups[1].Value; // "08102025"
+				if (!DateTime.TryParseExact(datePart, "ddMMyyyy", null, System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
+				{
+					Logger.Log($"[ARCHIVE] Failed to parse date from filename: {fileName}");
+					return;
+				}
+
+				string formattedDate = parsedDate.ToString("yyyyMMdd");
 				string archiveRootDir = Path.Combine(localDirectory, "ARCHIVE");
-				string archiveDateDir = Path.Combine(archiveRootDir, formatted);
+				string archiveDateDir = Path.Combine(archiveRootDir, formattedDate);
+
 				Directory.CreateDirectory(archiveDateDir);
 
 				string archivedPath = Path.Combine(archiveDateDir, fileName);
 
 				if (File.Exists(archivedPath))
 				{
+					Logger.Log($"[ARCHIVE] Overwriting existing file: {archivedPath}");
 					File.Delete(archivedPath);
-					Logger.Log($"Overwriting archived file: {archivedPath}");
 				}
 
 				File.Move(filePath, archivedPath);
+				Logger.Log($"[ARCHIVE] Moved file to: {archivedPath}");
 			}
-			else
+			catch (Exception ex)
 			{
-				Console.WriteLine("Invalid date format in filename.");
-				Logger.Log($"Invalid date format in filename. {fileName}");
-
-				return;
+				Logger.Log($"[ARCHIVE] Error archiving file: {ex.Message}");
 			}
 		}
+
 
 		private readonly Dictionary<string, string> _docTypeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
 		{

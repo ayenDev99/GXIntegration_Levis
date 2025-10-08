@@ -19,7 +19,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<PriceModel>> GetPriceAsync(DateTime from_date, DateTime to_date)
+		public async Task<List<PriceModel>> GetPriceAsync(DateTime procDate)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -50,6 +50,7 @@ namespace GXIntegration_Levis.Data.Access
 							STORE.ACTIVE = 1
 							AND ISI.ACTIVE = 1
 							AND STORE.ADDRESS4 IS NOT NULL
+							AND TRUNC(ISIP.POST_DATE) <= :ProcDate
 						GROUP BY 
 							CASE 
 								WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
@@ -63,8 +64,7 @@ namespace GXIntegration_Levis.Data.Access
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date
+						ProcDate = procDate
 					};
 
 					var sales = await connection.QueryAsync<PriceModel>(sql, parameters);
