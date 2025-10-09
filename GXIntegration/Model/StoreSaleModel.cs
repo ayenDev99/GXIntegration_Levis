@@ -43,6 +43,9 @@ namespace GXIntegration_Levis.Model
 		public string GiftReceiptFlag { get; set; }
 		public string AssociateID { get; set; }
 		public string Percentage { get; set; }
+		public string RetailRriceModifierAmount { get; set; }
+		public string PromotionID { get; set; }
+		public string RetailPriceModifierReasonCode { get; set; }
 		public string TaxAuthority { get; set; }
 		public string TaxableAmount { get; set; }
 		public string Amount { get; set; }

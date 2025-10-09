@@ -135,7 +135,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 							if (lineItems == null) continue;
 
 							writer.WriteStartElement("LineItem");
-							writer.WriteAttributeString("EntryMethod", "Scanner"); // fixed value
+							writer.WriteAttributeString("EntryMethod", "Scanner");
 							writer.WriteAttributeString("VoidFlag", "false");
 
 							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", lineItems.LineItemSequenceNo ?? "");
@@ -169,6 +169,18 @@ namespace GXIntegration_Levis.OutboundHandlers
 							GlobalOutbound.WriteCDataElement(writer, "dtv", "AssociateID", GlobalOutbound.NsDtv, lineItems.AssociateID ?? "");
 							GlobalOutbound.WriteCDataElement(writer, "dtv", "Percentage", GlobalOutbound.NsDtv, lineItems.Percentage ?? "");
 							writer.WriteEndElement(); // </dtv:PercentageOfItem>
+
+							writer.WriteStartElement("RetailPriceModifier");
+							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", lineItems.LineItemSequenceNo ?? "");
+
+							writer.WriteStartElement("Amount");
+							writer.WriteAttributeString("Action", "Subtract");
+							writer.WriteCData(lineItems.RetailRriceModifierAmount ?? "");
+							writer.WriteEndElement(); // </Amount>
+
+							GlobalOutbound.WriteCDataElement(writer, "PromotionID", lineItems.PromotionID ?? "");
+							GlobalOutbound.WriteCDataElement(writer, "ReasonCode", lineItems.RetailPriceModifierReasonCode ?? "");
+							writer.WriteEndElement(); // </RetailPriceModifier>
 
 							writer.WriteStartElement("Tax");
 							writer.WriteAttributeString("TaxType", "Sales");

@@ -63,8 +63,8 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.POST_DATE                    AS LineItemEndDateTime
                                 , DOC_ITEM.ALU                          AS SaleItemID
                                 , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
-                                , DOC_ITEM.PRICE                        AS SaleRegularSalesUnitPrice
-                                , DOC_ITEM.ORIG_PRICE                   AS SaleActualSalesUnitPrice
+                                , DOC_ITEM.ORIG_PRICE                   AS SaleRegularSalesUnitPrice
+                                , DOC_ITEM.PRICE                        AS SaleActualSalesUnitPrice
                                 , DOC_ITEM.PRICE * DOC_ITEM.QTY         AS SaleExtendedAmount
                                 , DOC_ITEM.QTY                          AS SaleQuantity
                                 , '10'                                  AS Division
@@ -74,10 +74,13 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.SCAN_UPC                     AS ScannedItemID
                                 , 'false'                               AS GiftReceiptFlag
                                 , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
-                                , '100'                                 AS Percentage
+                                , DOC_ITEM.DISC_PERC                    AS Percentage
+                                , ROUND(DOC_ITEM.DISC_AMT, 2)           AS RetailRriceModifierAmount
+                                , ''                                    AS PromotionID
+                                , DOC_ITEM.DISCOUNT_REASON              AS RetailPriceModifierReasonCode
                                 , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
-                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS TaxableAmount
-                                , DOC_ITEM.DIP_PRICE                    AS Amount
+                                , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
+                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
                                 , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
                                 , ''                                    AS TaxGroupID
@@ -126,7 +129,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency 
                                 , TENDER.AMOUNT                         AS TenderAmount
                                 , TENDER.AMOUNT                         AS TransactionGrandAmount
-                                , ROUND(TO_NUMBER(TENDER.AMOUNT))       AS RoundedTotal
+                                , '0'                                   AS RoundedTotal
                                 , DOC.SID					            AS DocSid
                             FROM 
                                 RPS.DOCUMENT DOC
