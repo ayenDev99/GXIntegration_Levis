@@ -3,11 +3,11 @@ using GXIntegration.Properties;
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.InboundHandlers;
-using GXIntegration_Levis.Properties;
 using System;
 using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace GXIntegration_Levis.Views
@@ -40,46 +40,40 @@ namespace GXIntegration_Levis.Views
 		}
 
 		// ***************************************************
-		// Initialization Methods
+		// Initialization
 		// ***************************************************
 		private void ProcessedInboundFilesDatabase()
 		{
 			string folderPath = Path.Combine(Application.StartupPath, "AppData");
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-				Logger.Log($"[INBOUND] Created AppData folder at: {folderPath}");
-			}
+			Directory.CreateDirectory(folderPath);
 
 			string dbPath = Path.Combine(folderPath, "TempProcessedInboundFiles.db");
+
 			if (!File.Exists(dbPath))
-			{
 				SQLiteConnection.CreateFile(dbPath);
-			}
 
 			string connectionString = $"Data Source={dbPath};Version=3;";
+			string createTableQuery = @"
+				CREATE TABLE IF NOT EXISTS TempProcessedInboundFiles (
+					Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+					CreatedDate     TEXT,
+					ModuleType      TEXT,
+					FileName        TEXT,
+					Status          TEXT,
+					DeletedDate     TEXT
+				);
+			";
+
 			using (SQLiteConnection conn = new SQLiteConnection(connectionString))
 			{
 				conn.Open();
-
-				string createTableQuery = @"
-				CREATE TABLE IF NOT EXISTS TempProcessedInboundFiles (
-					Id                      INTEGER PRIMARY KEY AUTOINCREMENT
-					, CreatedDate				TEXT
-					, ModuleType				TEXT
-					, FileName					TEXT
-					, Status					TEXT
-					, DeletedDate				TEXT
-				);";
-
 				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
 				{
 					cmd.ExecuteNonQuery();
-					Logger.Log($"[INBOUND] 'TempProcessedInboundFiles' table created or already exists. Path : {folderPath}");
 				}
-
-				Logger.Log("[INBOUND] Database initialization complete.");
 			}
+
+			Logger.Log($"[INBOUND] 'TempProcessedInboundFiles' table created or already exists. Path : {folderPath}");
 		}
 
 		private void InitializeGrid()
@@ -102,50 +96,81 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
 			guna1DataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-			guna1DataGridView1.ColumnCount = 5;
-			guna1DataGridView1.Columns[0].Name = "ID";
-			guna1DataGridView1.Columns[1].Name = "Name";
-			guna1DataGridView1.Columns[2].Name = "File Name Format";
-			guna1DataGridView1.Columns[3].Name = "File Type";
-			guna1DataGridView1.Columns[4].Name = "Delimiter";
+			var checkboxColumn = new DataGridViewCheckBoxColumn
+			{
+				Name = "Select",
+				HeaderText = "",
+				Width = 45
+			};
+			guna1DataGridView1.Columns.Add(checkboxColumn);
 
-			guna1DataGridView1.Columns[0].Width = 30;
-			guna1DataGridView1.Columns[1].Width = 200;
-			guna1DataGridView1.Columns[2].Width = 300;
-			guna1DataGridView1.Columns[3].Width = 85;
-			guna1DataGridView1.Columns[4].Width = 85;
+			CheckBox selectAllCheckbox = new CheckBox
+			{
+				Size = new Size(15, 15),
+				BackColor = Color.Transparent
+			};
+			guna1DataGridView1.Controls.Add(selectAllCheckbox);
 
-			//var imageColumn = new DataGridViewImageColumn
-			//{
-			//	Name = "Action",
-			//	HeaderText = "Action",
-			//	Image = Resources.icon_download,
-			//	Width = 50,
-			//	ImageLayout = DataGridViewImageCellLayout.Zoom
-			//};
-			//guna1DataGridView1.Columns.Add(imageColumn);
+			void PositionSelectAll()
+			{
+				if (guna1DataGridView1.Columns["Select"] == null) return;
+				Rectangle rect = guna1DataGridView1.GetCellDisplayRectangle(
+					guna1DataGridView1.Columns["Select"].Index, -1, true);
+				selectAllCheckbox.Location = new Point(
+					rect.Left + (rect.Width - selectAllCheckbox.Width) / 2,
+					rect.Top + (rect.Height - selectAllCheckbox.Height) / 2
+				);
+			}
+
+			guna1DataGridView1.ColumnWidthChanged += (s, e) => PositionSelectAll();
+			guna1DataGridView1.Scroll += (s, e) => PositionSelectAll();
+			guna1DataGridView1.SizeChanged += (s, e) => PositionSelectAll();
+			guna1DataGridView1.DataBindingComplete += (s, e) => PositionSelectAll();
+			guna1DataGridView1.CellPainting += (s, e) =>
+			{
+				if (e.RowIndex == -1 && e.ColumnIndex == guna1DataGridView1.Columns["Select"].Index)
+					PositionSelectAll();
+			};
+
+			selectAllCheckbox.CheckedChanged += (s, e) =>
+			{
+				guna1DataGridView1.EndEdit();
+				foreach (DataGridViewRow row in guna1DataGridView1.Rows)
+				{
+					row.Cells["Select"].Value = selectAllCheckbox.Checked;
+				}
+			};
+
+			guna1DataGridView1.Columns.AddRange(
+				new DataGridViewTextBoxColumn { Name = "ID", Width = 30 },
+				new DataGridViewTextBoxColumn { Name = "Name", Width = 140 },
+				new DataGridViewTextBoxColumn { Name = "File Name Format", Width = 250 },
+				new DataGridViewTextBoxColumn { Name = "File", Width = 45 },
+				new DataGridViewTextBoxColumn { Name = "Delimiter", Width = 65 }
+			);
+
+			void AddRow(string id, string name, string format, string type, string delimiter)
+				=> guna1DataGridView1.Rows.Add(false, id, name, format, type, delimiter);
+
+			AddRow("1", "EMPLOYEE DETAILS", "LSPI_WD_[yyyymmddhhmmss]", ".csv", "( , )");
+			AddRow("2", "ITEM DETAILS", "LSPI_ITEM_[yyyymmddhhmmss]", ".txt", "( ^ )");
+			AddRow("3", "HIERARCHY DETAILS", "LSPI_HIERARCHY_[yyyymmddhhmmss]", ".txt", "( ^ )");
+			AddRow("4", "ASN DETAILS", "LSPI_PRTRDX_[yyyymmddhhmmss]", ".txt", "{^^}");
+			AddRow("5", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]", ".txt", "{^^}");
 
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
 
-			void AddRow(string id, string name, string format, string type, string delimiter)
-				=> guna1DataGridView1.Rows.Add(id, name, format, type, delimiter);
-
-			AddRow("1", "EMPLOYEE DETAILS", "LSPI_WD_[yyyymmddhhmmss]", ".csv", "comma ( , )");
-			AddRow("2", "ITEM DETAILS", "LSPI_ITEM_[yyyymmddhhmmss]", ".txt", "caret ( ^ )");
-			AddRow("3", "HIERARCHY DETAILS", "LSPI_HIERARCHY_[yyyymmddhhmmss]", ".txt", "caret ( ^ )");
-			AddRow("4", "ADVANCE SHIPPING NOTICE (ASN) DETAILS", "LSPI_PRTRDX_[yyyymmddhhmmss]", ".txt", "{^^}");
-			AddRow("5", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]",".txt", "{^^}");
-
 			this.Controls.Add(guna1DataGridView1);
+
+			this.Load += (s, e) => PositionSelectAll();
 		}
 
 		private void InitializeControls()
 		{
 			btnSaveToPrism = GlobalHelper.CreateButton(
 				text: "Save Data to Prism",
-				location: new Point(250, 250),
-
+				location: new Point(250, 270),
 				clickAction: async () =>
 				{
 					try
@@ -153,25 +178,58 @@ namespace GXIntegration_Levis.Views
 						var globalInbound = new GlobalInbound();
 
 						string session = await globalInbound.AuthenticateFromConfigAsync();
-						if (session == null) return;
+						if (session == null)
+							return;
 
 						string inboundDir = globalInbound.EnsureInboundDirectory();
 
-						await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
-						await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
-						await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
-						await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
-						await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
-					
+						var selectedModules = guna1DataGridView1.Rows
+							.Cast<DataGridViewRow>()
+							.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
+							.Select(r => r.Cells["Name"].Value.ToString())
+							.ToList();
 
-						MessageBox.Show("All sync operations completed successfully!");
+						if (!selectedModules.Any())
+						{
+							MessageBox.Show("Please select at least one module to process.", "No Selection",
+								MessageBoxButtons.OK, MessageBoxIcon.Warning);
+							return;
+						}
+
+						foreach (var moduleName in selectedModules)
+						{
+							Logger.Log($"[INBOUND] Processing module: {moduleName}");
+
+							switch (moduleName)
+							{
+								case "EMPLOYEE DETAILS":
+									await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+									break;
+								case "ITEM DETAILS":
+									await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
+									break;
+								case "HIERARCHY DETAILS":
+									await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
+									break;
+								case "ASN DETAILS":
+									await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
+									break;
+								case "PRICE DETAILS":
+									await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+									break;
+							}
+						}
+
+						MessageBox.Show("Selected sync operations completed successfully!", "Success",
+							MessageBoxButtons.OK, MessageBoxIcon.Information);
 					}
 					catch (Exception ex)
 					{
-						MessageBox.Show($"Error: {ex.Message}");
+						Logger.Log($"[INBOUND] Error: {ex}");
+						MessageBox.Show("An error occurred during synchronization. Check logs for details.",
+							"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
 				}
-
 			);
 
 			this.Controls.Add(btnSaveToPrism);
