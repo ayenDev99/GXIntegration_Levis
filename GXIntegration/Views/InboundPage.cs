@@ -16,6 +16,11 @@ namespace GXIntegration_Levis.Views
 	{
 		static GXConfig config;
 		private GunaDataGridView guna1DataGridView1;
+
+		private DateTimePicker datePickerFrom;
+		private DateTimePicker datePickerTo;
+		private Label lblFrom;
+		private Label lblTo;
 		private GunaButton btnSaveToPrism;
 
 		private PrismRepository _prismRepository;
@@ -80,7 +85,7 @@ namespace GXIntegration_Levis.Views
 		{
 			guna1DataGridView1 = new GunaDataGridView
 			{
-				Location = new Point(250, 50),
+				Location = new Point(250, 90),
 				Size = new Size(620, 180),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
@@ -168,6 +173,54 @@ namespace GXIntegration_Levis.Views
 
 		private void InitializeControls()
 		{
+			// --------------------
+			// Date Range Controls
+			// --------------------
+			lblFrom = new Label
+			{
+				Text = "From:",
+				Location = new Point(250, 54),
+				AutoSize = true
+			};
+
+			datePickerFrom = new DateTimePicker
+			{
+				Location = new Point(300, 50),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd hh:mm tt",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today
+			};
+
+			lblTo = new Label
+			{
+				Text = "To:",
+				Location = new Point(480, 54),
+				AutoSize = true
+			};
+
+			datePickerTo = new DateTimePicker
+			{
+				Location = new Point(520, 50),
+				Format = DateTimePickerFormat.Custom,
+				CustomFormat = "yyyy-MM-dd hh:mm tt",
+				Width = 160,
+				ShowUpDown = false,
+				Value = DateTime.Today.AddDays(1).AddSeconds(-1)
+			};
+
+			// --------------------
+			// Add to Control
+			// --------------------
+			this.Controls.Add(lblFrom);
+			this.Controls.Add(datePickerFrom);
+			this.Controls.Add(lblTo);
+			this.Controls.Add(datePickerTo);
+
+			// --------------------
+			// Send Button
+			// --------------------
 			btnSaveToPrism = GlobalHelper.CreateButton(
 				text: "Save Data to Prism",
 				location: new Point(250, 270),

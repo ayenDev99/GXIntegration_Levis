@@ -147,6 +147,11 @@
     <Compile Include="InboundHandlers\InboundPrice.cs" />
     <Compile Include="Model\StoreInventoryCountModel.cs" />
     <Compile Include="OutboundHandlers\OutboundStoreInventoryCount.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Views\AboutPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -272,15 +277,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Compile Include="GXConfig.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="Views\OutboundPage.resx">
       <DependentUpon>OutboundPage.cs</DependentUpon>
     </EmbeddedResource>
@@ -329,6 +329,11 @@
     <None Include="Resources\github_64px_Hover.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="image-removebg-preview.png" />
+    <None Include="Resources\image-removebg-preview.png" />
+    <None Include="Resources\geniex_logo-removebg-preview.png" />
+    <None Include="Resources\geniexlogo.PNG" />
+    <None Include="Resources\geniexlogo1.PNG" />
     <Content Include="Resources\icon_download.png" />
     <None Include="Resources\Rolling%401x-0.9s-230px-230px.gif" />
     <None Include="Resources\spinner.gif" />

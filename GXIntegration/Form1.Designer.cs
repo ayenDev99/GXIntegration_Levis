@@ -48,11 +48,12 @@ namespace GXIntegration
 			this.Home_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel2 = new Guna.UI.WinForms.GunaPanel();
 			this.gunaPanel9 = new Guna.UI.WinForms.GunaPanel();
-			this.Menu_Button = new Guna.UI.WinForms.GunaButton();
+			this.versionNo = new System.Windows.Forms.Label();
+			this.pictureBox1 = new System.Windows.Forms.PictureBox();
 			this.DragControl_Form = new Guna.UI.WinForms.GunaDragControl(this.components);
 			this.Timer_Sidebar_Menu = new System.Windows.Forms.Timer(this.components);
-			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
 			this.MainContentPanel = new System.Windows.Forms.Panel();
+			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
 			this.SideBar.SuspendLayout();
 			this.gunaPanel6.SuspendLayout();
 			this.gunaPanel5.SuspendLayout();
@@ -61,6 +62,7 @@ namespace GXIntegration
 			this.gunaPanel3.SuspendLayout();
 			this.gunaPanel2.SuspendLayout();
 			this.gunaPanel9.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
 			this.MainContentPanel.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -71,7 +73,7 @@ namespace GXIntegration
 			// 
 			// SideBar
 			// 
-			this.SideBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(40)))), ((int)(((byte)(45)))));
+			this.SideBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(0)))), ((int)(((byte)(102)))));
 			this.SideBar.Controls.Add(this.gunaPanel6);
 			this.SideBar.Controls.Add(this.gunaPanel5);
 			this.SideBar.Controls.Add(this.gunaPanel8);
@@ -91,7 +93,7 @@ namespace GXIntegration
 			// 
 			this.gunaPanel6.Controls.Add(this.About_Button);
 			this.gunaPanel6.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel6.Location = new System.Drawing.Point(0, 306);
+			this.gunaPanel6.Location = new System.Drawing.Point(0, 307);
 			this.gunaPanel6.Name = "gunaPanel6";
 			this.gunaPanel6.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel6.TabIndex = 4;
@@ -105,10 +107,10 @@ namespace GXIntegration
 			this.About_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.About_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.About_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.About_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.About_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
 			this.About_Button.ForeColor = System.Drawing.Color.White;
 			this.About_Button.Image = ((System.Drawing.Image)(resources.GetObject("About_Button.Image")));
-			this.About_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.About_Button.ImageSize = new System.Drawing.Size(17, 17);
 			this.About_Button.Location = new System.Drawing.Point(7, 8);
 			this.About_Button.Name = "About_Button";
 			this.About_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
@@ -126,7 +128,7 @@ namespace GXIntegration
 			// 
 			this.gunaPanel5.Controls.Add(this.Outbound_Button);
 			this.gunaPanel5.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel5.Location = new System.Drawing.Point(0, 251);
+			this.gunaPanel5.Location = new System.Drawing.Point(0, 252);
 			this.gunaPanel5.Name = "gunaPanel5";
 			this.gunaPanel5.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel5.TabIndex = 3;
@@ -140,10 +142,10 @@ namespace GXIntegration
 			this.Outbound_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Outbound_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Outbound_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Outbound_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Outbound_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
 			this.Outbound_Button.ForeColor = System.Drawing.Color.White;
 			this.Outbound_Button.Image = ((System.Drawing.Image)(resources.GetObject("Outbound_Button.Image")));
-			this.Outbound_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Outbound_Button.ImageSize = new System.Drawing.Size(17, 17);
 			this.Outbound_Button.Location = new System.Drawing.Point(7, 8);
 			this.Outbound_Button.Name = "Outbound_Button";
 			this.Outbound_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
@@ -161,7 +163,7 @@ namespace GXIntegration
 			// 
 			this.gunaPanel8.Controls.Add(this.Inbound_Button);
 			this.gunaPanel8.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel8.Location = new System.Drawing.Point(0, 196);
+			this.gunaPanel8.Location = new System.Drawing.Point(0, 197);
 			this.gunaPanel8.Name = "gunaPanel8";
 			this.gunaPanel8.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel8.TabIndex = 5;
@@ -175,10 +177,10 @@ namespace GXIntegration
 			this.Inbound_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Inbound_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Inbound_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Inbound_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Inbound_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
 			this.Inbound_Button.ForeColor = System.Drawing.Color.White;
 			this.Inbound_Button.Image = ((System.Drawing.Image)(resources.GetObject("Inbound_Button.Image")));
-			this.Inbound_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Inbound_Button.ImageSize = new System.Drawing.Size(17, 17);
 			this.Inbound_Button.Location = new System.Drawing.Point(7, 8);
 			this.Inbound_Button.Name = "Inbound_Button";
 			this.Inbound_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
@@ -196,7 +198,7 @@ namespace GXIntegration
 			// 
 			this.gunaPanel4.Controls.Add(this.Configuration_Button);
 			this.gunaPanel4.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel4.Location = new System.Drawing.Point(0, 141);
+			this.gunaPanel4.Location = new System.Drawing.Point(0, 142);
 			this.gunaPanel4.Name = "gunaPanel4";
 			this.gunaPanel4.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel4.TabIndex = 2;
@@ -210,10 +212,10 @@ namespace GXIntegration
 			this.Configuration_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Configuration_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Configuration_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Configuration_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Configuration_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
 			this.Configuration_Button.ForeColor = System.Drawing.Color.White;
 			this.Configuration_Button.Image = ((System.Drawing.Image)(resources.GetObject("Configuration_Button.Image")));
-			this.Configuration_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Configuration_Button.ImageSize = new System.Drawing.Size(17, 17);
 			this.Configuration_Button.Location = new System.Drawing.Point(7, 7);
 			this.Configuration_Button.Name = "Configuration_Button";
 			this.Configuration_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
@@ -231,7 +233,7 @@ namespace GXIntegration
 			// 
 			this.gunaPanel3.Controls.Add(this.Home_Button);
 			this.gunaPanel3.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel3.Location = new System.Drawing.Point(0, 86);
+			this.gunaPanel3.Location = new System.Drawing.Point(0, 87);
 			this.gunaPanel3.Name = "gunaPanel3";
 			this.gunaPanel3.Size = new System.Drawing.Size(217, 55);
 			this.gunaPanel3.TabIndex = 1;
@@ -245,10 +247,10 @@ namespace GXIntegration
 			this.Home_Button.Cursor = System.Windows.Forms.Cursors.Hand;
 			this.Home_Button.DialogResult = System.Windows.Forms.DialogResult.None;
 			this.Home_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Home_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.Home_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
 			this.Home_Button.ForeColor = System.Drawing.Color.White;
 			this.Home_Button.Image = ((System.Drawing.Image)(resources.GetObject("Home_Button.Image")));
-			this.Home_Button.ImageSize = new System.Drawing.Size(20, 20);
+			this.Home_Button.ImageSize = new System.Drawing.Size(17, 17);
 			this.Home_Button.Location = new System.Drawing.Point(7, 7);
 			this.Home_Button.Name = "Home_Button";
 			this.Home_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
@@ -268,42 +270,40 @@ namespace GXIntegration
 			this.gunaPanel2.Dock = System.Windows.Forms.DockStyle.Top;
 			this.gunaPanel2.Location = new System.Drawing.Point(0, 0);
 			this.gunaPanel2.Name = "gunaPanel2";
-			this.gunaPanel2.Size = new System.Drawing.Size(217, 86);
+			this.gunaPanel2.Size = new System.Drawing.Size(217, 87);
 			this.gunaPanel2.TabIndex = 0;
+			this.gunaPanel2.Paint += new System.Windows.Forms.PaintEventHandler(this.gunaPanel2_Paint);
 			// 
 			// gunaPanel9
 			// 
-			this.gunaPanel9.Controls.Add(this.Menu_Button);
+			this.gunaPanel9.Controls.Add(this.versionNo);
+			this.gunaPanel9.Controls.Add(this.pictureBox1);
 			this.gunaPanel9.Location = new System.Drawing.Point(0, 12);
 			this.gunaPanel9.Name = "gunaPanel9";
-			this.gunaPanel9.Size = new System.Drawing.Size(213, 68);
+			this.gunaPanel9.Size = new System.Drawing.Size(213, 54);
 			this.gunaPanel9.TabIndex = 2;
 			// 
-			// Menu_Button
+			// versionNo
 			// 
-			this.Menu_Button.AnimationHoverSpeed = 0.07F;
-			this.Menu_Button.AnimationSpeed = 0.03F;
-			this.Menu_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.Menu_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.Menu_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.Menu_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.Menu_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.Menu_Button.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.Menu_Button.ForeColor = System.Drawing.Color.White;
-			this.Menu_Button.Image = ((System.Drawing.Image)(resources.GetObject("Menu_Button.Image")));
-			this.Menu_Button.ImageSize = new System.Drawing.Size(20, 20);
-			this.Menu_Button.Location = new System.Drawing.Point(7, 14);
-			this.Menu_Button.Name = "Menu_Button";
-			this.Menu_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.Menu_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.Menu_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.Menu_Button.OnHoverImage = null;
-			this.Menu_Button.OnPressedColor = System.Drawing.Color.White;
-			this.Menu_Button.Size = new System.Drawing.Size(203, 40);
-			this.Menu_Button.TabIndex = 1;
-			this.Menu_Button.Text = "Menu";
-			this.Menu_Button.TextOffsetX = 15;
-			this.Menu_Button.Click += new System.EventHandler(this.Menu_Button_Click);
+			this.versionNo.AutoSize = true;
+			this.versionNo.Font = new System.Drawing.Font("Segoe UI", 7F);
+			this.versionNo.ForeColor = System.Drawing.Color.White;
+			this.versionNo.Location = new System.Drawing.Point(90, 39);
+			this.versionNo.Name = "versionNo";
+			this.versionNo.Size = new System.Drawing.Size(29, 12);
+			this.versionNo.TabIndex = 2;
+			this.versionNo.Text = "v1.0.0";
+			this.versionNo.Click += new System.EventHandler(this.label1_Click);
+			// 
+			// pictureBox1
+			// 
+			this.pictureBox1.Image = global::GXIntegration_Levis.Properties.Resources.geniexlogo1;
+			this.pictureBox1.Location = new System.Drawing.Point(61, 3);
+			this.pictureBox1.Name = "pictureBox1";
+			this.pictureBox1.Size = new System.Drawing.Size(84, 29);
+			this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+			this.pictureBox1.TabIndex = 0;
+			this.pictureBox1.TabStop = false;
 			// 
 			// DragControl_Form
 			// 
@@ -313,6 +313,16 @@ namespace GXIntegration
 			// 
 			this.Timer_Sidebar_Menu.Interval = 10;
 			this.Timer_Sidebar_Menu.Tick += new System.EventHandler(this.Timer_Sidebar_Menu_Tick);
+			// 
+			// MainContentPanel
+			// 
+			this.MainContentPanel.BackColor = System.Drawing.Color.White;
+			this.MainContentPanel.Controls.Add(this.Close_Button);
+			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
+			this.MainContentPanel.Name = "MainContentPanel";
+			this.MainContentPanel.Size = new System.Drawing.Size(900, 494);
+			this.MainContentPanel.TabIndex = 3;
+			this.MainContentPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainContentPanel_Paint);
 			// 
 			// Close_Button
 			// 
@@ -328,16 +338,6 @@ namespace GXIntegration
 			this.Close_Button.Size = new System.Drawing.Size(28, 24);
 			this.Close_Button.TabIndex = 1;
 			this.Close_Button.Click += new System.EventHandler(this.Close_Button_Click);
-			// 
-			// MainContentPanel
-			// 
-			this.MainContentPanel.BackColor = System.Drawing.Color.White;
-			this.MainContentPanel.Controls.Add(this.Close_Button);
-			this.MainContentPanel.Location = new System.Drawing.Point(0, 0);
-			this.MainContentPanel.Name = "MainContentPanel";
-			this.MainContentPanel.Size = new System.Drawing.Size(900, 494);
-			this.MainContentPanel.TabIndex = 3;
-			this.MainContentPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.MainContentPanel_Paint);
 			// 
 			// Form1
 			// 
@@ -360,6 +360,8 @@ namespace GXIntegration
 			this.gunaPanel3.ResumeLayout(false);
 			this.gunaPanel2.ResumeLayout(false);
 			this.gunaPanel9.ResumeLayout(false);
+			this.gunaPanel9.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
 			this.MainContentPanel.ResumeLayout(false);
 			this.ResumeLayout(false);
 
@@ -382,9 +384,10 @@ namespace GXIntegration
         private Guna.UI.WinForms.GunaButton Configuration_Button;
         private Guna.UI.WinForms.GunaButton Home_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel9;
-        private Guna.UI.WinForms.GunaButton Menu_Button;
         private Guna.UI.WinForms.GunaDragControl DragControl_Form;
         private System.Windows.Forms.Timer Timer_Sidebar_Menu;
+		private PictureBox pictureBox1;
+		private Label versionNo;
 	}
 	}
 

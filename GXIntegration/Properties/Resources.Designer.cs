@@ -63,6 +63,16 @@ namespace GXIntegration_Levis.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap geniexlogo1 {
+            get {
+                object obj = ResourceManager.GetObject("geniexlogo1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_download {
             get {
                 object obj = ResourceManager.GetObject("icon_download", resourceCulture);

@@ -75,7 +75,7 @@ namespace GXIntegration
 			topBar = new Panel();
 			topBar.Height = 30;
 			topBar.Dock = DockStyle.Top;
-			topBar.BackColor = Color.FromArgb(35, 40, 45);
+			topBar.BackColor = Color.FromArgb(51, 0, 102);
 			this.Controls.Add(topBar);
 
 			EnableDrag(topBar);
@@ -412,5 +412,13 @@ namespace GXIntegration
 			}
 		}
 
+		private void label1_Click(object sender, EventArgs e)
+		{
+		}
+
+		private void gunaPanel2_Paint(object sender, PaintEventArgs e)
+		{
+			EnableDrag(this);
+		}
 	}
 }
