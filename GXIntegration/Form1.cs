@@ -251,11 +251,6 @@ namespace GXIntegration
 			LoadPage(new OutboundPage(repositories));
 			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
 		}
-		private void About_Button_Click(object sender, EventArgs e)
-		{
-			LoadPage(new AboutPage());
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
-		}
 
 		// *********************************************************
 		// Helpers

@@ -36,8 +36,6 @@ namespace GXIntegration
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
 			this.Elipse_Form = new Guna.UI.WinForms.GunaElipse(this.components);
 			this.SideBar = new Guna.UI.WinForms.GunaPanel();
-			this.gunaPanel6 = new Guna.UI.WinForms.GunaPanel();
-			this.About_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel5 = new Guna.UI.WinForms.GunaPanel();
 			this.Outbound_Button = new Guna.UI.WinForms.GunaButton();
 			this.gunaPanel8 = new Guna.UI.WinForms.GunaPanel();
@@ -55,7 +53,6 @@ namespace GXIntegration
 			this.MainContentPanel = new System.Windows.Forms.Panel();
 			this.Close_Button = new Guna.UI.WinForms.GunaImageButton();
 			this.SideBar.SuspendLayout();
-			this.gunaPanel6.SuspendLayout();
 			this.gunaPanel5.SuspendLayout();
 			this.gunaPanel8.SuspendLayout();
 			this.gunaPanel4.SuspendLayout();
@@ -74,7 +71,6 @@ namespace GXIntegration
 			// SideBar
 			// 
 			this.SideBar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(51)))), ((int)(((byte)(0)))), ((int)(((byte)(102)))));
-			this.SideBar.Controls.Add(this.gunaPanel6);
 			this.SideBar.Controls.Add(this.gunaPanel5);
 			this.SideBar.Controls.Add(this.gunaPanel8);
 			this.SideBar.Controls.Add(this.gunaPanel4);
@@ -88,41 +84,6 @@ namespace GXIntegration
 			this.SideBar.Size = new System.Drawing.Size(217, 494);
 			this.SideBar.TabIndex = 0;
 			this.SideBar.Paint += new System.Windows.Forms.PaintEventHandler(this.gunaPanel1_Paint);
-			// 
-			// gunaPanel6
-			// 
-			this.gunaPanel6.Controls.Add(this.About_Button);
-			this.gunaPanel6.Dock = System.Windows.Forms.DockStyle.Top;
-			this.gunaPanel6.Location = new System.Drawing.Point(0, 307);
-			this.gunaPanel6.Name = "gunaPanel6";
-			this.gunaPanel6.Size = new System.Drawing.Size(217, 55);
-			this.gunaPanel6.TabIndex = 4;
-			// 
-			// About_Button
-			// 
-			this.About_Button.AnimationHoverSpeed = 0.07F;
-			this.About_Button.AnimationSpeed = 0.03F;
-			this.About_Button.BaseColor = System.Drawing.Color.Transparent;
-			this.About_Button.BorderColor = System.Drawing.Color.Transparent;
-			this.About_Button.Cursor = System.Windows.Forms.Cursors.Hand;
-			this.About_Button.DialogResult = System.Windows.Forms.DialogResult.None;
-			this.About_Button.FocusedColor = System.Drawing.Color.Empty;
-			this.About_Button.Font = new System.Drawing.Font("Segoe UI", 8F);
-			this.About_Button.ForeColor = System.Drawing.Color.White;
-			this.About_Button.Image = ((System.Drawing.Image)(resources.GetObject("About_Button.Image")));
-			this.About_Button.ImageSize = new System.Drawing.Size(17, 17);
-			this.About_Button.Location = new System.Drawing.Point(7, 8);
-			this.About_Button.Name = "About_Button";
-			this.About_Button.OnHoverBaseColor = System.Drawing.Color.Transparent;
-			this.About_Button.OnHoverBorderColor = System.Drawing.Color.Transparent;
-			this.About_Button.OnHoverForeColor = System.Drawing.Color.Silver;
-			this.About_Button.OnHoverImage = null;
-			this.About_Button.OnPressedColor = System.Drawing.Color.White;
-			this.About_Button.Size = new System.Drawing.Size(203, 40);
-			this.About_Button.TabIndex = 1;
-			this.About_Button.Text = "About";
-			this.About_Button.TextOffsetX = 15;
-			this.About_Button.Click += new System.EventHandler(this.About_Button_Click);
 			// 
 			// gunaPanel5
 			// 
@@ -353,7 +314,6 @@ namespace GXIntegration
 			this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.SideBar.ResumeLayout(false);
-			this.gunaPanel6.ResumeLayout(false);
 			this.gunaPanel5.ResumeLayout(false);
 			this.gunaPanel8.ResumeLayout(false);
 			this.gunaPanel4.ResumeLayout(false);
@@ -374,12 +334,10 @@ namespace GXIntegration
         private Guna.UI.WinForms.GunaPanel gunaPanel3;
         private Guna.UI.WinForms.GunaPanel gunaPanel2;
         private Guna.UI.WinForms.GunaImageButton Close_Button;
-        private Guna.UI.WinForms.GunaPanel gunaPanel6;
         private Guna.UI.WinForms.GunaButton Inbound_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel5;
         private Guna.UI.WinForms.GunaButton Outbound_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel8;
-        private Guna.UI.WinForms.GunaButton About_Button;
         private Guna.UI.WinForms.GunaPanel gunaPanel4;
         private Guna.UI.WinForms.GunaButton Configuration_Button;
         private Guna.UI.WinForms.GunaButton Home_Button;

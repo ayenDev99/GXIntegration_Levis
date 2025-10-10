@@ -152,12 +152,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Views\AboutPage.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Views\AboutPage.Designer.cs">
-      <DependentUpon>AboutPage.cs</DependentUpon>
-    </Compile>
     <Compile Include="Views\ConfigurationAPITab.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -259,9 +253,6 @@
     <Compile Include="Views\OutboundPage.Designer.cs">
       <DependentUpon>OutboundPage.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Views\AboutPage.resx">
-      <DependentUpon>AboutPage.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Views\ConfigurationPage.resx">
       <DependentUpon>ConfigurationPage.cs</DependentUpon>
     </EmbeddedResource>

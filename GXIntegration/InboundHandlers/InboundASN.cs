@@ -228,6 +228,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			var poPayload = new Dictionary<string, object>
 			{
 				["billtostoreno"]		= billtostoreno ?? 0
+				, ["shiptostoreno"]		= billtostoreno ?? 0
 				, ["createddatetime"]	= orderDate ?? ""
 				, ["originapplication"] = "RProPrismWeb"
 				, ["sbssid"]			= sbs_sid ?? string.Empty
