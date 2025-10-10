@@ -348,10 +348,18 @@ namespace GXIntegration_Levis.Views
 
 							if (!string.IsNullOrWhiteSpace(fragment))
 							{
+								string cleaned = fragment
+									.Replace("<Transactions xmlns=\"\">", "")
+									.Replace("</Transactions>", "")
+									.Trim();
 								try
 								{
-									var parsedFragment = XElement.Parse(fragment);
-									validFragments.Add(parsedFragment);
+									var parsedFragment = XElement.Parse("<Root>" + cleaned + "</Root>");
+
+									foreach (var child in parsedFragment.Elements())
+									{
+										validFragments.Add(child);
+									}
 
 									int count = countsByType[xmlType];
 									Logger.Log($"[OUTBOUND EOD] [XML] Successfully generated {xmlType} XML for {storeCode} | Date: {dateStr} | Count: {count}");

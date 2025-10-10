@@ -439,8 +439,8 @@ namespace GXIntegration_Levis.Views
 				{
 					Items = storeSaleItems,
 					GetSid = i => ((StoreSaleModel)i).DocSid.ToString(),
-					GetDocNo = i => ((StoreSaleModel)i).SequenceNo.ToString(),
-					GetDate = i => ((StoreSaleModel)i).BusinessDayDate.DateTime,
+					GetDocNo = i => ((StoreSaleModel)i).TransSequenceNo.ToString(),
+					GetDate = i => ((StoreSaleModel)i).TransBusinessDayDate.DateTime,
 					XmlGen = list => OutboundStoreSale.GenerateXml(list.Cast<StoreSaleModel>().ToList(), null, "template"),
 					DocType = "storesale",
 					ApiUrl = saleApiUrl

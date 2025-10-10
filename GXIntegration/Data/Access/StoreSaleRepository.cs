@@ -40,55 +40,61 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = $@"
 							SELECT 
-                                '1'                                     AS OrganizationID
-                                , STORE.ADDRESS4			            AS RetailStoreID
-                                , DOC.WORKSTATION_NO				    AS WorkstationID
-                                , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TillID
-                                , DOC.DOC_NO				            AS SequenceNo
-                                , DOC.CREATED_DATETIME				    AS BusinessDayDate
-                                , DOC.CREATED_DATETIME				    AS BeginDateTime
-                                , DOC.INVC_POST_DATE				    AS EndDateTime
-                                , DOC.CASHIER_LOGIN_NAME				AS OperatorID
-                                , CURRENCY.ALPHABETIC_CODE			    AS CurrencyCode
-                                , 'PAPER'                               AS ReceiptDeliveryMethod
-                                , 'true'                                AS InventoryMovementSuccess 
-                                , 'AMA'                                 AS Region
-                                , 'PH'                                  AS Country
-                                , STORE.ADDRESS4			            AS AlternateStoreID
-                                , DOC.DOC_NO                            AS TransactionCode
-                                , DOC_ITEM.SCAN_UPC                     AS Barcode
-                                , DOC_ITEM.ITEM_POS                     AS LineItemSequenceNo
-                                , DOC_ITEM.ITEM_POS                     AS LineItemLineNumber
-                                , DOC_ITEM.CREATED_DATETIME             AS LineItemBeginDateTime
-                                , DOC_ITEM.POST_DATE                    AS LineItemEndDateTime
+                                '1'                                     AS TransOrganizationID
+                                , STORE.ADDRESS4			            AS TransRetailStoreID
+                                , DOC.WORKSTATION_NO				    AS TransWorkstationID
+                                , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TransTillID
+                                , ''                                    AS TransCashDrawerID
+                                , DOC.DOC_NO				            AS TransSequenceNo
+                                , DOC.CREATED_DATETIME				    AS TransBusinessDayDate
+                                , DOC.CREATED_DATETIME				    AS TransBeginDateTime
+                                , DOC.INVC_POST_DATE				    AS TransEndDateTime
+                                , DOC.CASHIER_LOGIN_NAME				AS TransOperatorID
+                                , CURRENCY.ALPHABETIC_CODE			    AS TransCurrencyCode
+                                , STORE.ADDRESS4			            AS TransAlternateStoreID
+                                , DOC.DOC_NO                            AS TransTransactionCode
+                                , DOC_ITEM.SCAN_UPC                     AS TransBarcode
+
+                                , DOC_ITEM.ITEM_POS                     AS ItemSequenceNo
+                                , DOC_ITEM.ITEM_POS                     AS ItemLineNumber
+                                , DOC_ITEM.CREATED_DATETIME             AS ItemBeginDateTime
+                                , DOC_ITEM.POST_DATE                    AS ItemEndDateTime
                                 , DOC_ITEM.ALU                          AS SaleItemID
                                 , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
                                 , DOC_ITEM.ORIG_PRICE                   AS SaleRegularSalesUnitPrice
                                 , DOC_ITEM.PRICE                        AS SaleActualSalesUnitPrice
                                 , DOC_ITEM.PRICE * DOC_ITEM.QTY         AS SaleExtendedAmount
                                 , DOC_ITEM.QTY                          AS SaleQuantity
-                                , '10'                                  AS Division
-                                , '00674'                               AS Department
-                                , '00054'                               AS SubDepartment
-                                , '02'                                  AS Class
-                                , DOC_ITEM.SCAN_UPC                     AS ScannedItemID
-                                , 'false'                               AS GiftReceiptFlag
-                                , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
-                                , DOC_ITEM.DISC_PERC                    AS Percentage
-                                , ROUND(DOC_ITEM.DISC_AMT, 2)           AS RetailRriceModifierAmount
-                                , ''                                    AS PromotionID
-                                , DOC_ITEM.DISCOUNT_REASON              AS RetailPriceModifierReasonCode
+                                , '10'                                  AS SaleBrand
+                                , '10-0001-00673'                       AS SaleCategory
+                                , '10-0001-00673-1020'                  AS SaleClass
+                                , '10-0001-00673-1020-2200'             AS SaleSubClass
+                                , DOC_ITEM.SCAN_UPC                     AS SaleScannedItemID
+
+                                , 'false'                               AS SaleGiftReceiptFlag
                                 , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
                                 , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
                                 , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
                                 , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
+                                , ''                                    AS TaxLocationID
                                 , ''                                    AS TaxGroupID
-                                , 'yes'                                 AS DealItemPercentOff
+
                                 , ISI.ITEM_SIZE						    AS PTDIM1
                                 , ISI.ATTRIBUTE						    AS PTDIM2
                                 , ISI.DESCRIPTION1						AS PTStyle
                                 , ISI.UPC							    AS PTEAN   
+
+                                , DOC.SALE_TOTAL_AMT                    AS TransGrandAmount
+                                , '0.00'                                AS TransRoundedTotal
+
+                                , DOC.SID					            AS DocSid
+
+                                , DOC_ITEM_DISC.DISC_POS                AS DiscSequenceNo
+                                , DOC_ITEM_DISC.NEW_DISC_AMT            AS DiscAmount
+                                , 'TRANSACTION_DISCOUNT'                AS DiscPromotionID
+                                , DOC_ITEM_DISC.DISC_REASON             AS DiscReasonCode
+
                                 , TENDER.TENDER_POS                     AS TenderSequenceNo
                                 , TENDER.TENDER_POS                     AS TenderLineNumber
                                 , TENDER.CREATED_DATETIME               AS TenderBeginDateTime
@@ -119,8 +125,7 @@ namespace GXIntegration_Levis.Data.Access
                                     WHEN DOC.RECEIPT_TYPE = 0 THEN 'SALE'
                                     WHEN DOC.RECEIPT_TYPE = 2 THEN 'DEPOSIT'
                                     ELSE ''
-                                  END                                   AS TypeCode
-                                , 'false'                               AS ChangeFlag
+                                  END                                   AS TenderTypeCode
                                 , CASE 
                                     WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
                                     WHEN TENDER.TENDER_TYPE = 0 THEN 'CASH'
@@ -128,19 +133,18 @@ namespace GXIntegration_Levis.Data.Access
                                     END                                 AS TenderID
                                 , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency 
                                 , TENDER.AMOUNT                         AS TenderAmount
-                                , TENDER.AMOUNT                         AS TransactionGrandAmount
-                                , '0'                                   AS RoundedTotal
-                                , DOC.SID					            AS DocSid
+                                , TENDER_CREDIT_CARD.AUTH_CODE          AS TenderAuthorizationNumber
                             FROM 
                                 RPS.DOCUMENT DOC
-                            LEFT JOIN RPS.STORE			            ON STORE.SID = DOC.STORE_SID
-                            LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM	ON DOC_ITEM.DOC_SID = DOC.SID
-                            LEFT JOIN RPS.INVN_SBS_ITEM ISI         ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
-                            LEFT JOIN RPS.TENDER 			        ON TENDER.DOC_SID = DOC.SID
-                            LEFT JOIN RPS.TENDER_CREDIT_CARD		ON TENDER_CREDIT_CARD.TENDER_SID = TENDER.SID
-                            LEFT JOIN RPS.CURRENCY 		            ON CURRENCY.SID = TENDER.CURRENCY_SID
-                            LEFT JOIN RPS.SUBSIDIARY SBS	        ON SBS.SID = DOC.SUBSIDIARY_SID
-                            LEFT JOIN RPS.COUNTRY 		            ON COUNTRY.SID = SBS.COUNTRY_SID
+                            LEFT JOIN RPS.STORE			                    ON STORE.SID = DOC.STORE_SID
+                            LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM	        ON DOC_ITEM.DOC_SID = DOC.SID
+                            LEFT JOIN RPS.DOCUMENT_ITEM_DISC DOC_ITEM_DISC  ON DOC_ITEM_DISC.DOC_ITEM_SID = DOC_ITEM.SID
+                            LEFT JOIN RPS.INVN_SBS_ITEM ISI                 ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
+                            LEFT JOIN RPS.TENDER 			                ON TENDER.DOC_SID = DOC.SID
+                            LEFT JOIN RPS.TENDER_CREDIT_CARD		        ON TENDER_CREDIT_CARD.TENDER_SID = TENDER.SID
+                            LEFT JOIN RPS.CURRENCY 		                    ON CURRENCY.SID = TENDER.CURRENCY_SID
+                            LEFT JOIN RPS.SUBSIDIARY SBS	                ON SBS.SID = DOC.SUBSIDIARY_SID
+                            LEFT JOIN RPS.COUNTRY 		                    ON COUNTRY.SID = SBS.COUNTRY_SID
                             WHERE 
                                 {dateCondition}
                                 AND DOC.STATUS = 4
@@ -151,6 +155,8 @@ namespace GXIntegration_Levis.Data.Access
 				                STORE.STORE_NO ASC
 				                , DOC.WORKSTATION_NO ASC
 				                , DOC.DOC_NO ASC
+                                , DOC_ITEM.ITEM_POS ASC
+                                , DOC_ITEM_DISC.DISC_POS ASC
 					";
 
 					//Logger.Log($"Generated SQL: {sql}");
@@ -162,8 +168,37 @@ namespace GXIntegration_Levis.Data.Access
 						StoreCode = storeCode
 					};
 
-					var sales = await connection.QueryAsync<StoreSaleModel>(sql, parameters);
-					return sales.ToList();
+					var salesDictionary = new Dictionary<string, StoreSaleModel>();
+					var sales = await connection.QueryAsync<StoreSaleModel, Discount, Tender, StoreSaleModel >(
+										sql,
+										(sale, disc, tender) =>
+										{
+											string key = sale.TransSequenceNo + "-" + sale.ItemLineNumber;
+
+											if (!salesDictionary.TryGetValue(key, out var existingSale))
+											{
+												existingSale = sale;
+												existingSale.Discounts = new List<Discount>();
+												existingSale.Tenders = new List<Tender>();
+												salesDictionary.Add(key, existingSale);
+											}
+
+											if (disc != null && !string.IsNullOrEmpty(disc.DiscSequenceNo))
+											{
+												existingSale.Discounts.Add(disc);
+											}
+
+											if (tender != null && !string.IsNullOrEmpty(tender.TenderSequenceNo))
+												existingSale.Tenders.Add(tender);
+
+
+											return existingSale;
+										},
+										parameters,
+										splitOn: "DiscSequenceNo, TenderSequenceNo"
+									);
+
+					return salesDictionary.Values.ToList();
 				}
 				catch (Exception ex)
 				{
