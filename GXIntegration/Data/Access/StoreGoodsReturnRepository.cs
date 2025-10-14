@@ -83,7 +83,7 @@ namespace GXIntegration_Levis.Data.Access
 
 								, ISB.ALU								AS ItemID
 								, ISB.UPC				                AS ScannedBarcodeID
-								, VI.QTY						        AS QuantityShipped
+								, TO_CHAR(VI.QTY)						AS QuantityShipped
 								, VI.ITEM_POS					        AS LineNumber
 								, ISB.DESCRIPTION2				        AS Description
 								, ISB.ITEM_SIZE							AS PTDIM1
@@ -128,7 +128,7 @@ namespace GXIntegration_Levis.Data.Access
 							if (!salesDictionary.TryGetValue(sale.TransSequenceNo, out var existingSale))
 							{
 								existingSale = sale;
-								existingSale.SGItems = new List<SGRItems>();
+								existingSale.SGRItems = new List<SGRItems>();
 								salesDictionary[sale.TransSequenceNo] = existingSale;
 							}
 
@@ -136,20 +136,20 @@ namespace GXIntegration_Levis.Data.Access
 							SGRItems existingItem = null;
 							if (!string.IsNullOrEmpty(item?.LineNumber))
 							{
-								existingItem = existingSale.SGItems
+								existingItem = existingSale.SGRItems
 									.FirstOrDefault(i => i.LineNumber == item.LineNumber);
 
 								if (existingItem == null)
 								{
 									existingItem = item;
-									existingSale.SGItems.Add(existingItem);
+									existingSale.SGRItems.Add(existingItem);
 								}
 							}
 
 							return existingSale;
 						}
 						, parameters
-						, splitOn: "LineNumber"
+						, splitOn: "ItemID"
 					).ConfigureAwait(false);
 
 					return salesDictionary.Values.ToList();

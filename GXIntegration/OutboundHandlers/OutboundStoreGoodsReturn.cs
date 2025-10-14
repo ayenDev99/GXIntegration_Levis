@@ -171,9 +171,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 				//---------------------
 				// Items Section (per item)
 				//---------------------
-				if (item.SGItems?.Any() == true)
+				if (item.SGRItems?.Any() == true)
 				{
-					foreach (var itm in item.SGItems.OrderBy(d => d.LineNumber))
+					foreach (var itm in item.SGRItems.OrderBy(d => d.LineNumber))
 					{
 						writer.WriteStartElement("LineItem");
 						writer.WriteAttributeString("VoidFlag", "false");

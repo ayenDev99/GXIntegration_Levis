@@ -37,7 +37,7 @@ namespace GXIntegration_Levis.Model
 		public string City { get; set; }
 		public string PostalCode { get; set; }
 
-		public List<SGRItems> SGItems { get; set; } = new List<SGRItems>();
+		public List<SGRItems> SGRItems { get; set; } = new List<SGRItems>();
 	}
 
 	public class SGRItems
