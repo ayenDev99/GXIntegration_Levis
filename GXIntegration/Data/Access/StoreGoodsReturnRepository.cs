@@ -1,11 +1,12 @@
 ﻿using Dapper;
+using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -16,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
+		public async Task<List<StoreGoodsReturnModel>> GetStoreGoodsReturnAsync(DateTime fromDate, DateTime toDate, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -113,8 +114,8 @@ namespace GXIntegration_Levis.Data.Access
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date,
+						FromDate = fromDate,
+						ToDate = toDate,
 						StoreCode = storeCode
 					};
 

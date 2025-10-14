@@ -1,39 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GXIntegration_Levis.Model
 {
 	public class StoreGoodsModel
 	{
-		public string OrganizationID { get; set; }
-		public string RetailStoreID { get; set; }
-		public string WorkstationID { get; set; }
-		public string TillID { get; set; }
-		public string SequenceNo { get; set; }
-		public DateTimeOffset BusinessDayDate { get; set; }
-		public DateTimeOffset? BeginDateTime { get; set; }
-		public DateTimeOffset? EndDateTime { get; set; }
-		public string OperatorID { get; set; }
-		public string CurrencyCode { get; set; }
-		public string InventoryMovementSuccess { get; set; }
-		public string Region { get; set; }
-		public string Country { get; set; }
+		public string VouSid { get; set; }
+
+		// Transaction Level
+		public string TransOrganizationID { get; set; }
+		public string TransRetailStoreID { get; set; }
+		public string TransWorkstationID { get; set; }
+		public string TransTillID { get; set; }
+		public string TransSequenceNo { get; set; }
+		public DateTimeOffset TransBusinessDayDate { get; set; }
+		public DateTimeOffset? TransBeginDateTime { get; set; }
+		public DateTimeOffset? TransEndDateTime { get; set; }
+		public string TransOperatorID { get; set; }
+		public string TransCurrencyCode { get; set; }
 		public string AlternateStoreID { get; set; }
-		public string DocumentStatus { get; set; }
+
+		// ReceiveInventory Header Level
 		public string DocumentID { get; set; }
-		public string DocumentTypeDescription { get; set; }
-		public string DocumentType { get; set; }
-		public string DocumentSubType { get; set; }
 		public DateTimeOffset? CompletionTimestamp { get; set; }
 		public DateTimeOffset? LastActivityTimestamp { get; set; }
+
+		// Shipment Level
 		public string ShipmentSequence { get; set; }
 		public string DestinationRetailLocationID { get; set; }
 		public string ShipmentStatusCode { get; set; }
+
+		// Carton Level
 		public string CartonID { get; set; }
 		public string CartonStatusCode { get; set; }
+		public List<SGCarton> SGCarton { get; set; } = new List<SGCarton>();
+
+		// LineItem Level outside Carton
+		public List<SGItems> SGItems { get; set; } = new List<SGItems>();
+	}
+
+	public class SGCarton
+	{
 		public string LineNumber { get; set; }
 		public string ItemID { get; set; }
 		public string ActualCount { get; set; }
@@ -44,6 +51,14 @@ namespace GXIntegration_Levis.Model
 		public string LineItemSequence { get; set; }
 		public string RecordCreationType { get; set; }
 		public string LineItemStatusCode { get; set; }
+	}
+
+	public class SGItems
+	{
+		public string ALU { get; set; }
+		public string ItemLineNumber { get; set; }
+		public string ItemID { get; set; }
+		public string CartonID { get; set; }
 		public string PTDIM1 { get; set; }
 		public string PTDIM2 { get; set; }
 		public string PTStyle { get; set; }
@@ -53,9 +68,6 @@ namespace GXIntegration_Levis.Model
 		public string QuantityReceived { get; set; }
 		public string CartonNumber { get; set; }
 		public string Description { get; set; }
-
-		public string VouSid { get; set; }
-
 	}
 
 }

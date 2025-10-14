@@ -81,7 +81,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				throw new ArgumentException("Invalid generate_type. Must be 'xml' or 'template'.");
 			}
-
 		}
 
 		private static void WriteXmlContent(List<StoreGoodsReturnModel> items, XmlWriter writer)

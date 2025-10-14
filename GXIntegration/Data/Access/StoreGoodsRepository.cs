@@ -17,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
+		public async Task<List<StoreGoodsModel>> GetStoreGoodsAsync(DateTime fromDate, DateTime toDate, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -39,44 +39,39 @@ namespace GXIntegration_Levis.Data.Access
 						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
 
-					string sql = $@"
+					string sql = @"
 						SELECT
-							'1'										AS OrganizationID
+							VOU.SID									AS VouSid							
+							, '1'									AS TransOrganizationID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
-								WHERE SID = PO.SHIPTO_STORE_SID)	AS RetailStoreID
-							, VOU.WORKSTATION						AS WorkstationID
+								WHERE SID = PO.SHIPTO_STORE_SID)	AS TransRetailStoreID
+							, VOU.WORKSTATION						AS TransWorkstationID
 							, (SELECT ADDRESS4 FROM RPS.STORE 
 								WHERE SID = PO.SHIPTO_STORE_SID) 
-									|| VOU.WORKSTATION				AS TILLID
-							, VOU.VOU_NO							AS SequenceNo
-							, TRUNC(VOU.CREATED_DATETIME)			AS BusinessDayDate
-							, VOU.CREATED_DATETIME					AS BeginDateTime
-							, VOU.POST_DATE							AS EndDateTime
-							, EMPLOYEE.EMPL_NAME			        AS OPERATORID
-							, 'PHP'									AS CurrencyCode
-							, 'true'                                AS InventoryMovementSuccess
-							, 'AMA'	                                AS Region
-							, 'PH'									AS Country
+									|| VOU.WORKSTATION				AS TransTILLID
+							, VOU.VOU_NO							AS TransSequenceNo
+							, TRUNC(VOU.CREATED_DATETIME)			AS TransBusinessDayDate
+							, VOU.CREATED_DATETIME					AS TransBeginDateTime
+							, VOU.POST_DATE							AS TransEndDateTime
+							, EMPLOYEE.EMPL_NAME			        AS TransOperatorID
+							, 'PHP'									AS TransCurrencyCode
 							, (SELECT ADDRESS4 FROM RPS.STORE 
 								WHERE SID = PO.SHIPTO_STORE_SID)	AS AlternateStoreID
-							, CASE WHEN VOU.STATUS = 4 
-								THEN 'CLOSED' 
-								ELSE 'PENDING' 
-								END									AS DocumentStatus
+
 							, PO.PO_NO								AS DocumentID
-							, 'RECEIVING_ASN'                       AS DocumentTypeDescription
-							, 'RECEIVING'                           AS DocumentType
-							, 'ASN'                                 AS DocumentSubType
 							, VOU.MODIFIED_DATETIME			        AS CompletionTimestamp
 							, VOU.POST_DATE							AS LastActivityTimestamp
+
 							, '1'							        AS ShipmentSequence
 							, (SELECT ADDRESS4 FROM RPS.STORE 
 								WHERE SID = PO.SHIPTO_STORE_SID)	AS DestinationRetailLocationID
 							, '1'				                    AS ShipmentStatusCode
+
 							, '1'					                AS CartonID
 							, '1'									AS CartonStatusCode
+
 							, VI.ITEM_POS					        AS LineNumber
-							, ISB.DESCRIPTION1				        AS ItemID
+							, ISB.ALU								AS ItemID
 							, PO_ITEM.RCVD_QTY						AS ActualCount
 							, PO_ITEM.ORD_QTY						AS ExpectedCount
 							, PO_ITEM.RCVD_QTY						AS POSTEDCOUNT
@@ -85,6 +80,9 @@ namespace GXIntegration_Levis.Data.Access
 							, VI.ITEM_POS							AS LineItemSequence
 							, 'OTHER'							    AS RecordCreationType
 							, '1'									AS LineItemStatusCode
+
+							, ISB.ALU								AS ALU
+							, VI.ITEM_POS					        AS ItemLineNumber
 							, ISB.ITEM_SIZE							AS PTDIM1
 							, ISB.ATTRIBUTE							AS PTDIM2
 							, ISB.DESCRIPTION1						AS PTStyle
@@ -94,7 +92,6 @@ namespace GXIntegration_Levis.Data.Access
 							, PO_ITEM.RCVD_QTY                      AS QuantityReceived
 							, '1'                                   AS CartonNumber
 							, ISB.DESCRIPTION2				        AS Description
-							, VOU.SID							    AS VouSid							
 						FROM
 							RPS.VOUCHER VOU
 						LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -104,7 +101,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
 						LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
 						WHERE
-							{dateCondition}
+							{DATE_CONDITION}
 							AND VOU.PO_NO IS NOT NULL
 							AND VOU.VOU_TYPE = 0
 							AND VOU.VOU_CLASS = 0
@@ -112,17 +109,68 @@ namespace GXIntegration_Levis.Data.Access
 							AND PO.SHIPTO_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 					";
 
+					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
+
 					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date,
+						FromDate = fromDate,
+						ToDate = toDate,
 						StoreCode = storeCode
 					};
 
-					var sales = await connection.QueryAsync<StoreGoodsModel>(sql, parameters);
-					return sales.ToList();
+					//var sales = await connection.QueryAsync<StoreGoodsModel>(sql, parameters);
+					//return sales.ToList();
+					var salesDictionary = new Dictionary<string, StoreGoodsModel>();
+
+					var sales = await connection.QueryAsync<StoreGoodsModel, SGCarton, SGItems, StoreGoodsModel>(
+						sql,
+						(sale, carton, item) =>
+						{
+							// Group by transaction (document)
+							if (!salesDictionary.TryGetValue(sale.TransSequenceNo, out var existingSale))
+							{
+								existingSale = sale;
+								existingSale.SGCarton = new List<SGCarton>();
+								existingSale.SGItems = new List<SGItems>();
+								salesDictionary[sale.TransSequenceNo] = existingSale;
+							}
+
+							// --- Handle Carton ---
+							SGCarton existinCarton = null;
+							if (!string.IsNullOrEmpty(carton?.LineNumber))
+							{
+								existinCarton = existingSale.SGCarton
+									.FirstOrDefault(i => i.LineNumber == carton.LineNumber);
+
+								if (existinCarton == null)
+								{
+									existinCarton = carton;
+									existingSale.SGCarton.Add(existinCarton);
+								}
+							}
+							// --- Handle Item Description of Carton ---
+							SGItems existingItem = null;
+							if (!string.IsNullOrEmpty(item?.ALU))
+							{
+								existingItem = existingSale.SGItems
+									.FirstOrDefault(i => i.ALU == item.ALU);
+
+								if (existingItem == null)
+								{
+									existingItem = item;
+									existingSale.SGItems.Add(existingItem);
+								}
+							}
+
+							return existingSale;
+						}
+						, parameters
+						, splitOn: "LineNumber,ALU"
+					).ConfigureAwait(false);
+
+					return salesDictionary.Values.ToList();
 				}
 				catch (Exception ex)
 				{
