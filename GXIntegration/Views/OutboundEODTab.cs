@@ -395,7 +395,7 @@ namespace GXIntegration_Levis.Views
 
 						int nextSequence = existingFiles.Count + 1;
 						string sequenceStr = nextSequence.ToString("D2");
-						string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+						string timestamp = currentDate.ToString("ddMMyyyyHHmmss");
 
 						string fileName = $"AMA_{countryCode}_{storeCode}_POSLOG_{sequenceStr}_{timestamp}.xml";
 						string filePath = Path.Combine(outboundDir, fileName);

@@ -21,7 +21,26 @@ namespace GXIntegration_Levis.Model
 		public string TransTransactionCode { get; set; }
 		public string TransBarcode { get; set; }
 
-		// Item Level
+		public string TransGrandAmount { get; set; }
+		public string TransRoundedTotal { get; set; }
+
+		// Tax Level
+		public string TaxAuthority { get; set; }
+		public string TaxableAmount { get; set; }
+		public string Amount { get; set; }
+		public string Percent { get; set; }
+		public string RawTaxPercentage { get; set; }
+		public string TaxLocationID { get; set; }
+		public string TaxGroupID { get; set; }
+
+		public string DocSid { get; set; }
+
+		public List<Items> Items { get; set; } = new List<Items>();
+		public List<Tender> Tenders { get; set; } = new List<Tender>();
+	}
+
+	public class Items
+	{
 		public string ItemSequenceNo { get; set; }
 		public string ItemLineNumber { get; set; }
 		public DateTimeOffset ItemBeginDateTime { get; set; }
@@ -44,36 +63,7 @@ namespace GXIntegration_Levis.Model
 		public string PTStyle { get; set; }
 		public string PTEAN { get; set; }
 
-		public string TransGrandAmount { get; set; }
-		public string TransRoundedTotal { get; set; }
-
-
-		// Tax Level
-		public string TaxAuthority { get; set; }
-		public string TaxableAmount { get; set; }
-		public string Amount { get; set; }
-		public string Percent { get; set; }
-		public string RawTaxPercentage { get; set; }
-		public string TaxLocationID { get; set; }
-		public string TaxGroupID { get; set; }
-
-		// Tender Level
-		public string TenderSequenceNo { get; set; }
-		public string TenderLineNumber { get; set; }
-		public string TenderType { get; set; }
-		public DateTimeOffset TenderBeginDateTime { get; set; }
-		public DateTimeOffset TenderEndDateTime { get; set; }
-		public string TypeCode { get; set; }
-		public string ChangeFlag { get; set; }
-		public string TenderID { get; set; }
-		public string AmountCurrency { get; set; }
-		public string TenderAmount { get; set; }
-
-		public string DocSid { get; set; }
-
-
 		public List<Discount> Discounts { get; set; } = new List<Discount>();
-		public List<Tender> Tenders { get; set; } = new List<Tender>();
 	}
 
 	public class Discount
@@ -82,10 +72,12 @@ namespace GXIntegration_Levis.Model
 		public string DiscAmount { get; set; }
 		public string DiscPromotionID { get; set; }
 		public string DiscReasonCode { get; set; }
+		public string DocItemSid { get; set; }
 	}
 
 	public class Tender
 	{
+		public string TenderSID { get; set; } 
 		public string TenderSequenceNo { get; set; }
 		public string TenderLineNumber { get; set; }
 		public string TenderType { get; set; }

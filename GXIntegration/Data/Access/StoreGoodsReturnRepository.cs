@@ -84,7 +84,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ''				                    AS City
 								, (SELECT ZIP FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS PostalCode
-								, ISB.DESCRIPTION1				        AS ItemID
+								, ISB.ALU								AS ItemID
 								, ISB.UPC				                AS ScannedBarcodeID
 								, VI.QTY						        AS QuantityShipped
 								, VI.ITEM_POS					        AS LineNumber
