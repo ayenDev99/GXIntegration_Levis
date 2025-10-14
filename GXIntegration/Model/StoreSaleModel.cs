@@ -24,15 +24,6 @@ namespace GXIntegration_Levis.Model
 		public string TransGrandAmount { get; set; }
 		public string TransRoundedTotal { get; set; }
 
-		// Tax Level
-		public string TaxAuthority { get; set; }
-		public string TaxableAmount { get; set; }
-		public string Amount { get; set; }
-		public string Percent { get; set; }
-		public string RawTaxPercentage { get; set; }
-		public string TaxLocationID { get; set; }
-		public string TaxGroupID { get; set; }
-
 		public string DocSid { get; set; }
 
 		public List<Items> Items { get; set; } = new List<Items>();
@@ -62,6 +53,15 @@ namespace GXIntegration_Levis.Model
 		public string PTDIM2 { get; set; }
 		public string PTStyle { get; set; }
 		public string PTEAN { get; set; }
+
+		// Tax Level
+		public string TaxAuthority { get; set; }
+		public string TaxableAmount { get; set; }
+		public string Amount { get; set; }
+		public string Percent { get; set; }
+		public string RawTaxPercentage { get; set; }
+		public string TaxLocationID { get; set; }
+		public string TaxGroupID { get; set; }
 
 		public List<Discount> Discounts { get; set; } = new List<Discount>();
 	}

@@ -201,13 +201,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 						writer.WriteAttributeString("TaxType", "Sales");
 						writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
 
-						GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", item.TaxAuthority ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", item.TaxableAmount ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "Amount", item.Amount ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "Percent", item.Percent ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, item.RawTaxPercentage ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, item.TaxLocationID ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, item.TaxGroupID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", itm.TaxAuthority ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", itm.TaxableAmount ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Amount", itm.Amount ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Percent", itm.Percent ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, itm.RawTaxPercentage ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, itm.TaxLocationID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, itm.TaxGroupID ?? "");
 
 						writer.WriteEndElement(); // </Tax>
 

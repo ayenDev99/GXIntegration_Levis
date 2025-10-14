@@ -57,14 +57,6 @@ namespace GXIntegration_Levis.Data.Access
                             , DOC.DOC_NO                            AS TransTransactionCode
                             , DOC_ITEM.SCAN_UPC                     AS TransBarcode
 
-                            , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
-                            , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
-                            , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
-                            , DOC.TAX_AREA_PERC                     AS Percent
-                            , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
-                            , ''                                    AS TaxLocationID
-                            , ''                                    AS TaxGroupID
-
                             , DOC.SALE_TOTAL_AMT                    AS TransGrandAmount
                             , '0.00'                                AS TransRoundedTotal
                             , DOC.SID                               AS DocSid
@@ -89,6 +81,13 @@ namespace GXIntegration_Levis.Data.Access
                             , ISI.ATTRIBUTE                         AS PTDIM2
                             , ISI.DESCRIPTION1                      AS PTStyle
                             , ISI.UPC                               AS PTEAN
+                            , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
+                            , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
+                            , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
+                            , DOC.TAX_AREA_PERC                     AS Percent
+                            , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
+                            , ''                                    AS TaxLocationID
+                            , ''                                    AS TaxGroupID
 
                             , DOC_ITEM_DISC.DISC_POS                AS DiscSequenceNo
                             , DOC_ITEM_DISC.NEW_DISC_AMT            AS DiscAmount
@@ -162,6 +161,8 @@ namespace GXIntegration_Levis.Data.Access
 
 					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
 
+					//Logger.Log($"Generated SQL: {sql}");
+
 					var parameters = new
 					{
 						FromDate = fromDate,
@@ -214,9 +215,9 @@ namespace GXIntegration_Levis.Data.Access
 							}
 
 							return existingSale;
-						},
-						parameters,
-						splitOn: "ItemSequenceNo,DiscSequenceNo,TenderSID"
+						}
+						, parameters
+						, splitOn: "ItemSequenceNo,DiscSequenceNo,TenderSID"
 					).ConfigureAwait(false);
 
 					return salesDictionary.Values.ToList();
