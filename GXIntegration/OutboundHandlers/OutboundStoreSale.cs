@@ -89,6 +89,9 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void WriteXmlContent(IEnumerable<StoreSaleModel> items, XmlWriter writer)
 		{
+			var first = items.FirstOrDefault();
+			if (first == null) return;
+
 			//---------------------
 			// Transaction Section
 			//---------------------
@@ -98,160 +101,175 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteAttributeString("TrainingModeFlag", "false");
 			writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "RETAIL_SALE");
 
-			var first = items.FirstOrDefault();
-			if (first != null)
+			// Transaction Header Info
+			GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, first.TransOrganizationID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.TransRetailStoreID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "WorkstationID", first.TransWorkstationID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "TillID", first.TransTillID ?? "");
+			//GlobalOutbound.WriteCDataElement(writer, "dtv", "CashDrawerID", GlobalOutbound.NsDtv, first.TransCashDrawerID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", first.TransSequenceNo ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(first.TransBusinessDayDate));
+			GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(first.TransBeginDateTime, true));
+			GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(first.TransEndDateTime, true));
+			GlobalOutbound.WriteCDataElement(writer, "OperatorID", first.TransOperatorID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", first.TransCurrencyCode ?? "");
+
+			GlobalOutbound.WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", "PAPER");
+			GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
+			GlobalOutbound.WritePosTransactionProperties(writer, "REGION", "AMA");
+			GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", "PH");
+			GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", first.TransAlternateStoreID);
+			GlobalOutbound.WritePosTransactionProperties(writer, "TRANSACTION_CODE", first.TransTransactionCode);
+			GlobalOutbound.WritePosTransactionProperties(writer, "BARCODE", first.TransBarcode);
+
+			//---------------------
+			// RetailTransaction Section
+			//---------------------
+			writer.WriteStartElement("RetailTransaction");
+			writer.WriteAttributeString("TransactionStatus", "Delivered");
+			writer.WriteAttributeString("TypeCode", "Transaction");
+
+			//---------------------
+			// Line Items (Sales)
+			//---------------------
+			foreach (var item in items)
 			{
-				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, first.TransOrganizationID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.TransRetailStoreID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "WorkstationID", first.TransWorkstationID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "TillID", first.TransTillID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "dtv", "CashDrawerID", GlobalOutbound.NsDtv, first.TransCashDrawerID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", first.TransSequenceNo ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(first.TransBusinessDayDate));
-				GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(first.TransBeginDateTime, true));
-				GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(first.TransEndDateTime, true));
-				GlobalOutbound.WriteCDataElement(writer, "OperatorID", first.TransOperatorID ?? "");
-				GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", first.TransCurrencyCode ?? "");
-
-				GlobalOutbound.WritePosTransactionProperties(writer, "RECEIPT_DELIVERY_METHOD", "PAPER");
-				GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
-				GlobalOutbound.WritePosTransactionProperties(writer, "REGION", "AMA");
-				GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", "PH");
-				GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", first.TransAlternateStoreID);
-				GlobalOutbound.WritePosTransactionProperties(writer, "TRANSACTION_CODE", first.TransTransactionCode);
-				GlobalOutbound.WritePosTransactionProperties(writer, "BARCODE", first.TransBarcode);
-
-				writer.WriteStartElement("RetailTransaction");
-				writer.WriteAttributeString("TransactionStatus", "Delivered");
-				writer.WriteAttributeString("TypeCode", "Transaction");
-
 				//---------------------
-				// Item Section
+				// Invn Items Section (per item)
 				//---------------------
-				foreach (var item in items)
+				if (item.Items?.Any() == true)
 				{
-					writer.WriteStartElement("LineItem");
-					writer.WriteAttributeString("EntryMethod", "Scanner");
-					writer.WriteAttributeString("VoidFlag", "false");
-
-					GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", item.ItemSequenceNo ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "LineNumber", item.ItemLineNumber ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(item.ItemBeginDateTime, true));
-					GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(item.ItemEndDateTime, true));
-
-					writer.WriteStartElement("Sale");
-					writer.WriteAttributeString("ItemType", "Stock");
-
-					GlobalOutbound.WriteCDataElement(writer, "ItemID", item.SaleItemID ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "Description", item.SaleDescription ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "RegularSalesUnitPrice", item.SaleRegularSalesUnitPrice ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "ActualSalesUnitPrice", item.SaleActualSalesUnitPrice ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "ExtendedAmount", item.SaleExtendedAmount ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "Quantity", item.SaleQuantity ?? "");
-
-					GlobalOutbound.WriteMerchandiseHierarchy(writer, "BRAND", item.SaleBrand);
-					GlobalOutbound.WriteMerchandiseHierarchy(writer, "CATEGORY", item.SaleCategory);
-					GlobalOutbound.WriteMerchandiseHierarchy(writer, "CLASS", item.SaleClass);
-					GlobalOutbound.WriteMerchandiseHierarchy(writer, "SUBCLASS", item.SaleSubClass);
-
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedItemID", GlobalOutbound.NsDtv, item.SaleScannedItemID ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "GiftReceiptFlag", item.SaleGiftReceiptFlag ?? "");
-
-					//---------------------
-					// Discount Section
-					//---------------------
-					if (item.Discounts != null && item.Discounts.Any())
+					foreach (var itm in item.Items.OrderBy(d => d.ItemSequenceNo))
 					{
-						foreach (var disc in item.Discounts.OrderBy(d => d.DiscSequenceNo))
+						writer.WriteStartElement("LineItem");
+						writer.WriteAttributeString("EntryMethod", "Scanner");
+						writer.WriteAttributeString("VoidFlag", "false");
+
+						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", itm.ItemSequenceNo ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "LineNumber", itm.ItemLineNumber ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(itm.ItemBeginDateTime, true));
+						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(itm.ItemEndDateTime, true));
+
+						//---------------------
+						// Sale Section
+						//---------------------
+						writer.WriteStartElement("Sale");
+						writer.WriteAttributeString("ItemType", "Stock");
+
+						GlobalOutbound.WriteCDataElement(writer, "ItemID", itm.SaleItemID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Description", itm.SaleDescription ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "RegularSalesUnitPrice", itm.SaleRegularSalesUnitPrice ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "ActualSalesUnitPrice", itm.SaleActualSalesUnitPrice ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "ExtendedAmount", itm.SaleExtendedAmount ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Quantity", itm.SaleQuantity ?? "");
+
+						GlobalOutbound.WriteMerchandiseHierarchy(writer, "BRAND", itm.SaleBrand);
+						GlobalOutbound.WriteMerchandiseHierarchy(writer, "CATEGORY", itm.SaleCategory);
+						GlobalOutbound.WriteMerchandiseHierarchy(writer, "CLASS", itm.SaleClass);
+						GlobalOutbound.WriteMerchandiseHierarchy(writer, "SUBCLASS", itm.SaleSubClass);
+
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedItemID", GlobalOutbound.NsDtv, itm.SaleScannedItemID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "GiftReceiptFlag", itm.SaleGiftReceiptFlag ?? "");
+
+						//---------------------
+						// Discount Section (per item disc)
+						//---------------------
+						if (item.Discounts?.Any() == true)
 						{
-							writer.WriteStartElement("RetailPriceModifier");
-
-							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", disc.DiscSequenceNo ?? "");
-
-							writer.WriteStartElement("Amount");
-							writer.WriteAttributeString("Action", "Subtract");
-							writer.WriteCData(disc.DiscAmount ?? "");
-							writer.WriteEndElement(); // </Amount>
-
-							GlobalOutbound.WriteCDataElement(writer, "PromotionID", disc.DiscPromotionID ?? "");
-							GlobalOutbound.WriteCDataElement(writer, "ReasonCode", disc.DiscReasonCode ?? "");
-
-							writer.WriteEndElement(); // </RetailPriceModifier>
-						}
-					}
-
-					//---------------------
-					// Tax Section
-					//---------------------
-					writer.WriteStartElement("Tax");
-					writer.WriteAttributeString("TaxType", "Sales");
-					writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
-
-					GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", item.TaxAuthority ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", item.TaxableAmount ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "Amount", item.Amount ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "Percent", item.Percent ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, item.RawTaxPercentage ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, item.TaxLocationID ?? "");
-					GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, item.TaxGroupID ?? "");
-					writer.WriteEndElement(); // </Tax>
-
-					GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", item.PTDIM1);
-					GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", item.PTDIM2);
-					GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", item.PTStyle);
-					GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", item.PTEAN);
-
-					writer.WriteEndElement(); // </Sale>
-					writer.WriteEndElement(); // </LineItem>
-
-					//---------------------
-					// Tender Section
-					//---------------------
-					if (item.Tenders != null && item.Tenders.Any())
-					{
-						foreach (var tender in item.Tenders)
-						{
-							writer.WriteStartElement("LineItem");
-							writer.WriteAttributeString("VoidFlag", "false");
-
-							GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", tender.TenderSequenceNo ?? "");
-							GlobalOutbound.WriteCDataElement(writer, "LineNumber", tender.TenderLineNumber ?? "");
-							GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(tender.TenderBeginDateTime, true));
-							GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(tender.TenderEndDateTime, true));
-
-							writer.WriteStartElement("Tender");
-							writer.WriteAttributeString("TenderType", tender.TenderType ?? "");
-							writer.WriteAttributeString("TypeCode", tender.TenderTypeCode ?? "");
-							writer.WriteAttributeString("ChangeFlag", "false");
-
-							GlobalOutbound.WriteCDataElement(writer, "TenderID", tender.TenderID ?? "");
-
-							writer.WriteStartElement("Amount");
-							writer.WriteAttributeString("Currency", tender.AmountCurrency ?? "");
-							writer.WriteCData(tender.TenderAmount ?? "");
-							writer.WriteEndElement(); // </Amount>
-
-							if (tender.TenderAuthorizationNumber != null && tender.TenderAuthorizationNumber.Any())
+							foreach (var disc in item.Discounts.OrderBy(d => d.DiscSequenceNo))
 							{
-								GlobalOutbound.WriteLineItemProperty(writer, "AUTHORIZATION NUMBER", "STRING", tender.TenderAuthorizationNumber);
+								writer.WriteStartElement("RetailPriceModifier");
+
+								GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", disc.DiscSequenceNo ?? "");
+
+								writer.WriteStartElement("Amount");
+								writer.WriteAttributeString("Action", "Subtract");
+								writer.WriteCData(disc.DiscAmount ?? "");
+								writer.WriteEndElement(); // </Amount>
+
+								GlobalOutbound.WriteCDataElement(writer, "PromotionID", disc.DiscPromotionID ?? "");
+								GlobalOutbound.WriteCDataElement(writer, "ReasonCode", disc.DiscReasonCode ?? "");
+
+								writer.WriteEndElement(); // </RetailPriceModifier>
 							}
-
-							writer.WriteEndElement(); // </Tender>
-							writer.WriteEndElement(); // </LineItem>
 						}
+
+						//---------------------
+						// Tax Section
+						//---------------------
+						writer.WriteStartElement("Tax");
+						writer.WriteAttributeString("TaxType", "Sales");
+						writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
+
+						GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", item.TaxAuthority ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", item.TaxableAmount ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Amount", item.Amount ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "Percent", item.Percent ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, item.RawTaxPercentage ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, item.TaxLocationID ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, item.TaxGroupID ?? "");
+
+						writer.WriteEndElement(); // </Tax>
+
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", itm.PTDIM1);
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", itm.PTDIM2);
+						GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", itm.PTStyle);
+						GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", itm.PTEAN);
+						writer.WriteEndElement(); // </LineItem>
+
+						writer.WriteEndElement(); // </Sale>
 					}
-
-					writer.WriteStartElement("Total");
-					writer.WriteAttributeString("TotalType", "TransactionGrandAmount");
-					writer.WriteCData(item.TransGrandAmount ?? "");
-					writer.WriteEndElement(); // </Total>
-
-					GlobalOutbound.WriteCDataElement(writer, "RoundedTotal", item.TransRoundedTotal ?? "");
 				}
 
-				writer.WriteEndElement(); // </RetailTransaction>
+				//---------------------
+				// Tender Section (per tender)
+				//---------------------
+				if (item.Tenders?.Any() == true)
+				{
+					foreach (var tender in item.Tenders)
+					{
+						writer.WriteStartElement("LineItem");
+						writer.WriteAttributeString("VoidFlag", "false");
+
+						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", tender.TenderSequenceNo ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "LineNumber", tender.TenderLineNumber ?? "");
+						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(tender.TenderBeginDateTime, true));
+						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(tender.TenderEndDateTime, true));
+
+						writer.WriteStartElement("Tender");
+						writer.WriteAttributeString("TenderType", tender.TenderType ?? "");
+						writer.WriteAttributeString("TypeCode", tender.TenderTypeCode ?? "");
+						writer.WriteAttributeString("ChangeFlag", "false");
+
+						GlobalOutbound.WriteCDataElement(writer, "TenderID", tender.TenderID ?? "");
+
+						writer.WriteStartElement("Amount");
+						writer.WriteAttributeString("Currency", tender.AmountCurrency ?? "");
+						writer.WriteCData(tender.TenderAmount ?? "");
+						writer.WriteEndElement(); // </Amount>
+
+						if (!string.IsNullOrEmpty(tender.TenderAuthorizationNumber))
+						{
+							GlobalOutbound.WriteLineItemProperty(writer, "AUTHORIZATION NUMBER", "STRING", tender.TenderAuthorizationNumber);
+						}
+
+						writer.WriteEndElement(); // </Tender>
+						writer.WriteEndElement(); // </LineItem>
+					}
+				}
+
+				//---------------------
+				// Totals Section
+				//---------------------
+				writer.WriteStartElement("Total");
+				writer.WriteAttributeString("TotalType", "TransactionGrandAmount");
+				writer.WriteCData(item.TransGrandAmount ?? "");
+				writer.WriteEndElement(); // </Total>
+
+				GlobalOutbound.WriteCDataElement(writer, "RoundedTotal", item.TransRoundedTotal ?? "");
 			}
 
+			writer.WriteEndElement(); // </RetailTransaction>
 			writer.WriteEndElement(); // </Transaction>
 		}
 
