@@ -48,7 +48,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				Indent = true,
 				Encoding = Encoding.UTF8,
-				OmitXmlDeclaration = true
+				OmitXmlDeclaration = true,
+				ConformanceLevel = ConformanceLevel.Fragment
 			};
 
 			if (generate_type == "template")
@@ -56,7 +57,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 				using (var stringWriter = new StringWriter())
 				using (var writer = XmlWriter.Create(stringWriter, settings))
 				{
-					WriteXmlContent(items, writer);
+					var grouped = items.GroupBy(s => s.TransSequenceNo?.Trim() ?? string.Empty).ToList();
+
+					foreach (var g in grouped)
+					{
+						WriteXmlContent(g.ToList(), writer);
+					}
+
 					writer.Flush();
 					return stringWriter.ToString();
 				}
@@ -79,123 +86,118 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void WriteXmlContent(List<StoreGoodsReturnModel> items, XmlWriter writer)
 		{
-			writer.WriteStartElement("Transaction");	// Transaction
-			
+			var first = items.FirstOrDefault();
+			if (first == null) return;
+
+			//---------------------
+			// Transaction Section
+			//---------------------
+			writer.WriteStartElement("Transaction");
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
 			writer.WriteAttributeString("TrainingModeFlag", "false");
-			writer.WriteAttributeString("dtv", "AppVersion", "http://www.datavantagecorp.com/xstore/", "");
-			writer.WriteAttributeString("dtv", "InventoryDocumentSubType", "http://www.datavantagecorp.com/xstore/", "RETURN_TO_DC");
-			writer.WriteAttributeString("dtv", "InventoryDocumentType", "http://www.datavantagecorp.com/xstore/", "SHIPPING");
-			writer.WriteAttributeString("dtv", "TransactionType", "http://www.datavantagecorp.com/xstore/", "INVENTORY_CONTROL");
+			writer.WriteAttributeString("dtv", "AppVersion", GlobalOutbound.NsDtv, "");
+			writer.WriteAttributeString("dtv", "InventoryDocumentSubType", GlobalOutbound.NsDtv, "RETURN_TO_DC");
+			writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "SHIPPING");
+			writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "INVENTORY_CONTROL");
 
+			// Transaction Header Info
+			GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, first.TransOrganizationID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.TransRetailStoreID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "WorkstationID", first.TransWorkstationID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "TillID", first.TransTillID ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", first.TransSequenceNo ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(first.TransBusinessDayDate) ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(first.TransBeginDateTime, true) ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(first.TransEndDateTime, true) ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", first.TransCurrencyCode ?? "");
 
-			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.OrganizationID))
+			GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", "true");
+			GlobalOutbound.WritePosTransactionProperties(writer, "REGION", "AMA");
+			GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", "PH");
+			GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", first.TransAlternateStoreID ?? "");
+			GlobalOutbound.WritePosTransactionProperties(writer, "REASON_CODE", first.TransReasonCode ?? "");
+			GlobalOutbound.WritePosTransactionProperties(writer, "ORIGIN_ALTERNATE_STOREID", first.TransOriginAlternateStoreID ?? "");
+
+			// InventoryTransaction
+			writer.WriteStartElement("InventoryTransaction");
+			writer.WriteStartElement("ReturnToVendor");
+
+			GlobalOutbound.WriteCDataElement(writer, "DocumentStatus", first.TransDocumentStatus);
+			GlobalOutbound.WriteCDataElement(writer, "DocumentID", first.TransDocumentID);
+			GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.TransRetailStoreID);
+			GlobalOutbound.WriteCDataElement(writer, "OriginatorID", first.TransOrganizationID);
+			GlobalOutbound.WriteCDataElement(writer, "OriginatorName", first.TransOriginatorName);
+			GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", "SHIPPING_RTV_FROM_DAMAGED");
+			GlobalOutbound.WriteCDataElement(writer, "DocumentType", "SHIPPING");
+			GlobalOutbound.WriteCDataElement(writer, "DocumentSubType", "RTV_to_DC");
+			GlobalOutbound.WriteCDataElement(writer, "ReasonCode", first.TransReasonCode);
+			GlobalOutbound.WriteCDataElement(writer, "CreationTimestamp", GlobalOutbound.FormatDate(first.TransCreationTimestamp, true));
+			GlobalOutbound.WriteCDataElement(writer, "CompletionTimestamp", GlobalOutbound.FormatDate(first.TransCompletionTimestamp, true));
+			GlobalOutbound.WriteCDataElement(writer, "LastActivityTimestamp", GlobalOutbound.FormatDate(first.TransLastActivityTimestamp, true));
+
+			//---------------------
+			// Shipment Section
+			//---------------------
+			writer.WriteStartElement("Shipment");
+			GlobalOutbound.WriteCDataElement(writer, "ShipmentSequence", first.ShipmentSequence);
+			GlobalOutbound.WriteCDataElement(writer, "ActualDeliveryDate", GlobalOutbound.FormatDate(first.ActualDeliveryDate, true));
+			GlobalOutbound.WriteCDataElement(writer, "ActualShipDate", GlobalOutbound.FormatDate(first.ActualShipDate, true));
+			GlobalOutbound.WriteCDataElement(writer, "DestinationPartyID", first.DestinationPartyID);
+			GlobalOutbound.WriteCDataElement(writer, "DestinationRetailLocationID", first.DestinationRetailLocationID);
+			GlobalOutbound.WriteCDataElement(writer, "StatusCode", first.ShipmentStatusCode);
+
+				//---------------------
+				// Address Section
+				//---------------------
+				writer.WriteStartElement("Address");
+				GlobalOutbound.WriteCDataElement(writer, "City", first.City);
+				GlobalOutbound.WriteCDataElement(writer, "PostalCode", first.PostalCode);
+				GlobalOutbound.WriteCDataElement(writer, "Country", "PH");
+				writer.WriteStartElement("AddressLine1");
+				writer.WriteAttributeString("Type", "Text");
+				writer.WriteString(string.Empty);
+				writer.WriteEndElement(); // AddressLine1
+				writer.WriteStartElement("Territory");
+				writer.WriteAttributeString("TypeCode", "State");
+				writer.WriteString(string.Empty);
+				writer.WriteEndElement(); // Territory
+				writer.WriteEndElement(); // Address
+
+			writer.WriteEndElement(); // Shipment
+
+			foreach (var item in items)
 			{
-				var itemStore = storeGroup.FirstOrDefault();
-				if (itemStore == null) continue;
-
-				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", "http://www.datavantagecorp.com/xstore/", itemStore.OrganizationID);
-				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", itemStore.RetailStoreID);
-
-				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationID))
+				//---------------------
+				// Items Section (per item)
+				//---------------------
+				if (item.SGItems?.Any() == true)
 				{
-					var itemWs = wsGroup.FirstOrDefault();
-					if (itemWs == null) continue;
-
-					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", itemWs.WorkstationID);
-					GlobalOutbound.WriteCDataElement(writer, "TillID", itemWs.TillID);
-
-					foreach (var vouGroup in GlobalOutbound.GroupBySafe(wsGroup, i => i.SequenceNo))
+					foreach (var itm in item.SGItems.OrderBy(d => d.LineNumber))
 					{
-						var vouItems = vouGroup.FirstOrDefault();
-						if (vouItems == null) continue;
+						writer.WriteStartElement("LineItem");
+						writer.WriteAttributeString("VoidFlag", "false");
+						GlobalOutbound.WriteCDataElement(writer, "ItemID", itm.ItemID);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedBarcodeID", GlobalOutbound.NsDtv, itm.PTEAN);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "QuantityShipped", GlobalOutbound.NsDtv, itm.QuantityShipped);
+						GlobalOutbound.WriteCDataElement(writer, "LineItemNumber", itm.LineNumber);
+						GlobalOutbound.WriteCDataElement(writer, "Description", itm.Description);
 
-						GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", vouItems.SequenceNo);
-						GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(vouItems.BusinessDayDate));
-						GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(vouItems.BeginDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(vouItems.EndDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", vouItems.CurrencyCode);
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", itm.PTDIM1);
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", itm.PTDIM2);
+						GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", itm.PTStyle);
+						GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", itm.PTEAN);
 
-						GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", vouItems.InventoryMovementSuccess);
-						GlobalOutbound.WritePosTransactionProperties(writer, "REGION", vouItems.Region);
-						GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", vouItems.Country);
-						GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", vouItems.AlternateStoreID);
-						GlobalOutbound.WritePosTransactionProperties(writer, "REASON_CODE", vouItems.ReasonCode);
-						GlobalOutbound.WritePosTransactionProperties(writer, "ORIGIN_ALTERNATE_STOREID", vouItems.OriginAlternateStoreID);
-
-						writer.WriteStartElement("InventoryTransaction");
-						writer.WriteStartElement("ReturnToVendor");
-
-						GlobalOutbound.WriteCDataElement(writer, "DocumentStatus", vouItems.DocumentStatus);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentID", vouItems.DocumentID);
-						GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", vouItems.RetailStoreID);
-						GlobalOutbound.WriteCDataElement(writer,"OriginatorID", vouItems.OrganizationID);
-						GlobalOutbound.WriteCDataElement(writer, "OriginatorName", vouItems.OriginatorName);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentTypeDescription", vouItems.DocumentTypeDescription);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentType", vouItems.DocumentType);
-						GlobalOutbound.WriteCDataElement(writer, "DocumentSubType", vouItems.DocumentSubType);
-						GlobalOutbound.WriteCDataElement(writer, "ReasonCode", vouItems.ReasonCode);
-						GlobalOutbound.WriteCDataElement(writer, "CreationTimestamp", GlobalOutbound.FormatDate(vouItems.BeginDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "CompletionTimestamp", GlobalOutbound.FormatDate(vouItems.EndDateTime, true));
-						GlobalOutbound.WriteCDataElement(writer, "LastActivityTimestamp", GlobalOutbound.FormatDate(vouItems.EndDateTime, true));
-
-						// Shipment
-						writer.WriteStartElement("Shipment");
-						GlobalOutbound.WriteCDataElement(writer, "ShipmentSequence", vouItems.ShipmentSequence);
-						GlobalOutbound.WriteCDataElement(writer, "ActualDeliveryDate", GlobalOutbound.FormatDate(vouItems.ActualDeliveryDate, true));
-						GlobalOutbound.WriteCDataElement(writer, "ActualShipDate", GlobalOutbound.FormatDate(vouItems.ActualShipDate, true));
-						GlobalOutbound.WriteCDataElement(writer, "DestinationPartyID", vouItems.DestinationPartyID);
-						GlobalOutbound.WriteCDataElement(writer, "DestinationRetailLocationID", vouItems.DestinationRetailLocationID);
-						GlobalOutbound.WriteCDataElement(writer, "StatusCode", vouItems.ShipmentStatusCode);
-
-						// Address
-						writer.WriteStartElement("Address");
-						GlobalOutbound.WriteCDataElement(writer, "City", vouItems.City);
-						GlobalOutbound.WriteCDataElement(writer, "PostalCode", vouItems.PostalCode);
-						GlobalOutbound.WriteCDataElement(writer, "Country", vouItems.Country);
-						writer.WriteStartElement("AddressLine1");
-						writer.WriteAttributeString("Type", "Text");
-						writer.WriteString(string.Empty);
-						writer.WriteEndElement(); // AddressLine1
-						writer.WriteStartElement("Territory");
-						writer.WriteAttributeString("TypeCode", "State");
-						writer.WriteString(string.Empty);
-						writer.WriteEndElement(); // Territory
-						writer.WriteEndElement(); // Address
-
-						writer.WriteEndElement(); // Shipment
-
-						// LineItems
-						foreach (var lineItem in items)
-						{
-							writer.WriteStartElement("LineItem");
-							writer.WriteAttributeString("VoidFlag", "false");
-							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemID);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "ScannedBarcodeID", "http://www.datavantagecorp.com/xstore/", lineItem.PTEAN);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "QuantityShipped", "http://www.datavantagecorp.com/xstore/", lineItem.QuantityShipped);
-							GlobalOutbound.WriteCDataElement(writer, "LineItemNumber", lineItem.LineNumber);
-							GlobalOutbound.WriteCDataElement(writer, "Description", lineItem.Description);
-
-							// LineItemProperty
-							GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", lineItem.PTDIM1);
-							GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", lineItem.PTDIM2);
-							GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", lineItem.PTStyle);
-							GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", lineItem.PTEAN);
-
-							writer.WriteEndElement(); // LineItem
-						}
-
-						writer.WriteEndElement(); // ReturnToVendor
-						writer.WriteEndElement(); // InventoryTransaction
-						
-
+						writer.WriteEndElement(); // LineItem
 					}
+
 				}
 			}
 
-			writer.WriteEndElement(); // Transaction
+			writer.WriteEndElement(); // ReturnToVendor
+			writer.WriteEndElement(); // InventoryTransaction
 
+			writer.WriteEndElement(); // Transaction
 		}
 
 	}

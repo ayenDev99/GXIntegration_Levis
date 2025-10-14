@@ -5,6 +5,8 @@ namespace GXIntegration_Levis.Model
 {
 	public class StoreSaleModel
 	{
+		public string DocSid { get; set; }
+
 		// Transaction Level
 		public string TransOrganizationID { get; set; }
 		public string TransRetailStoreID { get; set; }
@@ -23,8 +25,6 @@ namespace GXIntegration_Levis.Model
 
 		public string TransGrandAmount { get; set; }
 		public string TransRoundedTotal { get; set; }
-
-		public string DocSid { get; set; }
 
 		public List<Items> Items { get; set; } = new List<Items>();
 		public List<Tender> Tenders { get; set; } = new List<Tender>();

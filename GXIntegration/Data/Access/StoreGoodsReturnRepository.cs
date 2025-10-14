@@ -38,42 +38,38 @@ namespace GXIntegration_Levis.Data.Access
 						dateCondition = "TRUNC(VOU.POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
 
-					string sql = $@"
+					string sql = @"
 							SELECT
-   								'1'										AS OrganizationID
+								VOU.SID									AS VouSid
+   								, '1'									AS TransOrganizationID
 								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS RetailStoreID
-								, VOU.WORKSTATION						AS WorkstationID
+									WHERE SID = VOU.STORE_SID)			AS TransRetailStoreID
+								, VOU.WORKSTATION						AS TransWorkstationID
 								, (SELECT ADDRESS4 FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID) 
-									|| VOU.WORKSTATION					AS TillID
-								, VOU.VOU_NO			                AS SequenceNo
-								, TRUNC(VOU.CREATED_DATETIME)           AS BusinessDayDate
-								, VOU.CREATED_DATETIME	                AS BeginDateTime
-								, VOU.POST_DATE                         AS EndDateTime
-								, EMPLOYEE.EMPL_NAME			        AS OperatorID
-								, C.ALPHABETIC_CODE                     AS CurrencyCode
-								, 'true'                                AS InventoryMovementSuccess
-								, 'AMA'	                                AS Region
-								, 'PH'									AS Country
+									|| VOU.WORKSTATION					AS TransTillID
+								, LPAD(VOU.VOU_NO, 10, '0')	            AS TransSequenceNo
+								, TRUNC(VOU.CREATED_DATETIME)           AS TransBusinessDayDate
+								, VOU.CREATED_DATETIME	                AS TransBeginDateTime
+								, VOU.POST_DATE                         AS TransEndDateTime
+								, C.ALPHABETIC_CODE                     AS TransCurrencyCode
 								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS AlternateStoreID
+									WHERE SID = VOU.STORE_SID)			AS TransAlternateStoreID
 								, TRIM(REGEXP_SUBSTR(
-									VOU_COMMENT.COMMENTS, '^[^-]+'))	AS ReasonCode
+									VOU_COMMENT.COMMENTS, '^[^-]+'))	AS TransReasonCode
 								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS OriginAlternateStoreID
+									WHERE SID = VOU.STORE_SID)			AS TransOriginAlternateStoreID
 								, CASE WHEN VOU.STATUS = 4 
 									THEN 'CLOSED' 
 									ELSE 'PENDING' 
-									END							        AS DocumentStatus
-								, VOU.VOU_NO					        AS DocumentID
+									END							        AS TransDocumentStatus
+								, LPAD(VOU.VOU_NO, 10, '0')				AS TransDocumentID
 								, (SELECT ADDRESS4 FROM RPS.STORE 
-									WHERE SID = VOU.STORE_SID)			AS OriginatorName
-								, 'SHIPPING_RTV_FROM_DAMAGED'           AS DocumentTypeDescription
-								, 'SHIPPING'                            AS DocumentType
-								, 'RTV_to_DC '                          AS DocumentSubType
-								, VOU.MODIFIED_DATETIME			        AS CreationTimestamp
-								, VOU.POST_DATE			                AS CompletionTimestamp
+									WHERE SID = VOU.STORE_SID)			AS TransOriginatorName
+								, VOU.MODIFIED_DATETIME			        AS TransCreationTimestamp
+								, VOU.POST_DATE			                AS TransCompletionTimestamp
+								, VOU.POST_DATE			                AS TransLastActivityTimestamp
+
 								, '1'							        AS ShipmentSequence
 								, VOU.POST_DATE			                AS ActualDeliveryDate
 								, VOU.POST_DATE			                AS ActualShipDate
@@ -84,6 +80,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ''				                    AS City
 								, (SELECT ZIP FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS PostalCode
+
 								, ISB.ALU								AS ItemID
 								, ISB.UPC				                AS ScannedBarcodeID
 								, VI.QTY						        AS QuantityShipped
@@ -92,9 +89,7 @@ namespace GXIntegration_Levis.Data.Access
 								, ISB.ITEM_SIZE							AS PTDIM1
 								, ISB.ATTRIBUTE							AS PTDIM2
 								, ISB.DESCRIPTION1						AS PTStyle
-								, VOU.PO_NO								AS PTControlNumber
 								, ISB.UPC								AS PTEAN
-								, VOU.SID							    AS VouSid							
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -105,12 +100,14 @@ namespace GXIntegration_Levis.Data.Access
 							LEFT JOIN RPS.VOU_COMMENT				ON VOU_COMMENT.VOU_SID = VOU.SID
 							LEFT JOIN RPS.VENDOR					ON VENDOR.SID = VOU.VEND_SID
 							WHERE
-								{dateCondition}
+								{DATE_CONDITION}
 								AND VOU.VOU_TYPE = 1
 								AND VOU.VOU_CLASS = 0
 								AND VOU.STATUS = 4
 								AND VOU.STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)					
 					";
+
+					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
 
 					//Logger.Log($"Generated SQL: {sql}");
 
@@ -121,13 +118,45 @@ namespace GXIntegration_Levis.Data.Access
 						StoreCode = storeCode
 					};
 
-					var sales = await connection.QueryAsync<StoreGoodsReturnModel>(sql, parameters);
-					return sales.ToList();
+					var salesDictionary = new Dictionary<string, StoreGoodsReturnModel>();
+
+					var sales = await connection.QueryAsync<StoreGoodsReturnModel, SGRItems, StoreGoodsReturnModel>(
+						sql,
+						(sale, item) =>
+						{
+							// Group by transaction (document)
+							if (!salesDictionary.TryGetValue(sale.TransSequenceNo, out var existingSale))
+							{
+								existingSale = sale;
+								existingSale.SGItems = new List<SGRItems>();
+								salesDictionary[sale.TransSequenceNo] = existingSale;
+							}
+
+							// --- Handle item ---
+							SGRItems existingItem = null;
+							if (!string.IsNullOrEmpty(item?.LineNumber))
+							{
+								existingItem = existingSale.SGItems
+									.FirstOrDefault(i => i.LineNumber == item.LineNumber);
+
+								if (existingItem == null)
+								{
+									existingItem = item;
+									existingSale.SGItems.Add(existingItem);
+								}
+							}
+
+							return existingSale;
+						}
+						, parameters
+						, splitOn: "LineNumber"
+					).ConfigureAwait(false);
+
+					return salesDictionary.Values.ToList();
 				}
 				catch (Exception ex)
 				{
 					Logger.Log($"Error fetching Store_Goods_Return data: {ex.Message}");
-					Console.WriteLine($"Error fetching Store_Goods_Return data: {ex.Message}");
 					return new List<StoreGoodsReturnModel>();
 				}
 			}

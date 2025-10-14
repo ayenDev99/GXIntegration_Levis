@@ -42,7 +42,8 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = @"
                         SELECT 
-                            '1'                                     AS TransOrganizationID
+                            DOC.SID                                 AS DocSid
+                            , '1'                                   AS TransOrganizationID
                             , STORE.ADDRESS4                        AS TransRetailStoreID
                             , DOC.WORKSTATION_NO                    AS TransWorkstationID
                             , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TransTillID
@@ -59,7 +60,6 @@ namespace GXIntegration_Levis.Data.Access
 
                             , DOC.SALE_TOTAL_AMT                    AS TransGrandAmount
                             , '0.00'                                AS TransRoundedTotal
-                            , DOC.SID                               AS DocSid
 
                             , DOC_ITEM.ITEM_POS                     AS ItemSequenceNo
                             , DOC_ITEM.ITEM_POS                     AS ItemLineNumber
