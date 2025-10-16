@@ -40,38 +40,38 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = $@"
 							SELECT
-                                '1'                                 AS OrganizationID
-                                , S.ADDRESS4			            AS RetailStoreID
-                                , WS.WORKSTATION_NO				    AS WorkstationID
-                                , S.ADDRESS4 || WS.WORKSTATION_NO   AS TillID
-                                , ADJ.ADJ_NO			            AS SequenceNo
-                                , ADJ.CREATED_DATETIME			    AS BusinessDayDate
-                                , ADJ.CREATED_DATETIME	            AS BeginDateTime
-								, ADJ.POST_DATE                     AS EndDateTime   
-                                , EMP.EMPL_NAME			            AS OperatorID
-                                , CURRENCY.ALPHABETIC_CODE          AS CurrencyCode
-                                , 'true'                            AS InventoryMovementSuccess
-                                , 'AMA'	                            AS Region
-                                , 'PH'								AS Country
-                                , S.ADDRESS4			            AS AlternateStoreID
-                                , ADJ.ADJ_NO						AS CountID
-                                , 'ADJUSTMENT'					    AS CountType
+                                '1'										AS OrganizationID
+                                , S.ADDRESS4							AS RetailStoreID
+                                , WS.WORKSTATION_NO						AS WorkstationID
+                                , S.ADDRESS4 || WS.WORKSTATION_NO		AS TillID
+                                , ADJ.ADJ_NO							AS SequenceNo
+                                , ADJ.CREATED_DATETIME					AS BusinessDayDate
+                                , ADJ.CREATED_DATETIME					AS BeginDateTime
+								, ADJ.POST_DATE							AS EndDateTime   
+                                , EMP.EMPL_NAME							AS OperatorID
+                                , CURRENCY.ALPHABETIC_CODE				AS CurrencyCode
+                                , 'true'								AS InventoryMovementSuccess
+                                , 'AMA'									AS Region
+                                , 'PH'									AS Country
+                                , S.ADDRESS4							AS AlternateStoreID
+                                , ADJ.ADJ_NO							AS CountID
+                                , 'ADJUSTMENT'							AS CountType
                                 , CASE WHEN ADJ.STATUS = 4 
 									THEN 'CLOSED' 
 										WHEN ADJ.STATUS = 2 
 										THEN 'CANCELLED' 
 										ELSE 'PENDING' 
-									END							    AS CountStatus
-                                , PREF_REASON.NAME				    AS ReasonCode
-                                , ADJ_COMMENT.COMMENTS				AS Comments
-                                , ISI.DESCRIPTION1					AS ItemID
-                                , ADJ_ITEM.ADJ_VALUE				AS QuantityShipped
-                                , 'ON_HAND'							AS InventoryBucketID
-                                , ISI.ITEM_SIZE						AS PTDIM1
-								, ISI.ATTRIBUTE						AS PTDIM2
-								, ISI.DESCRIPTION1					AS PTStyle
-								, ISI.UPC							AS PTEAN                               
-								, ADJ.SID							AS AdjSid
+									END									AS CountStatus
+                                , PREF_REASON.NAME						AS ReasonCode
+                                , ADJ_COMMENT.COMMENTS					AS Comments
+								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
+                                , ADJ_ITEM.ADJ_VALUE					AS QuantityShipped
+                                , 'ON_HAND'								AS InventoryBucketID
+                                , ISI.ITEM_SIZE							AS PTDIM1
+								, ISI.ATTRIBUTE							AS PTDIM2
+								, ISI.DESCRIPTION1						AS PTStyle
+								, ISI.UPC								AS PTEAN                               
+								, ADJ.SID								AS AdjSid
 							FROM
 								RPS.ADJUSTMENT ADJ
 							LEFT JOIN RPS.ADJ_ITEM ADJ_ITEM		ON ADJ.SID = ADJ_ITEM.ADJ_SID

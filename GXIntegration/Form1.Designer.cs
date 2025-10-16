@@ -309,6 +309,7 @@ namespace GXIntegration
 			this.Controls.Add(this.SideBar);
 			this.Controls.Add(this.MainContentPanel);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "Form1";
 			this.Text = "k.//";
 			this.WindowState = System.Windows.Forms.FormWindowState.Minimized;

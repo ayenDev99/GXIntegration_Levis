@@ -82,20 +82,20 @@ namespace GXIntegration_Levis.Data.Access
 								, (SELECT ZIP FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS PostalCode
 
-								, ISB.ALU								AS ItemID
-								, ISB.UPC				                AS ScannedBarcodeID
+								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
+								, ISI.UPC				                AS ScannedBarcodeID
 								, TO_CHAR(VI.QTY)						AS QuantityShipped
 								, VI.ITEM_POS					        AS LineNumber
-								, ISB.DESCRIPTION2				        AS Description
-								, ISB.ITEM_SIZE							AS PTDIM1
-								, ISB.ATTRIBUTE							AS PTDIM2
-								, ISB.DESCRIPTION1						AS PTStyle
-								, ISB.UPC								AS PTEAN
+								, ISI.DESCRIPTION2				        AS Description
+								, ISI.ITEM_SIZE							AS PTDIM1
+								, ISI.ATTRIBUTE							AS PTDIM2
+								, ISI.DESCRIPTION1						AS PTStyle
+								, ISI.UPC								AS PTEAN
 							FROM
 								RPS.VOUCHER VOU
 							LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
 							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-							LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
+							LEFT JOIN RPS.INVN_SBS_ITEM ISI			ON ISI.SID = VI.ITEM_SID
 							LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
 							LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 							LEFT JOIN RPS.VOU_COMMENT				ON VOU_COMMENT.VOU_SID = VOU.SID

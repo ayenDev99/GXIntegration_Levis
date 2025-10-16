@@ -85,20 +85,20 @@ namespace GXIntegration_Levis.Data.Access
 								, 'SHIPPED'									AS STATUSCODE
 								, ''										AS POSTALCODE
 								, VI.ITEM_POS								AS LINENUMBER
-								, ISB.DESCRIPTION1							AS ITEMID
+								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '')		AS ItemID
 								, VI.QTY									AS ActualCount
 								, VI.ORIG_QTY								AS ExpectedCount
 								, VI.QTY									AS PostedCount
 								, VI.ORIG_QTY								AS QuantityOrdered
 								, VI.QTY									AS QuantityReceived
 								, ''										AS CartonNumber
-								, ISB.DESCRIPTION2							AS DESCRIPTION
-								, ISB.ITEM_SIZE								AS PTDIM1
-								, ISB.ATTRIBUTE								AS PTDIM2
-								, ISB.DESCRIPTION1							AS PTSTYLE
+								, ISI.DESCRIPTION2							AS DESCRIPTION
+								, ISI.ITEM_SIZE								AS PTDIM1
+								, ISI.ATTRIBUTE								AS PTDIM2
+								, ISI.DESCRIPTION1							AS PTSTYLE
 								, VOU.VOU_NO								AS PTCONTROLNUMBER
 								, 'PH'										AS COUNTRY
-								, ISB.UPC									AS PTEAN
+								, ISI.UPC									AS PTEAN
 								, VOU.SID									AS VouSid							
 								FROM
 									RPS.VOUCHER VOU
@@ -108,7 +108,7 @@ namespace GXIntegration_Levis.Data.Access
 								LEFT JOIN RPS.COUNTRY					ON COUNTRY.SID = SBS.COUNTRY_SID
 								LEFT JOIN RPS.REGION_SUBSIDIARY			ON SBS.SID = REGION_SUBSIDIARY.SBS_SID
 								LEFT JOIN RPS.REGION					ON REGION.SID = REGION_SUBSIDIARY.REGION_SID
-								LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
+								LEFT JOIN RPS.INVN_SBS_ITEM ISI			ON ISI.SID = VI.ITEM_SID
 								LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND VOU.CLERK_SID = EMPLOYEE.SID
 								LEFT JOIN RPS.CURRENCY C				ON SBS.BASE_CURRENCY_SID = C.SID
 								LEFT JOIN RPS.PREF_REASON VOU_REASON	ON VOU.VOU_REASON_SID = VOU_REASON.SID

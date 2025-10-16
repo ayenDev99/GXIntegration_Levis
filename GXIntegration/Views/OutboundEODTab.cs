@@ -20,6 +20,7 @@ using System.Xml.Linq;
 using static System.Data.Entity.Infrastructure.Design.Executor;
 
 
+
 namespace GXIntegration_Levis.Views
 {
 	public partial class OutboundEODTab : UserControl
@@ -35,6 +36,10 @@ namespace GXIntegration_Levis.Views
 		private Label lblTo;
 		private GunaButton btnSendXml;
 		private CheckBox headerCheckBox;
+
+		private Panel loadingOverlay;
+		private GunaWinCircleProgressIndicator spinner;
+		private Label lblLoadingText;
 
 		public OutboundEODTab(GXConfig config, OutboundRepositories repositories)
 		{
@@ -175,6 +180,7 @@ namespace GXIntegration_Levis.Views
 				clickAction: async () => await ManualProcess()
 			);
 
+
 			this.Controls.Add(btnSendXml);
 		}
 
@@ -262,6 +268,9 @@ namespace GXIntegration_Levis.Views
 			}
 
 			btnSendXml.Enabled = false;
+			btnSendXml.Text = "Processing...";
+			btnSendXml.BaseColor = Color.Gray; // optional, to indicate disabled
+			btnSendXml.Refresh();
 			Cursor.Current = Cursors.WaitCursor;
 
 			try
@@ -308,6 +317,8 @@ namespace GXIntegration_Levis.Views
 			finally
 			{
 				btnSendXml.Enabled = true;
+				btnSendXml.Text = "Download All and Send to SFTP";
+				btnSendXml.BaseColor = Color.FromArgb(100, 88, 255); // restore original color
 				Cursor.Current = Cursors.Default;
 			}
 		}

@@ -65,7 +65,7 @@ namespace GXIntegration_Levis.Data.Access
                             , DOC_ITEM.ITEM_POS                     AS ItemLineNumber
                             , DOC_ITEM.CREATED_DATETIME             AS ItemBeginDateTime
                             , DOC_ITEM.POST_DATE                    AS ItemEndDateTime
-                            , DOC_ITEM.ALU                          AS SaleItemID
+							, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS SaleItemID
                             , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
                             , DOC_ITEM.ORIG_PRICE                   AS SaleRegularSalesUnitPrice
                             , DOC_ITEM.PRICE                        AS SaleActualSalesUnitPrice

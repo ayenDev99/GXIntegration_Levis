@@ -71,7 +71,7 @@ namespace GXIntegration_Levis.Data.Access
 							, '1'									AS CartonStatusCode
 
 							, VI.ITEM_POS					        AS LineNumber
-							, ISB.ALU								AS ItemID
+							, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
 							, PO_ITEM.RCVD_QTY						AS ActualCount
 							, PO_ITEM.ORD_QTY						AS ExpectedCount
 							, PO_ITEM.RCVD_QTY						AS POSTEDCOUNT
@@ -81,17 +81,17 @@ namespace GXIntegration_Levis.Data.Access
 							, 'OTHER'							    AS RecordCreationType
 							, '1'									AS LineItemStatusCode
 
-							, ISB.ALU								AS ALU
+							, ISI.ALU								AS ALU
 							, VI.ITEM_POS					        AS ItemLineNumber
-							, ISB.ITEM_SIZE							AS PTDIM1
-							, ISB.ATTRIBUTE							AS PTDIM2
-							, ISB.DESCRIPTION1						AS PTStyle
+							, ISI.ITEM_SIZE							AS PTDIM1
+							, ISI.ATTRIBUTE							AS PTDIM2
+							, ISI.DESCRIPTION1						AS PTStyle
 							, VOU_COMMENT.COMMENTS					AS PTControlNumber
-							, ISB.UPC								AS PTEAN
+							, ISI.UPC								AS PTEAN
 							, PO_ITEM.ORD_QTY						AS QuantityOrdered
 							, PO_ITEM.RCVD_QTY                      AS QuantityReceived
 							, '1'                                   AS CartonNumber
-							, ISB.DESCRIPTION2				        AS Description
+							, ISI.DESCRIPTION2				        AS Description
 						FROM
 							RPS.VOUCHER VOU
 						LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
@@ -99,7 +99,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.PO_ITEM 					ON PO_ITEM.PO_SID = PO.SID
 						LEFT JOIN RPS.VOU_COMMENT 				ON VOU_COMMENT.VOU_SID = VOU.SID
 						LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
+						LEFT JOIN RPS.INVN_SBS_ITEM ISI			ON ISI.SID = VI.ITEM_SID
 						LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
 						WHERE
 							{DATE_CONDITION}
