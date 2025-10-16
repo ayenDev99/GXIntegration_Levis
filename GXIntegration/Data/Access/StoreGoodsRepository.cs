@@ -86,9 +86,9 @@ namespace GXIntegration_Levis.Data.Access
 							, ISB.ITEM_SIZE							AS PTDIM1
 							, ISB.ATTRIBUTE							AS PTDIM2
 							, ISB.DESCRIPTION1						AS PTStyle
-							, PO.PO_NO								AS PTControlNumber
+							, VOU_COMMENT.COMMENTS					AS PTControlNumber
 							, ISB.UPC								AS PTEAN
-							, PO_ITEM.ORD_QTY						AS QUANTITYORDERED
+							, PO_ITEM.ORD_QTY						AS QuantityOrdered
 							, PO_ITEM.RCVD_QTY                      AS QuantityReceived
 							, '1'                                   AS CartonNumber
 							, ISB.DESCRIPTION2				        AS Description
@@ -97,6 +97,7 @@ namespace GXIntegration_Levis.Data.Access
 						LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
 						LEFT JOIN RPS.PO 						ON PO.PO_NO = VOU.PO_NO
 						LEFT JOIN RPS.PO_ITEM 					ON PO_ITEM.PO_SID = PO.SID
+						LEFT JOIN RPS.VOU_COMMENT 				ON VOU_COMMENT.VOU_SID = VOU.SID
 						LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
 						LEFT JOIN RPS.INVN_SBS_ITEM ISB			ON ISB.SID = VI.ITEM_SID
 						LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID

@@ -111,27 +111,31 @@ namespace GXIntegration_Levis.InboundHandlers
 								string jsonResult = JsonConvert.SerializeObject(resultList, Formatting.Indented);
 								//Logger.Log("Inbound items result:\n" + jsonResult);
 
+								var price_lvl_sid = resultList[0].ACTIVE_PRICE_LVL_SID;
+								var sbs_sid = resultList[0].SBS_SID;
+
+								var newAjustmentData = await createRpsAdjustment(session, resultList[0]);
+
+								string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
+								Logger.Log($"ADJUSTMENT SID: {adjusment_sid}");
+
 								foreach (var item in resultList)
 								{
-									var price_lvl_sid = item.ACTIVE_PRICE_LVL_SID;
-									var sbs_sid = item.SBS_SID;
-									Logger.Log($"[INBOUND - PRICE] PRICE_LVL_SID : {sbs_sid}");
-
-									var newAjustmentData = await createRpsAdjustment(session, item);
-									string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
-
 									await createRpsAdjItem(session, item, row, adjusment_sid);
-
-									//Logger.Log($"isReprocess: {isReprocess}");
-
-									if (isReprocess)
-									{
-										Logger.Log("Reprocessing item...");
-
-										var repo = new InboundPriceRepository();
-										await repo.MarkTempPriceRowAsProcessedAsync(row);
-									}
 								}
+
+								var ADJ_result = await repository.GetRpsAdjustment("SID", adjusment_sid);
+								var rowVersionString = ADJ_result[0].ROW_VERSION.ToString();
+
+								await updateRpsAdjustment(session, adjusment_sid, rowVersionString);
+
+								if (isReprocess)
+								{
+									Logger.Log("Reprocessing item...");
+
+									var repo = new InboundPriceRepository();
+									await repo.MarkTempPriceRowAsProcessedAsync(row);
+								}	
 							}
 							else
 							{
@@ -216,6 +220,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			string price_lvl_sid = item?.ACTIVE_PRICE_LVL_SID?.ToString();
 			string sbs_sid = item?.SBS_SID?.ToString();
+			var currentDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
 
 			var adjustmentPayload = new Dictionary<string, object>
 			{
@@ -224,11 +229,10 @@ namespace GXIntegration_Levis.InboundHandlers
 				["pricelvlsid"] = price_lvl_sid,
 				["sbssid"] = sbs_sid,
 				["status"] = 3,
+				["modifieddatetime"] = currentDate,
+				["adjreasonsid"] = "555357003000181402"
 			};
 
-			// NOTE: ADD REASON SID FROM RPS.PREF_REASON
-
-			// Call API to CREATE RPS.ADJUSTMENT
 			string endpointCreate = "/api/backoffice/adjustment";
 			var payload = new { data = new[] { adjustmentPayload } };
 			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
@@ -242,7 +246,37 @@ namespace GXIntegration_Levis.InboundHandlers
 									);
 
 			return responseJson;
+		}
 
+		private async Task<string> updateRpsAdjustment(string session, string adjusmentSid, string rowversion)
+		{
+			Logger.Log($"[INBOUND - PRICE]		[UPDATE] ADJUSTMENT");
+			var currentDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
+			int rowVersion = Convert.ToInt32(rowversion);
+
+			var adjustmentPayload = new Dictionary<string, object>
+			{
+				["modifieddatetime"] = currentDate,
+				["adjreasonsid"] = "555357003000181402",
+				["reasonname"] = "MANUALLY",
+				["rowversion"] = rowVersion,
+				["status"] = 4,
+			};
+
+			string endpointCreate = $"/api/backoffice/adjustment/{adjusmentSid}?";
+			var payload = new { data = new[] { adjustmentPayload } };
+			//Logger.Log($"Payload: {JsonConvert.SerializeObject(payload, Formatting.Indented)}");
+			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, endpointCreate
+									, json
+									, out bool issuccessful
+									, "PUT"
+									, 1
+									);
+
+			return responseJson;
 		}
 
 		private async Task<string> createRpsAdjItem(string session, dynamic item, dynamic fileRowData, string adjustmentSid)
@@ -352,7 +386,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						// Map only relevant indices
 						if (fields.Length > 0) rowDict["CountryCode"] = fields[0].Trim();
 						if (fields.Length > 1) rowDict["StoreCode"] = fields[1].Trim();
-						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim();
+						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
 						if (fields.Length > 3) rowDict["ColorCode"] = fields[3].Trim();
 						if (fields.Length > 4) rowDict["SizeCode"] = fields[4].Trim();
 						if (fields.Length > 5) rowDict["SKU"] = fields[5].Trim();

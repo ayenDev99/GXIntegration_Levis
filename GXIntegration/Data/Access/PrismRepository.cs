@@ -429,5 +429,43 @@ namespace GXIntegration_Levis.Data.Access
 			}
 		}
 
+		public async Task<dynamic> GetRpsAdjustment(string columnName, string columnValue)
+		{
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> { "SID" };
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+
+					string sql = $@"
+						SELECT 
+							*
+						FROM 
+							RPS.ADJUSTMENT 
+						WHERE 
+							{columnName} = :ColumnValue
+					";
+
+					Logger.Log(columnName);
+					Logger.Log(columnValue);
+
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching RPS ADJUSTMENT SID: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS ADJUSTMENT SID: {ex.Message}");
+					return null;
+				}
+			}
+		}
 	}
 }

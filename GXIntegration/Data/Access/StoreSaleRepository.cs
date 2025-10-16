@@ -40,7 +40,7 @@ namespace GXIntegration_Levis.Data.Access
 						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
 
-					string sql = @"
+					string sql = $@"
                         SELECT 
                             DOC.SID                                 AS DocSid
                             , '1'                                   AS TransOrganizationID
@@ -146,7 +146,7 @@ namespace GXIntegration_Levis.Data.Access
                         LEFT JOIN RPS.SUBSIDIARY SBS                    ON SBS.SID = DOC.SUBSIDIARY_SID
                         LEFT JOIN RPS.COUNTRY                           ON COUNTRY.SID = SBS.COUNTRY_SID
                         WHERE 
-                            {DATE_CONDITION}
+                            {dateCondition}
                             AND DOC.STATUS = 4
                             AND DOC.RECEIPT_TYPE IN (0, 2)
                             AND DOC.DOC_NO IS NOT NULL
@@ -158,8 +158,6 @@ namespace GXIntegration_Levis.Data.Access
                             , DOC_ITEM.ITEM_POS ASC
                             , DOC_ITEM_DISC.DISC_POS ASC
                     ";
-
-					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
 
 					//Logger.Log($"Generated SQL: {sql}");
 
