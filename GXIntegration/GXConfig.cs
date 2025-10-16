@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace GXIntegration.Properties
@@ -12,8 +8,8 @@ namespace GXIntegration.Properties
 		public string MainDbConnection { get; set; }
 		public string CountryCode { get; set; }
 		public string Delimiter { get; set; }
-
-		public int ReprocessMinutes { get; set; }
+		public int OutApiAutoProcessTime { get; set; }
+		public string OutEodAutoProcessTime { get; set; }
 
 		public static GXConfig Load(string filePath)
 		{
@@ -37,11 +33,23 @@ namespace GXIntegration.Properties
 			if (delimiterNode != null)
 				config.Delimiter = delimiterNode.Value;
 
-			var delayElem = doc.Root.Element("ReprocessMinutes");
-			if (delayElem != null && int.TryParse(delayElem.Value, out int delay))
+			var apiDelayElem = doc.Root.Element("OutApiAutoProcessTime");
+			if (apiDelayElem != null && int.TryParse(apiDelayElem.Value, out int apiDelay))
 			{
-				config.ReprocessMinutes = delay;
+				config.OutApiAutoProcessTime = apiDelay;
 			}
+
+			// --- Outbound EOD time (HH:mm:ss) ---
+			var eodTimeElem = root.Element("OutEodAutoProcessTime");
+			if (eodTimeElem != null)
+			{
+				config.OutEodAutoProcessTime = eodTimeElem.Value.Trim();
+			}
+			else
+			{
+				throw new Exception("OutEodAutoProcessTime not found in config.xml");
+			}
+
 
 			return config;
 		}

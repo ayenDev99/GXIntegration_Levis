@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 
 namespace GXIntegration_Levis.Views
@@ -177,13 +178,51 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 
-		public async Task TriggerDownloadAsync()
+		public async Task TriggerEODAsync(string processTime)
 		{
-			await ManualProcess();
+			await AutoProcess(processTime);
 		}
+
 		// ***************************************************
 		// Process Methods
 		// ***************************************************
+		private async Task AutoProcess(string processTime)
+		{
+			Logger.Log($"[AUTO PROCESS] Scheduled Time: {processTime}");
+
+			try
+			{
+				if (!TimeSpan.TryParse(processTime, out var toTime))
+				{
+					Logger.Log($"ERROR: Invalid processTime value '{processTime}'. Expected format HH:mm:ss");
+					return;
+				}
+
+				DateTime today = DateTime.Today;
+				DateTime fromDate = today;
+				DateTime toDate = today.Add(toTime);
+
+				Logger.Log($"[OUTBOUND EOD-AUTO] Processing Date Range From: {fromDate:yyyy-MM-dd HH:mm:ss} To: {toDate:yyyy-MM-dd HH:mm:ss}");
+
+				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
+
+				await OutboundPrice.Execute(repositories.PriceRepository, config, fromDate);
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, fromDate);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config, fromDate);
+				await ExecuteStoreInventoryCountAsync(prismStores, fromDate, toDate);
+				await ExecuteAllAndSaveToSingleXmlAsync(prismStores, fromDate, toDate);
+
+				Logger.Log("[OUTBOUND EOD-AUTO] [SFTP] Start Uploading generated files to SFTP...");
+				await UploadToSftpAsync();
+
+				Logger.Log("[OUTBOUND EOD-AUTO] Process completed successfully.");
+			}
+			catch (Exception ex)
+			{
+				Logger.Log($"[OUTBOUND EODD-AUTO] ERROR during AutoProcess: {ex}");
+			}
+		}
+
 		private async Task ManualProcess()
 		{
 			Logger.Log("[OUTBOUND EOD-MANUAL] Start Manual Process...");

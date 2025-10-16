@@ -33,7 +33,7 @@ namespace GXIntegration
 		private System.Windows.Forms.Button closeButton;
 		private System.Windows.Forms.Button minimizeButton;
 
-		//public OutboundEODTab OutboundTab { get; private set; }
+		public OutboundEODTab OutboundEODTab { get; private set; }
 		public OutboundAPITab OutboundAPITab { get; private set; }
 
 		public Form1()
@@ -50,6 +50,7 @@ namespace GXIntegration
 			MainContentPanel.Dock = DockStyle.Fill;
 
 			OutboundAPITab = new OutboundAPITab(config, repositories);
+			OutboundEODTab = new OutboundEODTab(config, repositories);
 		}
 
 		private OutboundRepositories InitializeRepositories(string connectionString)

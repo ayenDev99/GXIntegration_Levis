@@ -9,82 +9,134 @@ using System.Windows.Forms;
 
 class Program
 {
-	static void Main()
-	{
-		var thread = new Thread(() =>
-		{
-			MainAsync().GetAwaiter().GetResult();
-		});
-
-		thread.SetApartmentState(ApartmentState.STA);
-		thread.Start();
-		thread.Join();
-	}
-
 	static GXConfig config;
 	static Form1 form;
-	public static string CurrentTime => DateTime.Now.ToString("HH:mm");
+	static readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-	static async Task MainAsync()
+	public static string CurrentTime => DateTime.Now.ToString("HH:mm:ss");
+
+	[STAThread]
+	static async Task Main()
 	{
 		string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 		config = GXConfig.Load(configPath);
 
-		var tcsApp = new TaskCompletionSource<bool>();
-
-		var formThread = new Thread(() =>
+		// Start WinForms UI
+		Thread formThread = new Thread(() =>
 		{
 			form = new GXIntegration.Form1();
 
 			form.Load += async (sender, e) =>
 			{
-				await RunIterationLoop();
+				Task.Run(() => RunAutoOutboundAPIAsync(cts.Token));
+				Task.Run(() => RunAutoOutboundEODAsync(cts.Token));
 			};
 
+			form.FormClosed += (s, e) => cts.Cancel();
+
 			Application.Run(form);
-			tcsApp.SetResult(true);
 		});
 
 		formThread.SetApartmentState(ApartmentState.STA);
 		formThread.Start();
 
-		await tcsApp.Task;
+		try
+		{
+			await Task.Delay(Timeout.Infinite, cts.Token); // keep main alive
+		}
+		catch (TaskCanceledException)
+		{
+			// expected on shutdown
+		}
 	}
 
-	static async Task RunIterationLoop()
+	// ------------------------------
+	// AUTO OUTBOUND - API (interval)
+	// ------------------------------
+	static async Task RunAutoOutboundAPIAsync(CancellationToken token)
 	{
 		int iteration = 0;
+		int processInterval = config.OutApiAutoProcessTime; // in minutes
 
-		while (true)
+		while (!token.IsCancellationRequested)
 		{
 			iteration++;
 			try
 			{
 				Logger.Log("**************************************************************************");
-				Logger.Log($">>> START iteration {iteration} at {CurrentTime}");
+				Logger.Log($">>> [AUTO OUTBOUND - API] START iteration {iteration} at {CurrentTime}");
 				Logger.Log("**************************************************************************");
+				Logger.Log($">>> Interval = {processInterval} minute(s)");
 
-				Logger.Log($">>> ReprocessMinutes = {config.ReprocessMinutes}");
-
-				// Condition: INBOUND is triggered every [config.processMinutes] minutes. Process if the SFTP folder has files.
-				// Condition: OUTBOUND EOD is triggered every [config.morningProcess, config.eveningProcess]. Process as EOD.
-				// Condition: OUTBOUND API is triggered every [config.processMinutes] minutes and check if prism has transaction within the range.
-
-				//Logger.Log(">>> Starting OUTBOUND Process...");
-				//await form.OutboundTab.TriggerDownloadAsync();
-				//Logger.Log(">>> OUTBOUND completed");
-
-				await form.OutboundAPITab.TriggerAPIAsync();
+				await form.OutboundAPITab.TriggerAPIAsync(processInterval);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("ERROR : " + ex.ToString());
+				Logger.Log("ERROR (API): " + ex);
 			}
 
-			Logger.Log($">>> Waiting {config.ReprocessMinutes} minute(s) before next iteration...");
-			await Task.Delay(TimeSpan.FromMinutes(config.ReprocessMinutes));
+			Logger.Log($">>> Waiting {processInterval} minute(s) before next API run...");
+			try
+			{
+				await Task.Delay(TimeSpan.FromMinutes(processInterval), token);
+			}
+			catch (TaskCanceledException)
+			{
+				break;
+			}
 		}
 	}
 
+	// ------------------------------
+	// AUTO OUTBOUND - EOD (daily time)
+	// ------------------------------
+	static async Task RunAutoOutboundEODAsync(CancellationToken token)
+	{
+		if (!TimeSpan.TryParse(config.OutEodAutoProcessTime, out TimeSpan scheduledTime))
+		{
+			Logger.Log("ERROR: Invalid OutEodAutoProcessTime in config.xml. Expected format HH:mm:ss");
+			return;
+		}
+
+		int iteration = 0;
+
+		while (!token.IsCancellationRequested)
+		{
+			DateTime now = DateTime.Now;
+			DateTime nextRun = now.Date.Add(scheduledTime);
+
+			// If the scheduled time has already passed today, schedule for tomorrow
+			if (nextRun <= now)
+				nextRun = nextRun.AddDays(1);
+
+			TimeSpan delay = nextRun - now;
+
+			Logger.Log("**************************************************************************");
+			Logger.Log($">>> [AUTO OUTBOUND - EOD] Scheduled run at {nextRun:yyyy-MM-dd HH:mm:ss}");
+			Logger.Log("**************************************************************************");
+
+			try
+			{
+				await Task.Delay(delay, token); // wait until the scheduled time
+				if (token.IsCancellationRequested) break;
+
+				iteration++;
+				Logger.Log($">>> [AUTO OUTBOUND - EOD] START iteration {iteration} at {CurrentTime}");
+
+				// ✅ Pass the scheduled time string (e.g., "11:30:00")
+				await form.OutboundEODTab.TriggerEODAsync(config.OutEodAutoProcessTime);
+
+				Logger.Log($">>> [AUTO OUTBOUND - EOD] Completed iteration {iteration}");
+			}
+			catch (TaskCanceledException)
+			{
+				break;
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("ERROR (EOD): " + ex);
+			}
+		}
+	}
 
 }

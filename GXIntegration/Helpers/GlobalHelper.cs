@@ -116,28 +116,6 @@ namespace GXIntegration_Levis.Helpers
 		// ***************************************************
 		// Dates Methods
 		// ***************************************************
-		public static (DateTime from, DateTime to) GetProcessingTimeWindow(GXConfig config)
-		{
-			string timeStr = Program.CurrentTime;
-			int processMinutes = config.ReprocessMinutes;
-
-			// TO = selected time of day + 59s 999ms (end of that minute)
-			DateTime to_date = DateTime.Today
-				.Add(TimeSpan.Parse(timeStr))
-				.AddSeconds(59)
-				.AddMilliseconds(999);
-
-			// FROM = start of N minutes ago (reset to 00.000)
-			DateTime from_date = to_date
-				.AddMinutes(-processMinutes)
-				.AddSeconds(-59)
-				.AddMilliseconds(-999);
-
-			//Logger.Log($">>> Processing Time Window: FROM = {from_date:yyyy-MM-dd HH:mm}, TO = {to_date:yyyy-MM-dd HH:mm}");
-
-			return (from_date, to_date);
-		}
-
 		public static string FormatDateToIso8601(string inputDate)
 		{
 			if (DateTime.TryParseExact(inputDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime datePart))

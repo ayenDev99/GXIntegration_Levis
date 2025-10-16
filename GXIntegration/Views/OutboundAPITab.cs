@@ -19,7 +19,6 @@ namespace GXIntegration_Levis.Views
 {
 	public partial class OutboundAPITab : UserControl
 	{
-		private GXConfig _config;
 		private OutboundRepositories _repositories;
 		private GunaDataGridView guna1DataGridView1;
 
@@ -31,7 +30,6 @@ namespace GXIntegration_Levis.Views
 
 		public OutboundAPITab(GXConfig config, OutboundRepositories repositories)
 		{
-			_config = config;
 			_repositories = repositories;
 
 			InitializeComponent();
@@ -165,9 +163,9 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSendXml);
 		}
 		
-		public async Task TriggerAPIAsync()
+		public async Task TriggerAPIAsync(int reprocessTime)
 		{
-			await AutoSendXmlFilesToApi();
+			await AutoSendXmlFilesToApi(reprocessTime);
 		}
 
 		// ***************************************************
@@ -215,10 +213,6 @@ namespace GXIntegration_Levis.Views
 
 			try
 			{
-				var config = GXConfig.Load("config.xml");
-				//var reprocessMinutes = config.ReprocessMinutes;
-				//var reprocessMinutes = 600;
-				//var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
 				var fromDate = datePickerFrom.Value;
 				var toDate = datePickerTo.Value;
 
@@ -290,7 +284,7 @@ namespace GXIntegration_Levis.Views
 			MessageBox.Show($"API processed successfully. Full API responses saved to AppData folder ProcessedPrismTransactions.db.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
-		public async Task AutoSendXmlFilesToApi()
+		public async Task AutoSendXmlFilesToApi(int reprocessTime)
 		{
 			Logger.Log("[OUTBOUND API-AUTO] Start Auto Process...");
 
@@ -307,10 +301,7 @@ namespace GXIntegration_Levis.Views
 					return;
 				}
 
-				var config = GXConfig.Load("config.xml");
-				var reprocessMinutes = config.ReprocessMinutes;
-				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessMinutes);
-
+				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime);
 				Logger.Log($"[OUTBOUND API-AUTO]	Process DateRange From: {fromDate}, To: {toDate}");
 
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
