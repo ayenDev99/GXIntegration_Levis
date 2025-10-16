@@ -71,7 +71,7 @@ namespace GXIntegration_Levis.Data.Access
 							, '1'									AS CartonStatusCode
 
 							, VI.ITEM_POS					        AS LineNumber
-							, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
+							, REPLACE(ISI.ALU, '-', '')				AS ItemID
 							, PO_ITEM.RCVD_QTY						AS ActualCount
 							, PO_ITEM.ORD_QTY						AS ExpectedCount
 							, PO_ITEM.RCVD_QTY						AS POSTEDCOUNT

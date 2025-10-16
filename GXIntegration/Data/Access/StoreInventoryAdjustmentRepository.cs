@@ -64,7 +64,7 @@ namespace GXIntegration_Levis.Data.Access
 									END									AS CountStatus
                                 , PREF_REASON.NAME						AS ReasonCode
                                 , ADJ_COMMENT.COMMENTS					AS Comments
-								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
+								, REPLACE(ISI.ALU, '-', '')				AS ItemID
                                 , ADJ_ITEM.ADJ_VALUE					AS QuantityShipped
                                 , 'ON_HAND'								AS InventoryBucketID
                                 , ISI.ITEM_SIZE							AS PTDIM1

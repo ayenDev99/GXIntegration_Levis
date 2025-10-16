@@ -54,7 +54,7 @@ namespace GXIntegration_Levis.Data.Access
 								, 'LEV_COUNT'							AS CountType
 								, 'COMPLETE'							AS CountStatus
 								, 'true'								AS VariancesAdjusted
-								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemCountItemID
+								, REPLACE(ISI.ALU, '-', '')				AS ItemCountItemID
 								, ISI.UPC								AS ItemCountScannedBarcodeID
 								, ISI.ITEM_SIZE							AS ItemCountDIM1
 								, ISI.ATTRIBUTE							AS ItemCountDIM2

@@ -85,7 +85,7 @@ namespace GXIntegration_Levis.Data.Access
 							, 'SHIPPED'											AS STATUSCODE
 							, ''												AS POSTALCODE
 							, 'PH'												AS COUNTRY
-							, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '')				AS SaleItemID
+							, REPLACE(ISI.ALU, '-', '')							AS SaleItemID
 							, ISI.ITEM_SIZE										AS PTDIM1
 							, ISI.ATTRIBUTE										AS PTDIM2
 							, ISI.DESCRIPTION1									AS PTSTYLE

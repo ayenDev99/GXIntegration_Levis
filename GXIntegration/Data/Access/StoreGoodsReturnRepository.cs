@@ -82,7 +82,7 @@ namespace GXIntegration_Levis.Data.Access
 								, (SELECT ZIP FROM RPS.STORE 
 									WHERE SID = VOU.STORE_SID)			AS PostalCode
 
-								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '') AS ItemID
+								, REPLACE(ISI.ALU, '-', '')				AS ItemID
 								, ISI.UPC				                AS ScannedBarcodeID
 								, TO_CHAR(VI.QTY)						AS QuantityShipped
 								, VI.ITEM_POS					        AS LineNumber

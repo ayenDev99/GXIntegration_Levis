@@ -85,7 +85,7 @@ namespace GXIntegration_Levis.Data.Access
 								, 'SHIPPED'									AS STATUSCODE
 								, ''										AS POSTALCODE
 								, VI.ITEM_POS								AS LINENUMBER
-								, REGEXP_REPLACE(ISI.ALU, '[^0-9]', '')		AS ItemID
+								, REPLACE(ISI.ALU, '-', '')					AS ItemID
 								, VI.QTY									AS ActualCount
 								, VI.ORIG_QTY								AS ExpectedCount
 								, VI.QTY									AS PostedCount
