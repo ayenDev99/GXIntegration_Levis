@@ -36,6 +36,8 @@ namespace GXIntegration_Levis.Model
 		public string ItemLineNumber { get; set; }
 		public DateTimeOffset ItemBeginDateTime { get; set; }
 		public DateTimeOffset ItemEndDateTime { get; set; }
+		public int NonInvnFlag1 { get; set; }
+		public int NonInvnFlag2 { get; set; }
 		public string SaleItemID { get; set; }
 		public string SaleDescription { get; set; }
 		public string SaleRegularSalesUnitPrice { get; set; }

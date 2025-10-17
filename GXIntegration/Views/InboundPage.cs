@@ -148,20 +148,19 @@ namespace GXIntegration_Levis.Views
 
 			guna1DataGridView1.Columns.AddRange(
 				new DataGridViewTextBoxColumn { Name = "ID", Width = 30 },
-				new DataGridViewTextBoxColumn { Name = "Name", Width = 140 },
-				new DataGridViewTextBoxColumn { Name = "File Name Format", Width = 250 },
-				new DataGridViewTextBoxColumn { Name = "File", Width = 45 },
-				new DataGridViewTextBoxColumn { Name = "Delimiter", Width = 65 }
+				new DataGridViewTextBoxColumn { Name = "Name", Width = 200 },
+				new DataGridViewTextBoxColumn { Name = "File Name Format", Width = 300 },
+				new DataGridViewTextBoxColumn { Name = "File", Width = 45 }
 			);
 
-			void AddRow(string id, string name, string format, string type, string delimiter)
-				=> guna1DataGridView1.Rows.Add(false, id, name, format, type, delimiter);
+			void AddRow(string id, string name, string format, string type)
+				=> guna1DataGridView1.Rows.Add(false, id, name, format, type);
 
-			AddRow("1", "EMPLOYEE DETAILS", "LSPI_WD_[yyyymmddhhmmss]", ".csv", "( , )");
-			AddRow("2", "ITEM DETAILS", "LSPI_ITEM_[yyyymmddhhmmss]", ".txt", "( ^ )");
-			AddRow("3", "HIERARCHY DETAILS", "LSPI_HIERARCHY_[yyyymmddhhmmss]", ".txt", "( ^ )");
-			AddRow("4", "ASN DETAILS", "LSPI_PRTRDX_[yyyymmddhhmmss]", ".txt", "{^^}");
-			AddRow("5", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]", ".txt", "{^^}");
+			AddRow("1", "EMPLOYEE DETAILS", "LSPI_WD_[yyyymmddhhmmss]", ".csv");
+			AddRow("2", "ITEM DETAILS", "LSPI_ITEM_[yyyymmddhhmmss]", ".txt");
+			AddRow("3", "HIERARCHY DETAILS", "LSPI_HIERARCHY_[yyyymmddhhmmss]", ".txt");
+			AddRow("4", "PRICE DETAILS", "LSPI_PRTAR_[yyyymmddhhmmss]", ".txt");
+			AddRow("5", "ASN DETAILS", "LSPI_PRTRDX_[yyyymmddhhmmss]", ".txt");
 
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;

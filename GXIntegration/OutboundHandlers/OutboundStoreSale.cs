@@ -154,7 +154,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 						// Sale Section
 						//---------------------
 						writer.WriteStartElement("Sale");
-						writer.WriteAttributeString("ItemType", "Stock");
+
+						// indentify in item is non-merchandise or stock
+						if (itm.NonInvnFlag1 == 1 || itm.NonInvnFlag2 == 7) {
+							writer.WriteAttributeString("ItemType", "dtv:NonMerchandise");
+						} else {
+							writer.WriteAttributeString("ItemType", "Stock");
+						}
 
 						GlobalOutbound.WriteCDataElement(writer, "ItemID", itm.SaleItemID ?? "");
 						GlobalOutbound.WriteCDataElement(writer, "Description", itm.SaleDescription ?? "");
@@ -179,6 +185,8 @@ namespace GXIntegration_Levis.OutboundHandlers
 							foreach (var disc in itm.Discounts.OrderBy(d => d.DiscSequenceNo))
 							{
 								writer.WriteStartElement("RetailPriceModifier");
+								writer.WriteAttributeString("MethodCode", "Promotion");
+								writer.WriteAttributeString("VoidFlag", "false");
 
 								GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", disc.DiscSequenceNo ?? "");
 
