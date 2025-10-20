@@ -15,31 +15,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundStoreShipping
 	{
-		//public static async Task Execute(StoreShippingRepository repository, GXConfig config, string generate_type)
-		//{
-		//	try
-		//	{
-		//		DateTime from_date = DateTime.Today; // 00:00:00
-		//		DateTime to_date = from_date.AddDays(1).AddMilliseconds(-1); // 23:59:59.999
-		//		//var items = await repository.GetStoreShippingAsync(from_date, to_date);
-
-		//		string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-		//		Directory.CreateDirectory(outboundDir);
-
-		//		string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-		//		string fileName = $"StoreShipping_{timestamp}.xml";
-		//		string filePath = Path.Combine(outboundDir, fileName);
-
-		//		//Logger.Log($"EOD StoreShipping downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
-		//		//GenerateXml(items, filePath, generate_type);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-		//		Logger.Log($"Error: {ex.Message}");
-		//	}
-		//}
-
 		public static string GenerateXml(List<StoreShippingModel> items, string filePath, string generate_type)
 		{
 			if (!items.Any()) { return null; }

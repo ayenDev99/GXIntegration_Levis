@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config>
+	<!-- ======================================= -->
+	<!--              GLOBAL SETTINGS            -->
+	<!-- ======================================= -->
+	<LogFile>log.txt</LogFile>
+	<CountryCode>PH</CountryCode>
+
+	<!-- ******* Process Time ******* -->
+	<OutApiAutoProcessTime>1</OutApiAutoProcessTime>
+	<OutEodAutoProcessTime>23:59:59</OutEodAutoProcessTime>
+
+
+	<!-- ======================================= -->
+	<!--         CONFIGURATION CONNECTION        -->
+	<!-- ======================================= -->
+	<!-- Oracle Prism DB Configuration -->
+	<MainDbConnection>User Id=reportuser;Password=report;Data Source=//localhost:1521/RPROODS;</MainDbConnection>
+	
+	<!-- Prism Server Configuration -->
+	<PrismConfig>
+		<Address>http://rpro-levis:8080</Address>
+		<Username>sysadmin</Username>
+		<Password>sysadmin</Password>
+		<WorkstationName>rpro-levis_8080</WorkstationName>
+	</PrismConfig>
+	
+	<!-- API MuleSoft Configuration -->
+	<APIConnection>
+		<Username>1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417</Username>
+		<Password>3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4</Password>
+		<SaleApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale</SaleApiUrl>
+		<InventoryApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory</InventoryApiUrl>
+	</APIConnection>
+	
+	<!-- SFTP Configuration -->
+	<SftpConnection>
+		<Host>levib2bstage.levi.com</Host>
+		<Port>49153</Port>
+		<Username>TestRetailPro</Username>
+		<Password>X67zZkTTAkIC</Password>
+	</SftpConnection>
+
+
+	<!-- ======================================= -->
+	<!--             INBOUND CONFIG              -->
+	<!-- ======================================= -->
+	<InboundSFTPPath>
+		<add key="WD" value="/OUT/IT101411/" />
+		<add key="ITEM" value="/OUT/IT101412/" />
+		<add key="HIERARCHY" value="/OUT/IT101412/" />
+		<add key="PRICE" value="/OUT/IT101413/" />
+		<add key="ASN" value="/OUT/IT101414/" />
+	</InboundSFTPPath>
+
+	<!-- For Inbound ASN -->
+	<ProcessConfig>
+		<AcceptPartial>true</AcceptPartial>
+		
+		<Subsidiaries>
+		  <Subsidiary>1</Subsidiary>
+		</Subsidiaries>
+		
+		<PriceLevels>
+		  <add key="LSPI-PC" value="LSPC" />
+		</PriceLevels>
+	</ProcessConfig>
+
+
+	<!-- ======================================= -->
+	<!--              OUTBOUND CONFIG            -->
+	<!-- ======================================= -->
+	<!-- ******* API ******* -->
+
+	<!-- ******* EOD ******* -->
+	<!--  SFTP PATHS -->
+	<ReprocessMinutes>1</ReprocessMinutes>
+	<SFTPPath>
+		<add key="PSSTKR" value="/IN/IT101626/" />
+		<add key="PRICING" value="/IN/IT101625/" />
+		<add key="INTRANSIT" value="/IN/IT101445/" />
+		<add key="POSLOG" value="/IN/IT101410/" />
+		<add key="INVENTORYCOUNT" value="/IN/IT101627/" />
+	</SFTPPath>
+	
+	<!--  Price -->
+	<OBProcessConfig>
+		<OBPriceLevels>
+		  <add key="LSPC" value="MARKET:LVAMAPH" />
+		  <add key="LSOT" value="MARKET:LVAMAPK" />
+		</OBPriceLevels>
+	 </OBProcessConfig>
+	
+</config>

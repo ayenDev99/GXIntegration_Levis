@@ -324,6 +324,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app_logo2.ico" />
+    <Content Include="config.xml" />
     <Content Include="image-removebg-preview.png" />
     <None Include="Resources\image-removebg-preview.png" />
     <None Include="Resources\geniex_logo-removebg-preview.png" />
