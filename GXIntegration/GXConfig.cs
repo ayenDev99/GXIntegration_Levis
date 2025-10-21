@@ -10,6 +10,7 @@ namespace GXIntegration.Properties
 		public string Delimiter { get; set; }
 		public int OutApiAutoProcessTime { get; set; }
 		public string OutEodAutoProcessTime { get; set; }
+		public int InAutoDownloadProcessTime { get; set; }
 
 		public static GXConfig Load(string filePath)
 		{
@@ -50,6 +51,11 @@ namespace GXIntegration.Properties
 				throw new Exception("OutEodAutoProcessTime not found in config.xml");
 			}
 
+			var sftpDelayElem = doc.Root.Element("InAutoDownloadProcessTime");
+			if (sftpDelayElem != null && int.TryParse(sftpDelayElem.Value, out int sftpDelay))
+			{
+				config.InAutoDownloadProcessTime = sftpDelay;
+			}
 
 			return config;
 		}

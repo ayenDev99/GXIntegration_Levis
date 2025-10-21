@@ -35,6 +35,7 @@ namespace GXIntegration
 
 		public OutboundEODTab OutboundEODTab { get; private set; }
 		public OutboundAPITab OutboundAPITab { get; private set; }
+		public InboundPage InboundPage { get; private set; }
 
 		public Form1()
 		{
@@ -51,6 +52,7 @@ namespace GXIntegration
 
 			OutboundAPITab = new OutboundAPITab(config, repositories);
 			OutboundEODTab = new OutboundEODTab(config, repositories);
+			InboundPage = new InboundPage();
 		}
 
 		private OutboundRepositories InitializeRepositories(string connectionString)

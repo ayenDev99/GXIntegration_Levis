@@ -180,7 +180,6 @@ namespace GXIntegration_Levis.Views
 				clickAction: async () => await ManualProcess()
 			);
 
-
 			this.Controls.Add(btnSendXml);
 		}
 
@@ -287,7 +286,6 @@ namespace GXIntegration_Levis.Views
 					["POSLOG"] = async (date) => await ExecuteAllAndSaveToSingleXmlAsync(prismStores, date, date)
 				};
 
-				// 🔁 Loop per date in the selected range
 				for (var date = fromDate; date <= toDate; date = date.AddDays(1))
 				{
 					Logger.Log($"[OUTBOUND EOD] Processing date: {date:yyyy-MM-dd}");
@@ -486,68 +484,92 @@ namespace GXIntegration_Levis.Views
 
 		private async Task ExecuteStoreInventoryCountAsync(dynamic prismStores, DateTime fromDate, DateTime toDate)
 		{
-			Logger.Log($"[OUTBOUND EOD] [XML] Start Generating INVENTORYCOUNT...");
+			string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
+			string baseArchiveDir = Path.Combine(outboundDir, "ARCHIVE");
 
-			foreach (var store in prismStores)
+			Directory.CreateDirectory(outboundDir);
+			Directory.CreateDirectory(baseArchiveDir);
+
+			Logger.Log($"[OUTBOUND EOD] [XML] Start Generating INVENTORYCOUNT per day...");
+
+			for (var currentDate = fromDate.Date; currentDate <= toDate.Date; currentDate = currentDate.AddDays(1))
 			{
-				if (store is IDictionary<string, object> dict && dict.TryGetValue("ADDRESS4", out var addr) && addr != null)
+				string dateStr = currentDate.ToString("yyyyMMdd");
+				string todayPrefix = currentDate.ToString("ddMMyyyy");
+
+				string archiveDir = Path.Combine(baseArchiveDir, dateStr);
+				Directory.CreateDirectory(archiveDir);
+
+				Logger.Log($"[OUTBOUND EOD] Processing date: {dateStr}");
+
+				foreach (var store in prismStores)
 				{
-					string storeCode = addr.ToString();
-
-					try
+					if (store is IDictionary<string, object> dict && dict.TryGetValue("ADDRESS4", out var addr) && addr != null)
 					{
-						var repo = new StoreInventoryCountRepository(config.MainDbConnection);
+						string storeCode = addr.ToString();
 
-						int pageSize = 100000;
-						int startRow = 1;
-						int totalFetched = 0;
-						var allItems = new List<StoreInventoryCountModel>();
-
-						while (true)
+						try
 						{
-							var batch = await repo.GetPagedStoreInventoryCountAsync(
-								fromDate, toDate, storeCode, startRow, startRow + pageSize - 1);
+							var repo = new StoreInventoryCountRepository(config.MainDbConnection);
 
-							if (batch.Count == 0)
-								break;
+							int pageSize = 100000;
+							int startRow = 1;
+							int totalFetched = 0;
+							var allItems = new List<StoreInventoryCountModel>();
 
-							allItems.AddRange(batch);
-							totalFetched += batch.Count;
+							while (true)
+							{
+								var batch = await repo.GetPagedStoreInventoryCountAsync(
+									currentDate, currentDate, storeCode, startRow, startRow + pageSize - 1);
 
-							Logger.Log($"[OUTBOUND EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
+								if (batch.Count == 0)
+									break;
 
-							startRow += pageSize;
+								allItems.AddRange(batch);
+								totalFetched += batch.Count;
+
+								Logger.Log($"[OUTBOUND EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
+
+								startRow += pageSize;
+							}
+
+							if (!allItems.Any())
+							{
+								Logger.Log($"[OUTBOUND EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
+								continue;
+							}
+
+							await OutboundStoreInventoryCount.Execute(currentDate, allItems, config, "xml", storeCode);
 						}
-
-						if (!allItems.Any())
+						catch (Exception ex)
 						{
-							Logger.Log($"[OUTBOUND EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
-							continue;
+							Logger.Log($"[OUTBOUND EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
 						}
-
-						await OutboundStoreInventoryCount.Execute(allItems, config, "xml", storeCode);
 					}
-					catch (Exception ex)
+					else
 					{
-						Logger.Log($"[OUTBOUND EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
+						Logger.Log("[OUTBOUND EOD] Store skipped due to missing ADDRESS4 field");
 					}
-				}
-				else
-				{
-					Logger.Log("[OUTBOUND EOD] Store skipped due to missing ADDRESS4 field");
 				}
 			}
 		}
 
 		private async Task UploadToSftpAsync()
-		{	
-			string host = "levib2bstage.levi.com";
-			int port = 49153;
-			string username = "TestRetailPro";
-			string password = "X67zZkTTAkIC";
+		{
+			var sftpConfig = GlobalHelper.LoadSftpConnection();
+
+			if (!sftpConfig.TryGetValue("Host", out string host) ||
+				!sftpConfig.TryGetValue("Port", out string port) ||
+				!sftpConfig.TryGetValue("Username", out string username) ||
+				!sftpConfig.TryGetValue("Password", out string password))
+			{
+				MessageBox.Show("[ERROR] SFTP configuration is missing. Please navigate to the 'Configuration SFTP' tab to set up the SFTP connection.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
+
 			string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 
-			var directoryMap = GlobalHelper.LoadSftpPathMap();
+			var directoryMap = GlobalHelper.LoadSftpPathMap("OutSFTPPath");
 
 			await Task.Run(() =>
 			{
@@ -570,7 +592,8 @@ namespace GXIntegration_Levis.Views
 						return;
 					}
 
-					using (var sftp = new SftpClient(host, port, username, password))
+					int portNumber = Convert.ToInt32(port);
+					using (var sftp = new SftpClient(host, portNumber, username, password))
 					{
 						sftp.Connect();
 

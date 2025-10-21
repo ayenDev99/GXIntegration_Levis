@@ -30,6 +30,7 @@ class Program
 			{
 				Task.Run(() => RunAutoOutboundAPIAsync(cts.Token));
 				Task.Run(() => RunAutoOutboundEODAsync(cts.Token));
+				Task.Run(() => RunAutoInboundDownloadSFTPAsync(cts.Token));
 			};
 
 			form.FormClosed += (s, e) => cts.Cancel();
@@ -135,6 +136,43 @@ class Program
 			catch (Exception ex)
 			{
 				Logger.Log("ERROR (EOD): " + ex);
+			}
+		}
+	}
+
+	// ------------------------------
+	// AUTO INBOUND - SFTP (interval)
+	// ------------------------------
+	static async Task RunAutoInboundDownloadSFTPAsync(CancellationToken token)
+	{
+		int iteration = 0;
+		int processInterval = config.InAutoDownloadProcessTime;
+
+		while (!token.IsCancellationRequested)
+		{
+			iteration++;
+			try
+			{
+				Logger.Log("**************************************************************************");
+				Logger.Log($">>> [AUTO INBOUND - SFTP] START iteration {iteration} at {CurrentTime}");
+				Logger.Log("**************************************************************************");
+				Logger.Log($">>> Interval = {processInterval} minute(s)");
+
+				await form.InboundPage.TriggerSFTPAsync();
+			}
+			catch (Exception ex)
+			{
+				Logger.Log("ERROR (SFTP): " + ex);
+			}
+
+			Logger.Log($">>> Waiting {processInterval} minute(s) before next SFTP run...");
+			try
+			{
+				await Task.Delay(TimeSpan.FromMinutes(processInterval), token);
+			}
+			catch (TaskCanceledException)
+			{
+				break;
 			}
 		}
 	}

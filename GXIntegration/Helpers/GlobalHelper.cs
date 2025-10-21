@@ -279,13 +279,13 @@ namespace GXIntegration_Levis.Helpers
 			return result;
 		}
 
-		public static Dictionary<string, string> LoadSftpPathMap()
+		public static Dictionary<string, string> LoadSftpPathMap(string blockName)
 		{
 			var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			var doc = new System.Xml.XmlDocument();
 			doc.Load("config.xml");
 
-			foreach (System.Xml.XmlNode node in doc.SelectNodes("//SFTPPath/add"))
+			foreach (System.Xml.XmlNode node in doc.SelectNodes($"//{blockName}/add"))
 			{
 				var key = node.Attributes["key"]?.Value;
 				var value = node.Attributes["value"]?.Value;
@@ -304,6 +304,25 @@ namespace GXIntegration_Levis.Helpers
 			doc.Load("config.xml");
 
 			var node = doc.SelectSingleNode("//APIConnection");
+			if (node != null)
+			{
+				foreach (System.Xml.XmlNode child in node.ChildNodes)
+				{
+					if (!string.IsNullOrWhiteSpace(child.Name) && !string.IsNullOrWhiteSpace(child.InnerText))
+						result[child.Name] = child.InnerText.Trim();
+				}
+			}
+
+			return result;
+		}
+
+		public static Dictionary<string, string> LoadSftpConnection()
+		{
+			var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+			var doc = new System.Xml.XmlDocument();
+			doc.Load("config.xml");
+
+			var node = doc.SelectSingleNode("//SFTPConnection");
 			if (node != null)
 			{
 				foreach (System.Xml.XmlNode child in node.ChildNodes)

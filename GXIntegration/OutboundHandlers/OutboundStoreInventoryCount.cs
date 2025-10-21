@@ -15,20 +15,20 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public class OutboundStoreInventoryCount
 	{
-		public static async Task Execute(List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode)
+		public static async Task Execute(DateTime processDate, List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode)
 		{
 			try
 			{
 				if (!items.Any()) { return; }
 
 				string outboundDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
-				string archiveDir = Path.Combine(outboundDir, "ARCHIVE", DateTime.Now.ToString("yyyyMMdd"));
+				string archiveDir = Path.Combine(outboundDir, "ARCHIVE", processDate.ToString("yyyyMMdd"));
 
 				Directory.CreateDirectory(outboundDir);
 				Directory.CreateDirectory(archiveDir);
 
 				string countryCode = config.CountryCode ?? "XX";
-				string todayPrefix = DateTime.Now.ToString("ddMMyyyy");
+				string todayPrefix = processDate.ToString("ddMMyyyy");
 
 				var existingFiles = Directory.GetFiles(archiveDir, $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_*.xml")
 					.Where(f => Path.GetFileName(f).Contains(todayPrefix))
@@ -36,7 +36,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				int nextSequence = existingFiles.Count + 1;
 				string sequenceStr = nextSequence.ToString("D2");
-				string timestamp = DateTime.Now.ToString("ddMMyyyyHHmmss");
+				string timestamp = processDate.ToString("ddMMyyyyHHmmss");
 
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
@@ -149,7 +149,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM1", GlobalOutbound.NsDtv, countItem.ItemCountDIM1);
 						GlobalOutbound.WriteCDataElement(writer, "dtv", "DIM2", GlobalOutbound.NsDtv, countItem.ItemCountDIM2);
 						GlobalOutbound.WriteCDataElement(writer, "Quantity", countItem.ItemCountQuantity);
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "SnapshotQuantity", GlobalOutbound.NsDtv, countItem.ItemCountSnapshotQuantity);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "SnapshotQuantity", GlobalOutbound.NsDtv, countItem.ItemCountSnapshotQuantity ?? "0");
 						GlobalOutbound.WriteCDataElement(writer, "dtv", "UnitVariance", GlobalOutbound.NsDtv, countItem.ItemCountUnitVariance);
 						GlobalOutbound.WriteCDataElement(writer, "dtv", "InventoryBucketId", GlobalOutbound.NsDtv, countItem.ItemCountInventoryBucketID);
 						writer.WriteEndElement(); // </ItemCount>

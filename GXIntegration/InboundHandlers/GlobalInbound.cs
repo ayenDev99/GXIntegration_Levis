@@ -240,8 +240,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			try
 			{
 				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string today = DateTime.Now.ToString("yyyyMMdd");
-				string inboundDir = Path.Combine(baseDir, "INBOUND", today);
+				string inboundDir = Path.Combine(baseDir, "INBOUND");
 
 				if (!Directory.Exists(inboundDir))
 				{

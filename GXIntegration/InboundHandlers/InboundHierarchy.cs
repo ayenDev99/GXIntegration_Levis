@@ -7,14 +7,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace GXIntegration_Levis.InboundHandlers
-{
-	public class InboundHierarchy
-	{
-		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		// Column to UDF Mapping
-		private readonly Dictionary<string, string> columnToUdfMap = new Dictionary<string, string>
+namespace GXIntegration_Levis.InboundHandlers
+	{
+		public class InboundHierarchy
+		{
+			private readonly GlobalInbound globalInbound = new GlobalInbound();
+
+			// Column to UDF Mapping
+			private readonly Dictionary<string, string> columnToUdfMap = new Dictionary<string, string>
 		{
 			{ "BRAND_CD", "UDF6" },
 			{ "BRAND_NM", "UDF7" },
@@ -28,75 +29,80 @@ namespace GXIntegration_Levis.InboundHandlers
 			{ "SUB_CLASS_NM", "UDF3" }
 		};
 
-		public async Task RunHierarchySyncAsync(string session, string inboundDir, PrismRepository repository)
-		{
-			try
+			public async Task RunHierarchySyncAsync(string session, string inboundDir, PrismRepository repository)
 			{
-				Logger.Log($"--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - HIERARCHY] STARTING HIERARCHY Sync Process...");
-
-				string fileNameFormat = "LSPI_HIERARCHY_*.*";
-				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
-				if (files.Count == 0) { Logger.Log($"[INBOUND - HIERARCHY] No {fileNameFormat} file format found."); }
-
-				foreach (string file in files)
+				try
 				{
-					var udfData = BuildHierarchyByUdf(file);
-
-					Logger.Log($"[INBOUND - HIERARCHY] -> {Path.GetFileName(file)}");
-					Logger.Log($"[INBOUND - HIERARCHY] UDF_NO Records found: {udfData.Count}");
-
-					// Extract distinct, non-empty values
-					var brandCodes = udfData.TryGetValue("UDF6", out var bc) ? bc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var brandNames = udfData.TryGetValue("UDF7", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var consumerCodes = udfData.TryGetValue("UDF10", out var cc) ? cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var consumerNames = udfData.TryGetValue("UDF11", out var cn) ? cn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var productCategoryCodes = udfData.TryGetValue("UDF2", out var pc) ? pc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var productCategoryNames = udfData.TryGetValue("UDF4", out var pn) ? pn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var classCodes = udfData.TryGetValue("UDF12", out var clsC) ? clsC.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var classNames = udfData.TryGetValue("UDF13", out var clsN) ? clsN.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var subClassCodes = udfData.TryGetValue("UDF14", out var sc) ? sc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-					var subClassNames = udfData.TryGetValue("UDF3", out var sn) ? sn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>();
-
-					var filteredUdfValues = new Dictionary<string, List<string>>
+					Logger.Log("--------------------------------------------------------------------------");
+					Logger.Log("[INBOUND - HIERARCHY] STARTING HIERARCHY Sync Process...");
+					string sendingDir = Path.Combine(inboundDir, "SENDING");
+					string fileNameFormat = "LSPI_HIERARCHY_*.*";
+					
+					var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
+					if (files.Count == 0)
 					{
-						{ "6", brandCodes },
-						{ "7", brandNames },
-						{ "10", consumerCodes },
-						{ "11", consumerNames },
-						{ "2", productCategoryCodes },
-						{ "4", productCategoryNames },
-						{ "12", classCodes },
-						{ "13", classNames },
-						{ "14", subClassCodes },
-						{ "3", subClassNames }
-					};
+						Logger.Log($"[INBOUND - HIERARCHY] No {fileNameFormat} file format found.");
+						return;
+					}
 
-					var SBS_result = await repository.GetRpsSubsidiary("ACTIVE", "1");
-					Logger.Log($"[INBOUND - HIERARCHY] SBS Count : {SBS_result.Count}");
+					// SENT / UNSENT Folders (no date subfolder)
+					string sentDir = Path.Combine(inboundDir, "SENT");
+					string unsentDir = Path.Combine(inboundDir, "UNSENT");
+					Directory.CreateDirectory(sentDir);
+					Directory.CreateDirectory(unsentDir);
 
-					int rowIndex = 1;
-					foreach (var sbsItem in SBS_result)
+					foreach (string file in files)
 					{
-						Logger.Log($"[INBOUND - HIERARCHY] [{rowIndex}] SBS Name : {sbsItem.SBS_NAME} | SBS_NO : {sbsItem.SBS_NO} | SID: {sbsItem.SID}");
-						foreach (var udfType in filteredUdfValues)
+						string fileName = Path.GetFileName(file);
+						bool isSuccess = true;
+
+						Logger.Log($"[INBOUND - HIERARCHY] Processing file: {fileName}");
+
+						try
 						{
-							//Logger.Log($"[INBOUND - HIERARCHY]		UDF_NO : {udfType.Key} | Count : {udfType.Value.Count}");
+							var udfData = BuildHierarchyByUdf(file);
+							Logger.Log($"[INBOUND - HIERARCHY] UDF_NO Records found: {udfData.Count}");
 
-							foreach (var udfValue in udfType.Value)
+							// Extract and prepare data
+							var filteredUdfValues = new Dictionary<string, List<string>>
+						{
+							{ "6", udfData.TryGetValue("UDF6", out var bc) ? bc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "7", udfData.TryGetValue("UDF7", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "10", udfData.TryGetValue("UDF10", out var cc) ? cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "11", udfData.TryGetValue("UDF11", out var cn) ? cn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "2", udfData.TryGetValue("UDF2", out var pc) ? pc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "4", udfData.TryGetValue("UDF4", out var pn) ? pn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "12", udfData.TryGetValue("UDF12", out var clsC) ? clsC.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "13", udfData.TryGetValue("UDF13", out var clsN) ? clsN.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "14", udfData.TryGetValue("UDF14", out var sc) ? sc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+							{ "3", udfData.TryGetValue("UDF3", out var sn) ? sn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() }
+						};
+
+							// Fetch subsidiaries
+							var SBS_result = await repository.GetRpsSubsidiary("ACTIVE", "1");
+							Logger.Log($"[INBOUND - HIERARCHY] SBS Count : {SBS_result.Count}");
+
+							int rowIndex = 1;
+							foreach (var sbsItem in SBS_result)
 							{
-								//Logger.Log($"Checking if UDF value '{udfValue}' exists for UDF{udfType.Key}");
+								Logger.Log($"[INBOUND - HIERARCHY] [{rowIndex}] SBS Name : {sbsItem.SBS_NAME} | SBS_NO : {sbsItem.SBS_NO} | SID: {sbsItem.SID}");
 
-								var udf_result = await repository.GetUdfDetailsAsync(udfType.Key, udfValue, sbsItem.SID.ToString());
-								//Logger.Log($"Found {udf_result?.Count ?? 0} existing UDF entries.");
-								if (udf_result == null || udf_result.Count == 0)
+								foreach (var udfType in filteredUdfValues)
 								{
-									var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
-
-									var payload = new
+									foreach (var udfValue in udfType.Value)
 									{
-										data = new[]
+										try
 										{
+											var udf_result = await repository.GetUdfDetailsAsync(udfType.Key, udfValue, sbsItem.SID.ToString());
+
+											if (udf_result == null || udf_result.Count == 0)
+											{
+												var invn_udf_res = await repository.GetInvnUdfSidAsync(udfType.Key, sbsItem.SID.ToString());
+
+												var payload = new
+												{
+													data = new[]
+													{
 													new
 													{
 														OriginApplication = "RProPrismWeb",
@@ -104,106 +110,119 @@ namespace GXIntegration_Levis.InboundHandlers
 														udfsid = invn_udf_res[0].SID.ToString()
 													}
 												}
-									};
+												};
 
-									var json = JsonConvert.SerializeObject(payload, Formatting.Indented);
-									//Logger.Log("[INBOUND - HIERARCHY] Payload:\n" + json);
+												var json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
-									Logger.Log($"[INBOUND - HIERARCHY]			[CREATE] UDF_NO : {udfType.Key} | Value: '{udfValue}'");
+												Logger.Log($"[INBOUND - HIERARCHY] [CREATE] UDF_NO : {udfType.Key} | Value: '{udfValue}'");
 
-									string responseJson = GlobalInbound.CallPrismAPI(
-															session
-															, "/api/backoffice/invnudfoption"
-															, json
-															, out bool isSuccessful
-															, "POST"
-															, 1
-														);
+												string responseJson = GlobalInbound.CallPrismAPI(
+													session,
+													"/api/backoffice/invnudfoption",
+													json,
+													out bool isSuccessfulApi,
+													"POST",
+													1
+												);
 
-									//Logger.Log($"[INBOUND - HIERARCHY] API Response: {responseJson}");
-									continue;
-								}
-
-								foreach (var udf_res in udf_result)
-								{
-									if (udf_res.UDF_OPTION == null)
-									{
-										var udfSid = udf_res.UDF_SID;
-
-										Logger.Log($"[INBOUND - HIERARCHY] Missing value detected: '{udfValue}' (UDF_SID: {udfSid})");
-										Logger.Log("[INBOUND - HIERARCHY] Preparing payload to insert...");
-
-									}
-									else
-									{
-										Logger.Log($"[INBOUND - HIERARCHY]			UDF_NO : {udfType.Key} | Value: '{udfValue}' already exists.");
+												if (!isSuccessfulApi)
+												{
+													Logger.Log($"❌ [INBOUND - HIERARCHY] API failed for UDF_NO : {udfType.Key} | Value: '{udfValue}'");
+													isSuccess = false;
+												}
+											}
+											else
+											{
+												Logger.Log($"[INBOUND - HIERARCHY] UDF_NO : {udfType.Key} | Value: '{udfValue}' already exists.");
+											}
+										}
+										catch (Exception innerEx)
+										{
+											Logger.Log($"❌ [INBOUND - HIERARCHY] Error processing UDF Value '{udfValue}': {innerEx.Message}");
+											isSuccess = false;
+										}
 									}
 								}
+
+								rowIndex++;
 							}
 						}
+						catch (Exception ex)
+						{
+							Logger.Log($"❌ [INBOUND - HIERARCHY] Error processing file {fileName}: {ex}");
+							isSuccess = false;
+						}
 
-						rowIndex++;
-						continue;
+						// MOVE FILE
+						try
+						{
+							string destinationDir = isSuccess ? sentDir : unsentDir;
+							string destinationPath = Path.Combine(destinationDir, fileName);
+
+							if (File.Exists(destinationPath))
+								File.Delete(destinationPath);
+
+							File.Move(file, destinationPath);
+							Logger.Log($"[INBOUND - HIERARCHY] File moved to {(isSuccess ? "SENT" : "UNSENT")} folder: {destinationPath}");
+						}
+						catch (Exception ex)
+						{
+							Logger.Log($"❌ [INBOUND - HIERARCHY] Failed to move file {fileName}: {ex.Message}");
+						}
 					}
 
+					Logger.Log("[INBOUND - HIERARCHY] END Sync Process.");
 				}
-
-				Logger.Log("[INBOUND - HIERARCHY] END Sync Process.");
-
+				catch (Exception ex)
+				{
+					Logger.Log($"❌ [INBOUND - HIERARCHY] Critical Error in RunHierarchySyncAsync: {ex}");
+				}
 			}
-			catch (Exception ex)
+
+			private Dictionary<string, List<string>> BuildHierarchyByUdf(string filePath)
 			{
-				Logger.Log($"❌ [INBOUND - HIERARCHY] Error in RunHierarchySyncAsync: {ex}");
-			}
-		}
+				var result = new Dictionary<string, List<string>>();
 
-		private Dictionary<string, List<string>> BuildHierarchyByUdf(string filePath)
-		{
-			var result = new Dictionary<string, List<string>>();
-
-			try
-			{
-				var lines = File.ReadAllLines(filePath);
-				if (lines.Length == 0)
+				try
 				{
-					Console.WriteLine("File is empty: " + filePath);
-					return result;
-				}
+					var lines = File.ReadAllLines(filePath);
+					if (lines.Length == 0)
+					{
+						Logger.Log($"⚠️ [INBOUND - HIERARCHY] File is empty: {filePath}");
+						return result;
+					}
 
-				var headers = lines[0].Split('^');
-
-				var mappedHeaders = headers.Select(h => columnToUdfMap.ContainsKey(h) ? columnToUdfMap[h] : null).ToArray();
-
-				for (int i = 0; i < headers.Length; i++)
-				{
-					string udf = mappedHeaders[i];
-					if (string.IsNullOrEmpty(udf)) continue;
-					result[udf] = new List<string>();
-				}
-
-				foreach (var line in lines.Skip(1))
-				{
-					var parts = line.Split('^');
+					var headers = lines[0].Split('^');
+					var mappedHeaders = headers.Select(h => columnToUdfMap.ContainsKey(h) ? columnToUdfMap[h] : null).ToArray();
 
 					for (int i = 0; i < headers.Length; i++)
 					{
 						string udf = mappedHeaders[i];
 						if (string.IsNullOrEmpty(udf)) continue;
+						result[udf] = new List<string>();
+					}
 
-						string value = (i < parts.Length) ? parts[i] : string.Empty;
-						result[udf].Add(value);
+					foreach (var line in lines.Skip(1))
+					{
+						var parts = line.Split('^');
+
+						for (int i = 0; i < headers.Length; i++)
+						{
+							string udf = mappedHeaders[i];
+							if (string.IsNullOrEmpty(udf)) continue;
+
+							string value = (i < parts.Length) ? parts[i] : string.Empty;
+							result[udf].Add(value);
+						}
 					}
 				}
+				catch (Exception ex)
+				{
+					Logger.Log($"❌ [INBOUND - HIERARCHY] Error in BuildHierarchyByUdf: {ex.Message}");
+				}
 
-				//Logger.Log($"Parsed {result.Count} UDF-mapped columns from file: {Path.GetFileName(filePath)}");
+				return result;
 			}
-			catch (Exception ex)
-			{
-				Logger.Log($"❌ [INBOUND - HIERARCHY] Error in BuildHierarchyByUdf: {ex}");
-			}
-
-			return result;
 		}
-	
 	}
-}
+

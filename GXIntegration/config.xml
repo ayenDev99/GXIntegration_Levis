@@ -45,6 +45,7 @@
 	<!-- ======================================= -->
 	<!--             INBOUND CONFIG              -->
 	<!-- ======================================= -->
+	<!--  SFTP PATHS -->
 	<InboundSFTPPath>
 		<add key="WD" value="/OUT/IT101411/" />
 		<add key="ITEM" value="/OUT/IT101412/" />
