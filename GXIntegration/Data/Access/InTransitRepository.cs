@@ -25,68 +25,93 @@ namespace GXIntegration_Levis.Data.Access
 					await connection.OpenAsync();
 
 					string sql = @"
-					    SELECT 
-                            'PO'                            AS SourceType
-                            , CASE 
-                                WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
-                                THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
-                                ELSE ISI.DESCRIPTION1
-                            END                             AS ProductCode
-                            , ISI.ALU                       AS Sku
-                            , ISI.ITEM_SIZE                 AS Waist
-                            , ISI.ATTRIBUTE                 AS Inseam
-                            , TO_CHAR(STORE.ADDRESS4)       AS StoreCode
-                            , PO_ITEM.ORD_QTY               AS Quantity
-                            , PO.POST_DATE                  AS PostDate
-                            , PO.MODIFIED_DATETIME          AS ModifiedDatetime
-                        FROM 
-                            RPS.PO
-                        LEFT JOIN RPS.PO_ITEM PO_ITEM       ON PO.SID = PO_ITEM.PO_SID
-                        LEFT JOIN RPS.STORE STORE           ON STORE.SID = PO.STORE_SID
-                        LEFT JOIN RPS.INVN_SBS_ITEM ISI     ON ISI.SID = PO_ITEM.ITEM_SID
-                        WHERE 
-                            ISI.ACTIVE = 1
-                            AND STORE.ACTIVE = 1
-                            AND STORE.ADDRESS4 IS NOT NULL
-                            AND PO.PO_NO NOT IN (
-                                SELECT 
-                                    VOU.PO_NO 
-                                FROM 
-                                    RPS.VOUCHER VOU 
-                                WHERE 
-                                    VOU.PO_NO IS NOT NULL
-                                    AND VOU.STATUS = 4
-                            )
-                            AND TRUNC(PO.POST_DATE) <= :ProcDate
-                        UNION ALL
-                        SELECT 
-                            'VOUCHER'                       AS SourceType,
-                            CASE 
-                                WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
-                                THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
-                                ELSE ISI.DESCRIPTION1
-                            END                             AS ProductCode
-                            , ISI.ALU                       AS Sku
-                            , ISI.ITEM_SIZE                 AS Waist
-                            , ISI.ATTRIBUTE                 AS Inseam
-                            , TO_CHAR(STORE.ADDRESS4)       AS StoreCode
-                            , VOU_ITEM.QTY                  AS Quantity
-                            , VOU.POST_DATE                 AS PostDate
-                            , VOU.MODIFIED_DATETIME         AS ModifiedDatetime
-                        FROM 
-                            RPS.VOUCHER VOU
-                        LEFT JOIN RPS.VOU_ITEM VOU_ITEM     ON VOU.SID = VOU_ITEM.VOU_SID
-                        LEFT JOIN RPS.STORE STORE           ON STORE.SID = VOU.STORE_SID
-                        LEFT JOIN RPS.INVN_SBS_ITEM ISI     ON ISI.SID = VOU_ITEM.ITEM_SID
-                        WHERE 
-                            VOU.SLIP_FLAG = 1 
-                            AND VOU.STATUS = 3
-                            AND ISI.ACTIVE = 1
-                            AND STORE.ACTIVE = 1
-                            AND STORE.ADDRESS4 IS NOT NULL
-                            AND TRUNC(VOU.POST_DATE) <= :ProcDate
+					SELECT 
+    SourceType,
+    ProductCode,
+    Sku,
+    Waist,
+    Inseam,
+    StoreCode,
+    SUM(Quantity) AS TotalQuantity,
+    MAX(PostDate) AS LastPostDate,
+    MAX(ModifiedDatetime) AS LastModifiedDatetime
+FROM (
+    -- ==============================
+    -- PO Source
+    -- ==============================
+    SELECT 
+        'PO' AS SourceType,
+        CASE 
+            WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+            THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+            ELSE ISI.DESCRIPTION1
+        END AS ProductCode,
+        ISI.ALU AS Sku,
+        ISI.ITEM_SIZE AS Waist,
+        ISI.ATTRIBUTE AS Inseam,
+        TO_CHAR(STORE.ADDRESS4) AS StoreCode,
+        PO_ITEM.ORD_QTY AS Quantity,
+        PO.POST_DATE AS PostDate,
+        PO.MODIFIED_DATETIME AS ModifiedDatetime
+    FROM 
+        RPS.PO
+    LEFT JOIN RPS.PO_ITEM PO_ITEM ON PO.SID = PO_ITEM.PO_SID
+    LEFT JOIN RPS.STORE STORE ON STORE.SID = PO.STORE_SID
+    LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = PO_ITEM.ITEM_SID
+    WHERE 
+        ISI.ACTIVE = 1
+        AND STORE.ACTIVE = 1
+        AND STORE.ADDRESS4 IS NOT NULL
+        AND PO.PO_NO NOT IN (
+            SELECT VOU.PO_NO 
+            FROM RPS.VOUCHER VOU 
+            WHERE VOU.PO_NO IS NOT NULL
+              AND VOU.STATUS = 4
+        )
+    -- AND TRUNC(PO.POST_DATE) <= :ProcDate
 
-                        ORDER BY PostDate DESC, ModifiedDatetime DESC
+    UNION ALL
+
+    -- ==============================
+    -- VOUCHER Source
+    -- ==============================
+    SELECT 
+        'VOUCHER' AS SourceType,
+        CASE 
+            WHEN SUBSTR(ISI.DESCRIPTION1, -1) = '0' 
+            THEN SUBSTR(ISI.DESCRIPTION1, 1, LENGTH(ISI.DESCRIPTION1) - 1)
+            ELSE ISI.DESCRIPTION1
+        END AS ProductCode,
+        ISI.ALU AS Sku,
+        ISI.ITEM_SIZE AS Waist,
+        ISI.ATTRIBUTE AS Inseam,
+        TO_CHAR(STORE.ADDRESS4) AS StoreCode,
+        VOU_ITEM.QTY AS Quantity,
+        VOU.POST_DATE AS PostDate,
+        VOU.MODIFIED_DATETIME AS ModifiedDatetime
+    FROM 
+        RPS.VOUCHER VOU
+    LEFT JOIN RPS.VOU_ITEM VOU_ITEM ON VOU.SID = VOU_ITEM.VOU_SID
+    LEFT JOIN RPS.STORE STORE ON STORE.SID = VOU.STORE_SID
+    LEFT JOIN RPS.INVN_SBS_ITEM ISI ON ISI.SID = VOU_ITEM.ITEM_SID
+    WHERE 
+        VOU.SLIP_FLAG = 1 
+        AND VOU.STATUS = 3
+        AND ISI.ACTIVE = 1
+        AND STORE.ACTIVE = 1
+        AND STORE.ADDRESS4 IS NOT NULL
+    -- AND TRUNC(VOU.POST_DATE) <= :ProcDate
+) Combined
+GROUP BY 
+    SourceType,
+    ProductCode,
+    Sku,
+    Waist,
+    Inseam,
+    StoreCode
+ORDER BY 
+    LastPostDate DESC,
+    LastModifiedDatetime DESC
 					";
 
 					//AND TRUNC(VOU.POST_DATE) <= :ToDate

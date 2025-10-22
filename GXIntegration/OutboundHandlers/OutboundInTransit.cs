@@ -83,7 +83,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +
 					$"{d}{item.StoreCode}" +
-					$"{d}{item.Quantity}"
+					$"{d}{item.TotalQuantity}"
 				);
 			}
 

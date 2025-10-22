@@ -14,6 +14,6 @@ namespace GXIntegration_Levis.Model
 		public string Waist { get; set; }
 		public string Inseam { get; set; }
 		public string StoreCode { get; set; }
-		public string Quantity { get; set; }
+		public string TotalQuantity { get; set; }
 	}
 }
