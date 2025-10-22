@@ -50,11 +50,13 @@ namespace GXIntegration_Levis.Data.Access
 
 		public async Task<List<dynamic>> GetRpsStore(string columnName, string columnValue)
 		{
-			// Validate columnName to prevent SQL injection
-			// Add column names to this list as needed
-			var allowedColumns = new HashSet<string> { "ADDRESS4", "ADDRESS5", "ACTIVE"};
+			var allowedColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+			{
+				"ADDRESS4",
+				"ACTIVE"
+			};
 
-			if (!allowedColumns.Contains(columnName.ToUpper()))
+			if (!allowedColumns.Contains(columnName))
 				throw new ArgumentException("Invalid column name");
 
 			using (var connection = new OracleConnection(_connectionString))
@@ -63,30 +65,37 @@ namespace GXIntegration_Levis.Data.Access
 				{
 					await connection.OpenAsync();
 
+					bool useLike = columnName.Equals("ADDRESS4", StringComparison.OrdinalIgnoreCase);
+
 					string sql = $@"
-						SELECT 
-							*
-						FROM 
-							RPS.STORE STORE
-						WHERE 
-							STORE.{columnName} = :ColumnValue
-							AND STORE.ADDRESS4 IS NOT NULL
-					";
+									SELECT 
+										*
+									FROM 
+										RPS.STORE STORE
+									WHERE 
+										STORE.ADDRESS4 IS NOT NULL
+										AND STORE.{columnName} {(useLike ? "LIKE" : "=")} :ColumnValue
+								";
+
+					var parameter = useLike
+						? new { ColumnValue = $"%{columnValue}%" }
+						: new { ColumnValue = columnValue };
 
 					//Logger.Log(columnName);
 					//Logger.Log(columnValue);
 
-					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					var results = await connection.QueryAsync(sql, parameter);
 					return results.ToList();
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS job SID: {ex.Message}");
-					Console.WriteLine($"Error fetching RPS job SID: {ex.Message}");
+					Logger.Log($"Error fetching RPS store data: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS store data: {ex.Message}");
 					return new List<dynamic>();
 				}
 			}
 		}
+
 
 		public async Task<dynamic> GetRpsInvnSbsItem(string columnName, string columnValue)
 		{
