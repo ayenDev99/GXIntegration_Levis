@@ -126,7 +126,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					GlobalOutbound.WriteCDataElement(writer, "CartonID", first.CartonID);
 					GlobalOutbound.WriteCDataElement(writer, "StatusCode", first.CartonStatusCode);
 
-					foreach (var crtn in item.SGCarton.OrderBy(d => d.ItemID))
+					foreach (var crtn in item.SGCarton.OrderBy(d => d.LineNumber))
 					{
 						// LineItem inside Carton
 						writer.WriteStartElement("LineItem");
@@ -157,7 +157,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				//---------------------
 				if (item.SGItems?.Any() == true)
 				{
-					foreach (var itm in item.SGItems.OrderBy(d => d.ALU))
+					foreach (var itm in item.SGItems.OrderBy(d => d.ItemLineNumber))
 					{
 						writer.WriteStartElement("LineItem");
 						writer.WriteAttributeString("VoidFlag", "false");
