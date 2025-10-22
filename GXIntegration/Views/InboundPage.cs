@@ -33,9 +33,11 @@ namespace GXIntegration_Levis.Views
 		private readonly InboundASN inboundAsn = new InboundASN();
 		private readonly InboundPrice inboundPrice = new InboundPrice();
 
+		private string configPath;
 		public InboundPage()
 		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+			GlobalInbound.Initialize();
+			configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
 			_prismRepository = new PrismRepository(config.MainDbConnection);
@@ -208,8 +210,6 @@ namespace GXIntegration_Levis.Views
 				if (session == null)
 					return;
 
-				string inboundDir = globalInbound.EnsureInboundDirectory();
-
 				var selectedModules = guna1DataGridView1.Rows
 					.Cast<DataGridViewRow>()
 					.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
@@ -230,19 +230,19 @@ namespace GXIntegration_Levis.Views
 					switch (moduleName)
 					{
 						case "EMPLOYEE DETAILS":
-							await inboundEmployee.RunEmployeeSyncAsync(session, inboundDir, _prismRepository);
+							await inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository);
 							break;
 						case "ITEM DETAILS":
-							await inboundItem.RunItemSyncAsync(session, inboundDir, _prismRepository);
+							await inboundItem.RunItemSyncAsync(session, _prismRepository);
 							break;
 						case "HIERARCHY DETAILS":
-							await inboundHierarchy.RunHierarchySyncAsync(session, inboundDir, _prismRepository);
+							await inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository);
 							break;
 						case "ASN DETAILS":
-							await inboundAsn.RunASNSyncAsync(session, inboundDir, _prismRepository);
+							await inboundAsn.RunASNSyncAsync(session, _prismRepository);
 							break;
 						case "PRICE DETAILS":
-							await inboundPrice.RunPriceSyncAsync(session, inboundDir, _prismRepository);
+							await inboundPrice.RunPriceSyncAsync(session, _prismRepository);
 							break;
 					}
 				}

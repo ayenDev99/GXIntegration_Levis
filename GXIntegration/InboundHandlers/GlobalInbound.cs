@@ -14,8 +14,19 @@ using static GXIntegration_Levis.Helpers.GlobalHelper;
 
 namespace GXIntegration_Levis.InboundHandlers
 {
+
 	public class GlobalInbound
 	{
+		public static string ConfigPath { get; private set; }
+		public static string BaseDir { get; private set; }
+		public static string InboundDir { get; private set; }
+		public static string SendingDir { get; private set; }
+		public static string SentDir { get; private set; }
+		public static string UnsentDir { get; private set; }
+		public static string InboundDbPath { get; private set; }
+
+		private static bool _initialized = false;
+
 		public async Task<string> Authenticate(string prismAddress, string prismUsername, string prismPassword, string workstationName)
 		{
 			try
@@ -235,30 +246,26 @@ namespace GXIntegration_Levis.InboundHandlers
 			return responseContent;
 		}
 
-		public string EnsureInboundDirectory()
+		public static void Initialize()
 		{
-			try
-			{
-				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string inboundDir = Path.Combine(baseDir, "INBOUND");
+			if (_initialized) return;
 
-				if (!Directory.Exists(inboundDir))
-				{
-					Directory.CreateDirectory(inboundDir);
-					//Logger.Log("INBOUND folder created: " + inboundDir);
-				}
-				else
-				{
-					//Logger.Log("INBOUND folder already exists: " + inboundDir);
-				}
+			BaseDir = AppDomain.CurrentDomain.BaseDirectory;
+			ConfigPath = Path.Combine(BaseDir, "config.xml");
 
-				return inboundDir;
-			}
-			catch (Exception ex)
-			{
-				Logger.Log("❌ Failed to ensure INBOUND directory: " + ex);
-				throw;
-			}
+			string todayFolder = DateTime.Now.ToString("yyyyMMdd");
+			InboundDir = Path.Combine(BaseDir, "INBOUND");
+			SendingDir = Path.Combine(InboundDir, "SENDING");
+			SentDir = Path.Combine(InboundDir, "SENT", todayFolder);
+			UnsentDir = Path.Combine(InboundDir, "UNSENT", todayFolder);
+			InboundDbPath = Path.Combine(InboundDir, "inbound_db.db");
+
+			Directory.CreateDirectory(InboundDir);
+			Directory.CreateDirectory(SendingDir);
+			Directory.CreateDirectory(SentDir);
+			Directory.CreateDirectory(UnsentDir);
+
+			_initialized = true;
 		}
 
 		public List<string> GetInboundFiles(string inboundDir, string filePattern)

@@ -14,42 +14,39 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-			// Column to UDF Mapping
 			private readonly Dictionary<string, string> columnToUdfMap = new Dictionary<string, string>
-		{
-			{ "BRAND_CD", "UDF6" },
-			{ "BRAND_NM", "UDF7" },
-			{ "CONSUMER_CD", "UDF10" },
-			{ "CONSUMER_NM", "UDF11" },
-			{ "PROD_CAT_CD", "UDF2" },
-			{ "PROD_CAT_NM", "UDF4" },
-			{ "CLASS_CD", "UDF12" },
-			{ "CLASS_NM", "UDF13" },
-			{ "SUB_CLASS_CD", "UDF14" },
-			{ "SUB_CLASS_NM", "UDF3" }
-		};
-
-			public async Task RunHierarchySyncAsync(string session, string inboundDir, PrismRepository repository)
 			{
+				{ "BRAND_CD", "UDF6" },
+				{ "BRAND_NM", "UDF7" },
+				{ "CONSUMER_CD", "UDF10" },
+				{ "CONSUMER_NM", "UDF11" },
+				{ "PROD_CAT_CD", "UDF2" },
+				{ "PROD_CAT_NM", "UDF4" },
+				{ "CLASS_CD", "UDF12" },
+				{ "CLASS_NM", "UDF13" },
+				{ "SUB_CLASS_CD", "UDF14" },
+				{ "SUB_CLASS_NM", "UDF3" }
+			};
+
+			public async Task RunHierarchySyncAsync(string session, PrismRepository repository)
+			{
+				string inboundDir = GlobalInbound.InboundDir;
+				string sentDir = GlobalInbound.SentDir;
+				string unsentDir = GlobalInbound.UnsentDir;
+
 				try
 				{
 					Logger.Log("--------------------------------------------------------------------------");
 					Logger.Log("[INBOUND - HIERARCHY] STARTING HIERARCHY Sync Process...");
-					string sendingDir = Path.Combine(inboundDir, "SENDING");
+
 					string fileNameFormat = "LSPI_HIERARCHY_*.*";
-					
+					string sendingDir = Path.Combine(inboundDir, "SENDING");
 					var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
 					if (files.Count == 0)
 					{
 						Logger.Log($"[INBOUND - HIERARCHY] No {fileNameFormat} file format found.");
 						return;
 					}
-
-					// SENT / UNSENT Folders (no date subfolder)
-					string sentDir = Path.Combine(inboundDir, "SENT");
-					string unsentDir = Path.Combine(inboundDir, "UNSENT");
-					Directory.CreateDirectory(sentDir);
-					Directory.CreateDirectory(unsentDir);
 
 					foreach (string file in files)
 					{

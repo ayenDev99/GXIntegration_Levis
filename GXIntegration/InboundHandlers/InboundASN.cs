@@ -1,5 +1,6 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Views;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 using System;
@@ -19,13 +20,11 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunASNSyncAsync(string session, string inboundDir, PrismRepository repository)
+		public async Task RunASNSyncAsync(string session, PrismRepository repository)
 		{
-			string basePath = @"C:\GXIntegration_Levis\GXIntegration\bin\Release\INBOUND";
-			string sentDir = Path.Combine(basePath, "SENT");
-			string unsentDir = Path.Combine(basePath, "UNSENT");
-			Directory.CreateDirectory(sentDir);
-			Directory.CreateDirectory(unsentDir);
+			string inboundDir = GlobalInbound.InboundDir;
+			string sentDir = GlobalInbound.SentDir;
+			string unsentDir = GlobalInbound.UnsentDir;
 
 			try
 			{
@@ -45,7 +44,6 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					bool fileProcessedSuccessfully = false;
 					string fileName = Path.GetFileName(file);
-					string targetPath = "";
 
 					try
 					{
@@ -132,7 +130,7 @@ namespace GXIntegration_Levis.InboundHandlers
 							}
 						}
 
-						// ✅ If we reach here, processing succeeded
+						// If we reach here, processing succeeded
 						fileProcessedSuccessfully = true;
 					}
 					catch (Exception ex)
@@ -142,7 +140,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 					finally
 					{
-						// ✅ Always move file to SENT or UNSENT
+						// Always move file to SENT or UNSENT
 						try
 						{
 							string destinationDir = fileProcessedSuccessfully ? sentDir : unsentDir;

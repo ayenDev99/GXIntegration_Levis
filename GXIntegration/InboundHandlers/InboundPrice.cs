@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -20,15 +21,20 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunPriceSyncAsync(string session, string inboundDir, PrismRepository repository)
+		public async Task RunPriceSyncAsync(string session, PrismRepository repository)
 		{
+			string inboundDir = GlobalInbound.InboundDir;
+			string sentDir = GlobalInbound.SentDir;
+			string unsentDir = GlobalInbound.UnsentDir;
+
 			try
 			{
 				Logger.Log($"--------------------------------------------------------------------------");
 				Logger.Log("[INBOUND - PRICE] Starting PRICE Sync Process...");
 
 				string fileNameFormat = "LSPI_PRTARI_*.*";
-				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
+				string sendingDir = Path.Combine(inboundDir, "SENDING");
+				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
 				if (files.Count == 0) { Logger.Log($"[INBOUND - PRICE] No {fileNameFormat} file format found."); }
 
 				foreach (string data in files)

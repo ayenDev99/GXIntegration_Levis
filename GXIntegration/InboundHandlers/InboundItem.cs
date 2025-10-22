@@ -14,15 +14,20 @@ namespace GXIntegration_Levis.InboundHandlers
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 
-		public async Task RunItemSyncAsync(string session, string inboundDir, PrismRepository repository)
+		public async Task RunItemSyncAsync(string session, PrismRepository repository)
 		{
+			string inboundDir = GlobalInbound.InboundDir;
+			string sentDir = GlobalInbound.SentDir;
+			string unsentDir = GlobalInbound.UnsentDir;
+
 			try
 			{
 				Logger.Log($"--------------------------------------------------------------------------");
 				Logger.Log("[INBOUND - ITEM] STARTING ITEM Sync Process...");
 
 				string fileNameFormat = "LSPI_ITEM_*.*";
-				var files = globalInbound.GetInboundFiles(inboundDir, fileNameFormat);
+				string sendingDir = Path.Combine(inboundDir, "SENDING");
+				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
 				if (files.Count == 0) { Logger.Log($"[INBOUND - ITEM] No {fileNameFormat} file format found."); }
 
 				foreach (string file in files)
