@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 
 namespace GXIntegration_Levis.InboundHandlers
-	{
+{
 		public class InboundHierarchy
 		{
 			private readonly GlobalInbound globalInbound = new GlobalInbound();
