@@ -165,21 +165,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 
 					// MOVE FILE
-					try
-					{
-						string destinationDir = isSuccess ? sentDir : unsentDir;
-						string destinationPath = Path.Combine(destinationDir, fileName);
-
-						if (File.Exists(destinationPath))
-							File.Delete(destinationPath);
-
-						File.Move(file, destinationPath);
-						Logger.Log($"[INBOUND - ITEM] File moved to {(isSuccess ? "SENT" : "UNSENT")} folder: {destinationPath}");
-					}
-					catch (Exception ex)
-					{
-						Logger.Log($"❌ [INBOUND - ITEM] Failed to move file {fileName}: {ex.Message}");
-					}
+					globalInbound.MoveFile(file, isSuccess);
 				}
 
 				Logger.Log("[INBOUND - ITEM] END Sync Process.");

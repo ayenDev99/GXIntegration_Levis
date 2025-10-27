@@ -64,6 +64,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						isSuccess = false;
 					}
 
+					// MOVE FILE
 					globalInbound.MoveFile(file, isSuccess);
 				}
 

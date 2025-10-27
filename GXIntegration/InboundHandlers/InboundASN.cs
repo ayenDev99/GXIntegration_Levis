@@ -6,11 +6,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Xml.Linq;
 
 
@@ -42,7 +40,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				foreach (string file in files)
 				{
-					bool fileProcessedSuccessfully = false;
+					bool isSuccess = false;
 					string fileName = Path.GetFileName(file);
 
 					try
@@ -130,32 +128,17 @@ namespace GXIntegration_Levis.InboundHandlers
 							}
 						}
 
-						// If we reach here, processing succeeded
-						fileProcessedSuccessfully = true;
+						isSuccess = true;
 					}
 					catch (Exception ex)
 					{
 						Logger.Log($"[INBOUND - ASN] Error processing file {fileName}: {ex.Message}");
-						fileProcessedSuccessfully = false;
+						isSuccess = false;
 					}
 					finally
 					{
-						// Always move file to SENT or UNSENT
-						try
-						{
-							string destinationDir = fileProcessedSuccessfully ? sentDir : unsentDir;
-							string targetFilePath = Path.Combine(destinationDir, fileName);
-
-							if (File.Exists(targetFilePath))
-								File.Delete(targetFilePath);
-
-							File.Move(file, targetFilePath);
-							Logger.Log($"[INBOUND - ASN] File moved → {(fileProcessedSuccessfully ? "SENT" : "UNSENT")} folder: {targetFilePath}");
-						}
-						catch (Exception moveEx)
-						{
-							Logger.Log($"[INBOUND - ASN] Failed to move file {fileName}: {moveEx.Message}");
-						}
+						// MOVE FILE
+						globalInbound.MoveFile(file, isSuccess);
 					}
 				}
 
