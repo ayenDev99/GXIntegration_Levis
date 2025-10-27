@@ -45,7 +45,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						Logger.Log($"[INBOUND - ITEM] Processing file: {fileName}");
 
 						var result = BuildItemCollection(file);
-						Logger.Log($"[INBOUND - ITEM] Snapshot loaded. Rows found: {result.Count}");
+						Logger.Log($"[INBOUND - ITEM] ITEM loaded. Rows found: {result.Count}");
 
 						foreach (var row in result)
 						{

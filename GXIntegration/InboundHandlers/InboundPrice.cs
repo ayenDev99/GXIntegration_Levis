@@ -20,6 +20,7 @@ namespace GXIntegration_Levis.InboundHandlers
 	public class InboundPrice
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
+		bool isSuccess = true;
 
 		public async Task RunPriceSyncAsync(string session, PrismRepository repository)
 		{
@@ -35,22 +36,43 @@ namespace GXIntegration_Levis.InboundHandlers
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 				string sendingDir = Path.Combine(inboundDir, "SENDING");
 				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
-				if (files.Count == 0) { Logger.Log($"[INBOUND - PRICE] No {fileNameFormat} file format found."); }
 
-				foreach (string data in files)
+				if (files.Count == 0)
 				{
-					var result = BuildPriceCollection(data);
-					await processPriceSyncAsync(result, repository, session, false);
+					Logger.Log($"[INBOUND - PRICE] No {fileNameFormat} file format found.");
+					return;
 				}
 
-				await reprocessPriceDbSyncAsync(repository, session);
+				foreach (string file in files)
+				{
+					string fileName = Path.GetFileName(file);
 
-				Logger.Log("[INBOUND - PRICE] END Sync Process");
+					try
+					{
+						Logger.Log($"[INBOUND - PRICE] Processing file: {fileName}");
+
+						var result = BuildPriceCollection(file);
+						Logger.Log($"[INBOUND - PRICE] PRICE loaded. Rows found: {result.Count}");
+
+						await processPriceSyncAsync(result, repository, session, false);
+						await reprocessPriceDbSyncAsync(repository, session);
+
+					}
+					catch (Exception ex)
+					{
+						Logger.Log($"❌ [INBOUND - PRICE] Error processing file {fileName}: {ex.Message}");
+						isSuccess = false;
+					}
+
+					globalInbound.MoveFile(file, isSuccess);
+				}
+
+				Logger.Log("[INBOUND - PRICE] END Sync Process.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND - PRICE] Error in RunItemSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
-				return;
+				Logger.Log($"[INBOUND - PRICE] Error in RunPriceSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				isSuccess = false;
 			}
 		}
 
@@ -158,6 +180,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						catch (Exception ex)
 						{
 							Logger.Log($"[ERROR] Failed to process row for ProductCode: {row["ProductCode"]} | {ex.Message}\nStackTrace: {ex.StackTrace}");
+							isSuccess = false;
 						}
 					}
 				}
@@ -166,8 +189,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			catch (Exception ex)
 			{
 				Logger.Log($"[ERROR] Error inserting data - {ex.Message}\nStackTrace: {ex.StackTrace}");
-
-				throw;
+				isSuccess = false;
 			}
 
 		}
@@ -246,10 +268,20 @@ namespace GXIntegration_Levis.InboundHandlers
 									session
 									, endpointCreate
 									, json
-									, out bool issuccessful
+									, out bool isSuccessfulApi
 									, "POST"
 									, 1
 									);
+
+			if (!isSuccessfulApi)
+			{
+				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				isSuccess = false;
+			}
+			else
+			{
+				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+			}
 
 			return responseJson;
 		}
@@ -277,10 +309,19 @@ namespace GXIntegration_Levis.InboundHandlers
 									session
 									, endpointCreate
 									, json
-									, out bool issuccessful
+									, out bool isSuccessfulApi
 									, "PUT"
 									, 1
 									);
+			if (!isSuccessfulApi)
+			{
+				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				isSuccess = false;
+			}
+			else
+			{
+				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+			}
 
 			return responseJson;
 		}
@@ -313,10 +354,20 @@ namespace GXIntegration_Levis.InboundHandlers
 									session
 									, endpointCreate
 									, json
-									, out bool issuccessful
+									, out bool isSuccessfulApi
 									, "POST"
 									, 1
 									);
+
+			if (!isSuccessfulApi)
+			{
+				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				isSuccess = false;
+			}
+			else
+			{
+				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+			}
 
 			return responseJson;
 		}
@@ -362,8 +413,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			catch (Exception ex)
 			{
 				Logger.Log($"[ERROR] Error inserting data ProductCode: {row["ProductCode"]} - {ex.Message}\nStackTrace: {ex.StackTrace}");
-
-				throw;
+				isSuccess = false;
 			}
 			
 		}
@@ -392,7 +442,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						// Map only relevant indices
 						if (fields.Length > 0) rowDict["CountryCode"] = fields[0].Trim();
 						if (fields.Length > 1) rowDict["StoreCode"] = fields[1].Trim();
-						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
+						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim();
 						if (fields.Length > 3) rowDict["ColorCode"] = fields[3].Trim();
 						if (fields.Length > 4) rowDict["SizeCode"] = fields[4].Trim();
 						if (fields.Length > 5) rowDict["SKU"] = fields[5].Trim();
@@ -420,6 +470,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			catch (Exception ex)
 			{
 				Logger.Log($"[INBOUND - PRICE] Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				isSuccess = false;
 			}
 
 			return result;

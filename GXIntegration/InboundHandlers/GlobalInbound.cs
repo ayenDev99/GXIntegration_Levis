@@ -298,5 +298,25 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 		}
 
+		public void MoveFile(string filePath, bool successFlag)
+		{
+			try
+			{
+				string fileName = Path.GetFileName(filePath);
+				string destinationDir = successFlag ? GlobalInbound.SentDir : GlobalInbound.UnsentDir;
+				string destinationPath = Path.Combine(destinationDir, fileName);
+
+				if (File.Exists(destinationPath))
+					File.Delete(destinationPath);
+
+				File.Move(filePath, destinationPath);
+				Logger.Log($"[INBOUND] File moved to {(successFlag ? "SENT" : "UNSENT")} folder: {destinationPath}");
+			}
+			catch (Exception ex)
+			{
+				Logger.Log($"❌ [INBOUND] Failed to move file {Path.GetFileName(filePath)}: {ex.Message}");
+			}
+		}
+
 	}
 }
