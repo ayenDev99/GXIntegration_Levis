@@ -89,7 +89,7 @@ namespace GXIntegration_Levis.Data.Access
                             , DOC.TAX_AREA_PERC                     AS Percent
                             , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
                             , ''                                    AS TaxLocationID
-                            , ''                                    AS TaxGroupID
+                            , '1'                                   AS TaxGroupID
 
                             , DOC_ITEM_DISC.DISC_POS                AS DiscSequenceNo
                             , DOC_ITEM_DISC.NEW_DISC_AMT            AS DiscAmount
@@ -131,7 +131,8 @@ namespace GXIntegration_Levis.Data.Access
                             , CASE 
                                 WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
                                 WHEN TENDER.TENDER_TYPE = 0 THEN 'CASH'
-                                WHEN TENDER.TENDER_TYPE = 15 THEN 'GC GIFT CARD'
+                                WHEN TENDER.TENDER_TYPE = 15 THEN 'CENTRALGC'
+                                WHEN TENDER.TENDER_TYPE = 9 THEN 'GIFTCERT'
                                 ELSE ''
                             END                                     AS TenderID
                             , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency

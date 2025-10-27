@@ -76,8 +76,8 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
                                 , DOC_ITEM.DIP_PRICE                    AS Amount
                                 , DOC.TAX_AREA_PERC                     AS Percent
-                                , DOC.TAX_AREA_PERC                     AS RawTaxPercentage
-                                , ''                                    AS TaxGroupID
+                                , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
+                                , '1'                                   AS TaxGroupID
                                 , STORE.ADDRESS4                        AS TransLinkRetailStoreID
                                 , DOC.WORKSTATION_NO                    AS TransLinkWorkstationID
                                 , DOC.DOC_NO                            AS TransLinkSequenceNumber
