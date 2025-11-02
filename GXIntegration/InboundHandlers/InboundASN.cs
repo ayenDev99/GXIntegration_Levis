@@ -80,7 +80,7 @@ namespace GXIntegration_Levis.InboundHandlers
 							if (isPONumExist)
 							{
 								Logger.Log($"[INBOUND - ASN] PO already exists. Skipping...");
-								continue;
+								isSuccess = false;
 							}
 
 							XDocument config = XDocument.Load("config.xml");
@@ -104,13 +104,13 @@ namespace GXIntegration_Levis.InboundHandlers
 							if (!acceptPartial && validProducts.Count != productCodes.Count)
 							{
 								Logger.Log($"[INBOUND - ASN] Rejecting PO {documentNumber}. Invalid items found.");
-								continue;
+								isSuccess = false;
 							}
 
 							if (!validProducts.Any())
 							{
 								Logger.Log($"[INBOUND - ASN] No valid items found for PO {documentNumber}. Skipping...");
-								continue;
+								isSuccess = false;
 							}
 
 							var po_sid = await createRpsPOAsync(repository, session, group.First());

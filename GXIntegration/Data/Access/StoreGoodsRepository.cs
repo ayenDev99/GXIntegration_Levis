@@ -108,6 +108,8 @@ namespace GXIntegration_Levis.Data.Access
 							AND VOU.VOU_CLASS = 0
 							AND VOU.STATUS = 4
 							AND PO.SHIPTO_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
+						ORDER BY
+							VI.ITEM_POS ASC
 					";
 
 					sql = sql.Replace("{DATE_CONDITION}", dateCondition);

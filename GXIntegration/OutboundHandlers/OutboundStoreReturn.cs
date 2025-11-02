@@ -147,7 +147,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 							// Tax
 							writer.WriteStartElement("Tax");
-							writer.WriteAttributeString("TaxType", "Sales");
+							writer.WriteAttributeString("TaxType", "dtv:VAT");
 							writer.WriteAttributeString("VoidFlag", "false");
 
 							GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", lineItems.TaxAuthority);

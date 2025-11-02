@@ -179,7 +179,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 						// Tax Section
 						//---------------------
 						writer.WriteStartElement("Tax");
-						writer.WriteAttributeString("TaxType", "Sales");
+						writer.WriteAttributeString("TaxType", "dtv:VAT");
 						writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
 
 						GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", itm.TaxAuthority ?? "");

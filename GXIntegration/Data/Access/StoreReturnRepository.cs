@@ -75,7 +75,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
                                 , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
                                 , DOC_ITEM.DIP_PRICE                    AS Amount
-                                , DOC.TAX_AREA_PERC                     AS Percent
+                                , DOC.TAX_AREA_PERC / 100               AS Percent
                                 , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
                                 , '1'                                   AS TaxGroupID
                                 , STORE.ADDRESS4                        AS TransLinkRetailStoreID
@@ -131,8 +131,11 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'false'                               AS ChangeFlag
                                 , CASE 
                                     WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
+                                    WHEN TENDER.TENDER_TYPE = 0 THEN 'CASH'
+                                    WHEN TENDER.TENDER_TYPE = 15 THEN 'CENTRALGC'
+                                    WHEN TENDER.TENDER_TYPE = 9 THEN 'GIFTCERT'
                                     ELSE ''
-                                    END                                 AS TenderID
+                                END                                     AS TenderID
                                 , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency 
                                 , TENDER.AMOUNT                         AS TenderAmount
                                 , 'REFUND'                              AS VoucherTypeCode
