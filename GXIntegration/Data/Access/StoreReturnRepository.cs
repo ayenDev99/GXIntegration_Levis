@@ -73,8 +73,8 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC.EMPLOYEE1_LOGIN_NAME              AS AssociateID
                                 , '100'                                 AS Percentage
                                 , DOC_ITEM.TAX_AREA_NAME                AS TaxAuthority
-                                , DOC_ITEM.DIP_TAX_AMT                  AS TaxableAmount
-                                , DOC_ITEM.DIP_PRICE                    AS Amount
+                                , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
+                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
                                 , DOC.TAX_AREA_PERC / 100               AS Percent
                                 , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
                                 , '1'                                   AS TaxGroupID
@@ -96,10 +96,10 @@ namespace GXIntegration_Levis.Data.Access
                                 , '00054'                               AS MerchHierarchySubDepartment
                                 , '02'                                  AS MerchHierarchyClass
                                 , ''                                    AS TaxAuthority1
-                                , DOC.TRANSACTION_TOTAL_TAX_AMT         AS TaxableAmount1
-                                , DOC.TRANSACTION_TOTAL_AMT             AS Amount1
-                                , DOC.TAX_AREA_PERC                     AS Percent1
-                                , DOC.TAX_AREA_PERC                     AS RawTaxPercentage1
+                                , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount1
+                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount1
+                                , DOC.TAX_AREA_PERC / 100               AS Percent1
+                                , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage1
                                 , ''                                    AS TaxLocationID1
                                 , TENDER.TENDER_POS                     AS TenderSequenceNo
                                 , TENDER.TENDER_POS                     AS TenderLineNumber

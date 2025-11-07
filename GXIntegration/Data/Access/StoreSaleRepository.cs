@@ -42,65 +42,65 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = $@"
                         SELECT 
-                            DOC.SID                                 AS DocSid
-                            , '1'                                   AS TransOrganizationID
-                            , STORE.ADDRESS4                        AS TransRetailStoreID
-                            , DOC.WORKSTATION_NO                    AS TransWorkstationID
-                            , STORE.ADDRESS4 || DOC.WORKSTATION_NO  AS TransTillID
-                            , ''                                    AS TransCashDrawerID
-                            , DOC.DOC_NO                            AS TransSequenceNo
-                            , DOC.CREATED_DATETIME                  AS TransBusinessDayDate
-                            , DOC.CREATED_DATETIME                  AS TransBeginDateTime
-                            , DOC.INVC_POST_DATE                    AS TransEndDateTime
-                            , DOC.CASHIER_LOGIN_NAME                AS TransOperatorID
-                            , CURRENCY.ALPHABETIC_CODE              AS TransCurrencyCode
-                            , STORE.ADDRESS4                        AS TransAlternateStoreID
-                            , DOC.DOC_NO                            AS TransTransactionCode
-                            , DOC_ITEM.SCAN_UPC                     AS TransBarcode
+                            DOC.SID                                         AS DocSid
+                            , '1'                                           AS TransOrganizationID
+                            , STORE.ADDRESS4                                AS TransRetailStoreID
+                            , DOC.WORKSTATION_NO                            AS TransWorkstationID
+                            , STORE.ADDRESS4 || DOC.WORKSTATION_NO          AS TransTillID
+                            , ''                                            AS TransCashDrawerID
+                            , DOC.DOC_NO                                    AS TransSequenceNo
+                            , DOC.CREATED_DATETIME                          AS TransBusinessDayDate
+                            , DOC.CREATED_DATETIME                          AS TransBeginDateTime
+                            , DOC.INVC_POST_DATE                            AS TransEndDateTime
+                            , DOC.CASHIER_LOGIN_NAME                        AS TransOperatorID
+                            , CURRENCY.ALPHABETIC_CODE                      AS TransCurrencyCode
+                            , STORE.ADDRESS4                                AS TransAlternateStoreID
+                            , DOC.DOC_NO                                    AS TransTransactionCode
+                            , DOC_ITEM.SCAN_UPC                             AS TransBarcode
 
-                            , DOC.SALE_TOTAL_AMT                    AS TransGrandAmount
-                            , '0.00'                                AS TransRoundedTotal
+                            , DOC.SALE_TOTAL_AMT                            AS TransGrandAmount
+                            , '0.00'                                        AS TransRoundedTotal
 
-                            , DOC_ITEM.ITEM_POS                     AS ItemSequenceNo
-                            , DOC_ITEM.ITEM_POS                     AS ItemLineNumber
-                            , DOC_ITEM.CREATED_DATETIME             AS ItemBeginDateTime
-                            , DOC_ITEM.POST_DATE                    AS ItemEndDateTime
-                            , ISI.NON_INVENTORY                     AS NonInvnFlag1
-                            , ISI.KIT_TYPE                          AS NonInvnFlag2
-							, REPLACE(ISI.ALU, '-', '')             AS SaleItemID
-                            , DOC_ITEM.DESCRIPTION2                 AS SaleDescription
-                            , DOC_ITEM.ORIG_PRICE                   AS SaleRegularSalesUnitPrice
-                            , DOC_ITEM.PRICE                        AS SaleActualSalesUnitPrice
-                            , DOC_ITEM.PRICE * DOC_ITEM.QTY         AS SaleExtendedAmount
-                            , DOC_ITEM.QTY                          AS SaleQuantity
-                            , '10'                                  AS SaleBrand
-                            , '10-0001-00673'                       AS SaleCategory
-                            , '10-0001-00673-1020'                  AS SaleClass
-                            , '10-0001-00673-1020-2200'             AS SaleSubClass
-                            , DOC_ITEM.SCAN_UPC                     AS SaleScannedItemID
-                            , 'false'                               AS SaleGiftReceiptFlag
-                            , ISI.ITEM_SIZE                         AS PTDIM1
-                            , ISI.ATTRIBUTE                         AS PTDIM2
-                            , ISI.DESCRIPTION1                      AS PTStyle
-                            , ISI.UPC                               AS PTEAN
-                            , 'PH_' || DOC_ITEM.TAX_AREA_NAME       AS TaxAuthority
-                            , ROUND(DOC_ITEM.DIP_PRICE, 2)          AS TaxableAmount
-                            , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)        AS Amount
-                            , DOC.TAX_AREA_PERC / 100               AS Percent
-                            , DOC.TAX_AREA_PERC / 100               AS RawTaxPercentage
-                            , ''                                    AS TaxLocationID
-                            , '1'                                   AS TaxGroupID
+                            , DOC_ITEM.ITEM_POS                             AS ItemSequenceNo
+                            , DOC_ITEM.ITEM_POS                             AS ItemLineNumber
+                            , DOC_ITEM.CREATED_DATETIME                     AS ItemBeginDateTime
+                            , DOC_ITEM.POST_DATE                            AS ItemEndDateTime
+                            , ISI.NON_INVENTORY                             AS NonInvnFlag1
+                            , ISI.KIT_TYPE                                  AS NonInvnFlag2
+							, REPLACE(ISI.ALU, '-', '')                     AS SaleItemID
+                            , DOC_ITEM.DESCRIPTION2                         AS SaleDescription
+                            , DOC_ITEM.ORIG_PRICE                           AS SaleRegularSalesUnitPrice
+                            , DOC_ITEM.PRICE                                AS SaleActualSalesUnitPrice
+                            , DOC_ITEM.PRICE * DOC_ITEM.QTY                 AS SaleExtendedAmount
+                            , DOC_ITEM.QTY                                  AS SaleQuantity
+                            , '10'                                          AS SaleBrand
+                            , '10-0001-00673'                               AS SaleCategory
+                            , '10-0001-00673-1020'                          AS SaleClass
+                            , '10-0001-00673-1020-2200'                     AS SaleSubClass
+                            , DOC_ITEM.SCAN_UPC                             AS SaleScannedItemID
+                            , 'false'                                       AS SaleGiftReceiptFlag
+                            , ISI.ITEM_SIZE                                 AS PTDIM1
+                            , ISI.ATTRIBUTE                                 AS PTDIM2
+                            , ISI.DESCRIPTION1                              AS PTStyle
+                            , ISI.UPC                                       AS PTEAN
+                            , 'PH_' || DOC_ITEM.TAX_AREA_NAME               AS TaxAuthority
+                            , ROUND(DOC_ITEM.DIP_PRICE, 2)                  AS TaxableAmount
+                            , ROUND(DOC_ITEM.DIP_TAX_AMT, 2)                AS Amount
+                            , DOC.TAX_AREA_PERC / 100                       AS Percent
+                            , DOC.TAX_AREA_PERC / 100                       AS RawTaxPercentage
+                            , ''                                            AS TaxLocationID
+                            , '1'                                           AS TaxGroupID
 
-                            , DOC_ITEM_DISC.DISC_POS                AS DiscSequenceNo
-                            , DOC_ITEM_DISC.NEW_DISC_AMT            AS DiscAmount
-                            , DOC_ITEM_DISC.DISC_REASON             AS DiscPromotionID
-                            , 'TRANSACTION_DISCOUNT'                AS DiscReasonCode
+                            , DOC_ITEM_DISC.DISC_POS                        AS DiscSequenceNo
+                            , DOC_ITEM_DISC.NEW_DISC_AMT * DOC_ITEM.QTY     AS DiscAmount
+                            , DOC_ITEM_DISC.DISC_REASON                     AS DiscPromotionID
+                            , 'TRANSACTION_DISCOUNT'                        AS DiscReasonCode
 
-                            , TENDER.SID                            AS TenderSID
-                            , TENDER.TENDER_POS                     AS TenderSequenceNo
-                            , TENDER.TENDER_POS                     AS TenderLineNumber
-                            , TENDER.CREATED_DATETIME               AS TenderBeginDateTime
-                            , TENDER.POST_DATE                      AS TenderEndDateTime
+                            , TENDER.SID                                    AS TenderSID
+                            , TENDER.TENDER_POS                             AS TenderSequenceNo
+                            , TENDER.TENDER_POS                             AS TenderLineNumber
+                            , TENDER.CREATED_DATETIME                       AS TenderBeginDateTime
+                            , TENDER.POST_DATE                              AS TenderEndDateTime
                             , CASE 
                                 WHEN TENDER.TENDER_TYPE = 0 THEN 'Cash'
                                 WHEN TENDER.TENDER_TYPE = 1 THEN 'Check'
@@ -122,33 +122,33 @@ namespace GXIntegration_Levis.Data.Access
                                 WHEN TENDER.TENDER_TYPE = 17 THEN 'CentralCustomerCredit'
                                 WHEN TENDER.TENDER_TYPE = 18 THEN 'CentralCustomerLoyalty'
                                 ELSE ''
-                            END                                     AS TenderType
+                            END                                             AS TenderType
                             , CASE 
                                 WHEN DOC.RECEIPT_TYPE = 0 THEN 'SALE'
                                 WHEN DOC.RECEIPT_TYPE = 2 THEN 'DEPOSIT'
                                 ELSE ''
-                            END                                     AS TenderTypeCode
+                            END                                             AS TenderTypeCode
                             , CASE 
                                 WHEN TENDER.TENDER_TYPE = 2 THEN TO_CHAR(TENDER_CREDIT_CARD.CARD_TYPE_NAME)
                                 WHEN TENDER.TENDER_TYPE = 0 THEN 'CASH'
                                 WHEN TENDER.TENDER_TYPE = 15 THEN 'CENTRALGC'
                                 WHEN TENDER.TENDER_TYPE = 9 THEN 'GIFTCERT'
                                 ELSE ''
-                            END                                     AS TenderID
-                            , CURRENCY.ALPHABETIC_CODE              AS AmountCurrency
-                            , TENDER.AMOUNT                         AS TenderAmount
-                            , TENDER_CREDIT_CARD.AUTH_CODE          AS TenderAuthorizationNumber
+                            END                                             AS TenderID
+                            , CURRENCY.ALPHABETIC_CODE                      AS AmountCurrency
+                            , TENDER.AMOUNT                                 AS TenderAmount
+                            , TENDER_CREDIT_CARD.AUTH_CODE                  AS TenderAuthorizationNumber
                         FROM 
                             RPS.DOCUMENT DOC
-                        LEFT JOIN RPS.STORE                             ON STORE.SID = DOC.STORE_SID
-                        LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM            ON DOC_ITEM.DOC_SID = DOC.SID
-                        LEFT JOIN RPS.DOCUMENT_ITEM_DISC DOC_ITEM_DISC  ON DOC_ITEM_DISC.DOC_ITEM_SID = DOC_ITEM.SID
-                        LEFT JOIN RPS.INVN_SBS_ITEM ISI                 ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
-                        LEFT JOIN RPS.TENDER                            ON TENDER.DOC_SID = DOC.SID
-                        LEFT JOIN RPS.TENDER_CREDIT_CARD                ON TENDER_CREDIT_CARD.TENDER_SID = TENDER.SID
-                        LEFT JOIN RPS.CURRENCY                          ON CURRENCY.SID = TENDER.CURRENCY_SID
-                        LEFT JOIN RPS.SUBSIDIARY SBS                    ON SBS.SID = DOC.SUBSIDIARY_SID
-                        LEFT JOIN RPS.COUNTRY                           ON COUNTRY.SID = SBS.COUNTRY_SID
+                        LEFT JOIN RPS.STORE                                 ON STORE.SID = DOC.STORE_SID
+                        LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM                ON DOC_ITEM.DOC_SID = DOC.SID
+                        LEFT JOIN RPS.DOCUMENT_ITEM_DISC DOC_ITEM_DISC      ON DOC_ITEM_DISC.DOC_ITEM_SID = DOC_ITEM.SID
+                        LEFT JOIN RPS.INVN_SBS_ITEM ISI                     ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
+                        LEFT JOIN RPS.TENDER                                ON TENDER.DOC_SID = DOC.SID
+                        LEFT JOIN RPS.TENDER_CREDIT_CARD                    ON TENDER_CREDIT_CARD.TENDER_SID = TENDER.SID
+                        LEFT JOIN RPS.CURRENCY                              ON CURRENCY.SID = TENDER.CURRENCY_SID
+                        LEFT JOIN RPS.SUBSIDIARY SBS                        ON SBS.SID = DOC.SUBSIDIARY_SID
+                        LEFT JOIN RPS.COUNTRY                               ON COUNTRY.SID = SBS.COUNTRY_SID
                         WHERE 
                             {dateCondition}
                             AND DOC.STATUS = 4

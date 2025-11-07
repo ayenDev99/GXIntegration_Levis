@@ -64,6 +64,9 @@ namespace GXIntegration_Levis.InboundHandlers
 							long? empExtendRowVersion = null;
 							string employeeSid = null;
 
+							string workAddress = row["WorkAddress"]?.ToString();
+							workAddress = workAddress?.Length > 40 ? workAddress.Substring(0, 40) : workAddress;
+
 							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | SID : {baseStoreSid}");
 
 							//***************************************************************
@@ -104,7 +107,7 @@ namespace GXIntegration_Levis.InboundHandlers
 								{
 									new {
 										active = true
-										, address1          = row["WorkAddress"]?.ToString()
+										, address1          = workAddress
 										, address2          = row["WorkCity"]?.ToString()
 										, address3          = row["WorkState"]?.ToString()
 										, address4          = row["WorkCountry"]?.ToString()
