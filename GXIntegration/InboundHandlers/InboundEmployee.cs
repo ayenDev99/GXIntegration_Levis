@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using JsonFormatting = Newtonsoft.Json.Formatting;
 
 namespace GXIntegration_Levis.InboundHandlers
@@ -64,10 +65,21 @@ namespace GXIntegration_Levis.InboundHandlers
 							long? empExtendRowVersion = null;
 							string employeeSid = null;
 
+							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | StoreSID : {baseStoreSid}");
+
 							string workAddress = row["WorkAddress"]?.ToString();
 							workAddress = workAddress?.Length > 40 ? workAddress.Substring(0, 40) : workAddress;
 
-							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | SID : {baseStoreSid}");
+							// Get SBS Result
+							var sbs_res = await GetSbsResult(repository);
+							var sbs_sid = sbs_res[0].SID.ToString();
+							Logger.Log($"[INBOUND - EMPLOYEE] SBS SID : {sbs_sid}");
+
+							// Get User Group Result
+							string jobTitle = row["JobTitle"]?.ToString();
+							var user_group_res = await GetUserGroupResult(repository, jobTitle);
+							var user_group_sid = user_group_res[0].SID.ToString();
+							Logger.Log($"[INBOUND - EMPLOYEE] USER_GROUP SID : {user_group_sid}");
 
 							//***************************************************************
 							// Build employeeextend base structure
@@ -89,9 +101,9 @@ namespace GXIntegration_Levis.InboundHandlers
 							, ["lastname"]			= row["Lastname"]?.ToString()
 							, ["hiredate"]			= row["HireDate"]?.ToString()
 							, ["jobsid"]			= await repository.GetRpsJobSid(row["JobTitle"]?.ToString())
-							, ["jobtitle"]			= "Manager"
+							, ["jobtitle"]			= row["JobTitle"]?.ToString()
 							, ["originapplication"] = "RProPrismWeb"
-							, ["origsbssid"]		= "555356986000134257"
+							, ["origsbssid"]		= sbs_sid
 							, ["status"]			= 1
 							, ["useractive"]		= true
 							, ["username"]			= row["UserName"]?.ToString()
@@ -100,7 +112,7 @@ namespace GXIntegration_Levis.InboundHandlers
 									new {
 										accessallstores     = true
 										, originapplication = "PrismWeb"
-										, sbssid            = "555356986000134257"
+										, sbssid            = sbs_sid
 									}
 								}
 							, ["empladdress"] = new[]
@@ -122,6 +134,12 @@ namespace GXIntegration_Levis.InboundHandlers
 										, udf10string       = row["EmployeeID"]?.ToString()
 										, udf11string       = row["Gender"]?.ToString()
 										, udf12string       = row["Language"]?.ToString()
+									}
+								}
+							, ["usergroupuser"] = new[]
+								{
+									new {
+										usergroupsid       = user_group_sid
 									}
 								}
 							};
@@ -239,6 +257,33 @@ namespace GXIntegration_Levis.InboundHandlers
 			{
 				Logger.Log($"❌ [INBOUND - EMPLOYEE] Critical Error in RunEmployeeSyncAsync: {ex}");
 			}
+		}
+
+		private async Task<List<dynamic>> GetSbsResult(PrismRepository repository)
+		{
+			// Get default SBS No from config.xml
+			XDocument config = XDocument.Load("config.xml");
+			var sbs_no = config.Root.Element("EmpSubsidiaries").Element("Subsidiary").Value;
+			Logger.Log($"[INBOUND - EMPLOYEE] Config SBS No. to process: {sbs_no}");
+
+			// Fetch from prism subsidiary
+			var sbs_result = await repository.GetRpsSubsidiary("SBS_NO", sbs_no);
+			
+			return sbs_result;
+		}
+
+		private async Task<List<dynamic>> GetUserGroupResult(PrismRepository repository, string jobTitle)
+		{
+			if (jobTitle == "Manager") { 
+				jobTitle = "STORE MANAGER";
+			} else if (jobTitle == "Cashier") {
+				jobTitle = "STORE CASHIER";
+			}
+
+			// Fetch from prism user_group
+			var user_group_result = await repository.GetRpsUserGroup("USER_GROUP_NAME", jobTitle);
+
+			return user_group_result;
 		}
 
 		private List<Dictionary<string, string>> BuildItemCollection(string filePath)

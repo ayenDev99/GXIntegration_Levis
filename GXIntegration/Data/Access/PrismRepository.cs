@@ -218,7 +218,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
-			var allowedColumns = new HashSet<string> { "ACTIVE" };
+			var allowedColumns = new HashSet<string> { "ACTIVE", "SBS_NO" };
 
 			if (!allowedColumns.Contains(columnName.ToUpper()))
 				throw new ArgumentException("Invalid column name");
@@ -248,6 +248,46 @@ namespace GXIntegration_Levis.Data.Access
 				{
 					Logger.Log($"Error fetching RPS Subsidiary SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS Subsidiary SID: {ex.Message}");
+					return null;
+				}
+			}
+		}
+
+		public async Task<dynamic> GetRpsUserGroup(string columnName, string columnValue)
+		{
+			Logger.Log("test");
+			// Validate columnName to prevent SQL injection
+			// Add column names to this list as needed
+			var allowedColumns = new HashSet<string> { "USER_GROUP_NAME" };
+
+			if (!allowedColumns.Contains(columnName.ToUpper()))
+				throw new ArgumentException("Invalid column name");
+
+			using (var connection = new OracleConnection(_connectionString))
+			{
+				try
+				{
+					await connection.OpenAsync();
+
+					string sql = $@"
+						SELECT 
+							*
+						FROM 
+							RPS.USER_GROUP 
+						WHERE 
+							{columnName} = :ColumnValue
+					";
+
+					Logger.Log(columnName);
+					Logger.Log(columnValue);
+
+					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
+					return results;
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"Error fetching RPS USER_GROUP: {ex.Message}");
+					Console.WriteLine($"Error fetching RPS USER_GROUP: {ex.Message}");
 					return null;
 				}
 			}
