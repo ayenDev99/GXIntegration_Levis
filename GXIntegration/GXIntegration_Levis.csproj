@@ -326,10 +326,15 @@
     <Content Include="app_logo2.ico" />
     <Content Include="config.xml" />
     <Content Include="image-removebg-preview.png" />
+    <None Include="Resources\retailpro_logo.png" />
+    <None Include="Resources\levis_logo.png" />
     <None Include="Resources\image-removebg-preview.png" />
     <None Include="Resources\geniex_logo-removebg-preview.png" />
     <None Include="Resources\geniexlogo.PNG" />
     <None Include="Resources\geniexlogo1.PNG" />
+    <Content Include="levis_logo.png" />
+    <Content Include="Properties\levis_logo.png" />
+    <Content Include="Properties\retailpro_logo.png" />
     <Content Include="Resources\icon_download.png" />
     <None Include="Resources\Rolling%401x-0.9s-230px-230px.gif" />
     <None Include="Resources\spinner.gif" />

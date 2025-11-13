@@ -33,6 +33,9 @@ namespace GXIntegration
 		private System.Windows.Forms.Button closeButton;
 		private System.Windows.Forms.Button minimizeButton;
 
+		private Label dateTimeLabel;
+		private Timer dateTimeTimer;
+
 		public OutboundEODTab OutboundEODTab { get; private set; }
 		public OutboundAPITab OutboundAPITab { get; private set; }
 		public InboundPage InboundPage { get; private set; }
@@ -48,12 +51,23 @@ namespace GXIntegration
 			InitialInboundPriceDatabase();
 			EnableDrag(SideBar);
 			InitializeTopBar();
+
+			// ✅ Real-time Date and Time
+			dateTimeTimer = new Timer();
+			dateTimeTimer.Interval = 1000; // 1 second
+			dateTimeTimer.Tick += (s, e) =>
+			{
+				dateTimeLabel.Text = DateTime.Now.ToString("dddd, MMMM dd yyyy hh:mm:ss tt");
+			};
+			dateTimeTimer.Start();
+
 			MainContentPanel.Dock = DockStyle.Fill;
 
 			OutboundAPITab = new OutboundAPITab(config, repositories);
 			OutboundEODTab = new OutboundEODTab(config, repositories);
 			InboundPage = new InboundPage();
 		}
+
 
 		private OutboundRepositories InitializeRepositories(string connectionString)
 		{
@@ -82,6 +96,13 @@ namespace GXIntegration
 			this.Controls.Add(topBar);
 
 			EnableDrag(topBar);
+			dateTimeLabel = new Label();
+			dateTimeLabel.ForeColor = Color.White;
+			dateTimeLabel.Font = new Font("Segoe UI", 9, FontStyle.Regular);
+			dateTimeLabel.AutoSize = true;
+			dateTimeLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+			dateTimeLabel.Location = new Point(this.Width - 310, 7); // tweak as needed
+			topBar.Controls.Add(dateTimeLabel);
 
 			InitializeCustomButtons();
 		}

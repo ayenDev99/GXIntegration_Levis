@@ -93,6 +93,16 @@ namespace GXIntegration_Levis.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap levis_logo {
+            get {
+                object obj = ResourceManager.GetObject("levis_logo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap loading_spinner {
             get {
                 object obj = ResourceManager.GetObject("loading_spinner", resourceCulture);
@@ -136,6 +146,16 @@ namespace GXIntegration_Levis.Properties {
         internal static System.Drawing.Bitmap multiply_48px1 {
             get {
                 object obj = ResourceManager.GetObject("multiply_48px1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap retailpro_logo {
+            get {
+                object obj = ResourceManager.GetObject("retailpro_logo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
