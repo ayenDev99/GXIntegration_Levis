@@ -336,5 +336,15 @@ namespace GXIntegration_Levis.Helpers
 		}
 
 	}
+	
+	public static class StringExtensions
+	{
+		public static string TrimMax(this string value, int maxLength = 30)
+		{
+			if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+			value = value.Trim();
+			return value.Length > maxLength ? value.Substring(0, maxLength) : value;
+		}
+	}
 
 }
