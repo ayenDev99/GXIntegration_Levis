@@ -77,122 +77,102 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 		}
 
-		private async Task processPriceSyncAsync(dynamic result, dynamic repository, string session, dynamic isReprocess)
+		private async Task processPriceSyncAsync(List<Dictionary<string, string>> result, PrismRepository repository, string session, bool isReprocess)
 		{
 			XDocument config = XDocument.Load("config.xml");
 
-			try
+			var sbsNos = config.Root.Element("PriceSubsidiaries").Element("Subsidiary").Value;
+
+			foreach (var sbsNo in sbsNos)
 			{
-				// Load SBS_NO from config
-				var sbsNos = config
-					.Descendants("Subsidiary")
-					.Select(x => int.Parse(x.Value))
-					.ToList();
+				Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
 
-				// Process each subsidiary
-				foreach (var sbsNo in sbsNos)
+				// Filter only rows that have valid effectivity date <= today
+				var validRows = new List<Dictionary<string, string>>();
+				foreach (var row in result)
 				{
-					Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
-
-					// Process each row from the data
-					foreach (var row in result)
+					if (DateTime.TryParseExact(row["EffectivityDate"], "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime effDate)
+						&& effDate <= DateTime.UtcNow.Date)
 					{
-						try
-						{
-							//Log each key/value in the row (optional for debugging)
-							//foreach (var kv in row) { Logger.Log($"{kv.Key}: {kv.Value}"); }
-
-							string effectivityDateStr = row["EffectivityDate"];
-							DateTime effectivityDate = DateTime.ParseExact(effectivityDateStr, "yyyyMMdd", null);
-							DateTime currentDate = DateTime.UtcNow.Date;
-
-							// Get PriceLevel value from config.xml
-
-
-							// Prepare filters
-							var baseFilters = new Dictionary<string, object>
-									{
-										{ "DESCRIPTION1", row["ProductCode"] },
-										{ "ACTIVE", 1 },
-										{ "PRICE_LVL_NAME", "LSPC" }
-									};
-
-							var filters = new Dictionary<string, object>(baseFilters)
-									{
-										{ "SBS_NO", sbsNo }
-									};
-							var results = await repository.GetInboundItemsAsync(filters);
-							var resultList = results as List<dynamic> ?? new List<dynamic>();
-
-							if (effectivityDate <= currentDate)
-							{
-								Logger.Log("[INBOUND - PRICE] Effectivity Date is valid (≤ current system date).");
-								Logger.Log($"[INBOUND - PRICE] Fetching item data for SBS_NO {sbsNo} | Item Code : {row["ProductCode"]}");
-
-								if (resultList.Count == 0)
-								{
-									Logger.Log("[INBOUND - PRICE] No results returned.");
-									continue;
-								}
-
-								Logger.Log($"[INBOUND - PRICE] Item count: {resultList.Count}");
-
-								string jsonResult = JsonConvert.SerializeObject(resultList, Formatting.Indented);
-								//Logger.Log("Inbound items result:\n" + jsonResult);
-
-								var price_lvl_sid = resultList[0].ACTIVE_PRICE_LVL_SID;
-								var sbs_sid = resultList[0].SBS_SID;
-
-								var newAjustmentData = await createRpsAdjustment(session, resultList[0]);
-
-								string adjusment_sid = JObject.Parse(newAjustmentData)?["data"]?[0]?["sid"]?.ToString();
-								Logger.Log($"ADJUSTMENT SID: {adjusment_sid}");
-
-								foreach (var item in resultList)
-								{
-									await createRpsAdjItem(session, item, row, adjusment_sid);
-								}
-
-								var ADJ_result = await repository.GetRpsAdjustment("SID", adjusment_sid);
-								var rowVersionString = ADJ_result[0].ROW_VERSION.ToString();
-
-								await updateRpsAdjustment(session, adjusment_sid, rowVersionString);
-
-								if (isReprocess)
-								{
-									Logger.Log("Reprocessing item...");
-
-									var repo = new InboundPriceRepository();
-									await repo.MarkTempPriceRowAsProcessedAsync(row);
-								}	
-							}
-							else
-							{
-								if (resultList.Count == 0)
-								{
-									Logger.Log("[SKIP] Skip inserting data to temporary table. ProductCode is not existing on Prism DB.");
-									continue;
-								}
-
-								await insertDataToTempDb(row);
-							}
-
-						}
-						catch (Exception ex)
-						{
-							Logger.Log($"[ERROR] Failed to process row for ProductCode: {row["ProductCode"]} | {ex.Message}\nStackTrace: {ex.StackTrace}");
-							isSuccess = false;
-						}
+						validRows.Add(row);
 					}
 				}
-				
-			}
-			catch (Exception ex)
-			{
-				Logger.Log($"[ERROR] Error inserting data - {ex.Message}\nStackTrace: {ex.StackTrace}");
-				isSuccess = false;
+
+				if (!validRows.Any())
+				{
+					Logger.Log("[INBOUND - PRICE] No valid rows for adjustment.");
+					continue;
+				}
+
+				int batchSize = 1000;
+				for (int i = 0; i < validRows.Count; i += batchSize)
+				{
+					var batch = validRows.Skip(i).Take(batchSize).ToList();
+
+					// Fetch repository data for all items in batch
+					var productCodes = batch.Select(r => r["ProductCode"]).ToList();
+					var filters = new Dictionary<string, object>
+					{
+						{ "SBS_NO", sbsNo },
+						{ "DESCRIPTION1", productCodes }, // List
+						{ "ACTIVE", 1 },
+						{ "PRICE_LVL_NAME", "LSPC" }
+					};
+
+					var items = await repository.GetInboundItemsAsync(filters);
+					var itemList = items as List<dynamic> ?? new List<dynamic>();
+
+					if (!itemList.Any())
+					{
+						Logger.Log("[INBOUND - PRICE] No items found in Prism DB for this batch.");
+						continue;
+					}
+
+					// Create single adjustment for this batch
+					var adjustmentData = await createRpsAdjustment(session, itemList[0]);
+					var adjustmentSid = JObject.Parse(adjustmentData)?["data"]?[0]?["sid"]?.ToString();
+					Logger.Log($"[INBOUND - PRICE] Adjustment SID: {adjustmentSid}");
+
+					// Add all items in the batch
+					foreach (var item in itemList)
+					{
+						// Find matching row for this item
+						var row = batch.FirstOrDefault(r => r["ProductCode"] == item.DESCRIPTION1);
+						if (row != null)
+						{
+							await createRpsAdjItem(session, item, row, adjustmentSid);
+						}
+					}
+
+					// Update adjustment
+					var adjResult = await repository.GetRpsAdjustment("SID", adjustmentSid);
+					var rowVersion = adjResult[0].ROW_VERSION.ToString();
+					await updateRpsAdjustment(session, adjustmentSid, rowVersion);
+
+					// Mark as processed if reprocessing
+					if (isReprocess)
+					{
+						var repo = new InboundPriceRepository();
+						foreach (var row in batch)
+						{
+							await repo.MarkTempPriceRowAsProcessedAsync(row);
+						}
+					}
+
+					Logger.Log($"[INBOUND - PRICE] Batch of {batch.Count} items processed for adjustment {adjustmentSid}");
+				}
 			}
 
+			// Handle rows with effectivity date in the future: insert to temp DB
+			var futureRows = result
+				.Where(r => DateTime.TryParseExact(r["EffectivityDate"], "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime effDate)
+							&& effDate > DateTime.UtcNow.Date)
+				.ToList();
+
+			foreach (var row in futureRows)
+			{
+				await insertDataToTempDb(row);
+			}
 		}
 
 		private async Task reprocessPriceDbSyncAsync(dynamic repository, string session)

@@ -418,15 +418,15 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Whitelisted column names with their table aliases
 			var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-			{
-				{ "DESCRIPTION1", "INV" },
-				{ "ACTIVE", "INV" },
-				{ "ATTRIBUTE", "INV" },
-				{ "ITEM_SIZE", "INV" },
-				{ "SBS_NO", "SBS" },
-				{ "PRICE_LVL_NAME", "PL" },
-				{ "SBS_SID", "INV" }
-			};
+	{
+		{ "DESCRIPTION1", "INV" },
+		{ "ACTIVE", "INV" },
+		{ "ATTRIBUTE", "INV" },
+		{ "ITEM_SIZE", "INV" },
+		{ "SBS_NO", "SBS" },
+		{ "PRICE_LVL_NAME", "PL" },
+		{ "SBS_SID", "INV" }
+	};
 
 			var whereClauses = new List<string>();
 			var parameters = new DynamicParameters();
@@ -439,29 +439,48 @@ namespace GXIntegration_Levis.Data.Access
 				string tableAlias = allowedColumns[filter.Key];
 				string paramName = $"p_{filter.Key}";
 
-				whereClauses.Add($"{tableAlias}.{filter.Key} = :{paramName}");
-				parameters.Add(paramName, filter.Value);
+				if (filter.Value is IEnumerable<string> list && !(filter.Value is string))
+				{
+					// Handle list of values -> use IN clause
+					var inParams = new List<string>();
+					int index = 0;
+					foreach (var val in list)
+					{
+						string pName = $"{paramName}_{index}";
+						inParams.Add($":{pName}");
+						parameters.Add(pName, val);
+						index++;
+					}
+
+					whereClauses.Add($"{tableAlias}.{filter.Key} IN ({string.Join(", ", inParams)})");
+				}
+				else
+				{
+					// Single value -> use =
+					whereClauses.Add($"{tableAlias}.{filter.Key} = :{paramName}");
+					parameters.Add(paramName, filter.Value);
+				}
 			}
 
 			string whereSql = whereClauses.Count > 0 ? $"WHERE {string.Join(" AND ", whereClauses)}" : "";
 
 			string sql = $@"
-					SELECT 
-						INV.DESCRIPTION1,
-						INV.ACTIVE,
-						SBS.SBS_NO,
-						PL.PRICE_LVL_NAME,
-						PL.SID AS ACTIVE_PRICE_LVL_SID,
-						SBS.SID AS SBS_SID,
-						INV.SID,
-						INV.ITEM_SIZE,
-						INV.ATTRIBUTE
-					FROM 
-						RPS.INVN_SBS_ITEM INV
-					LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID
-					LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SBS_SID = SBS.SID
-					{whereSql}
-				";
+				SELECT 
+					INV.DESCRIPTION1,
+					INV.ACTIVE,
+					SBS.SBS_NO,
+					PL.PRICE_LVL_NAME,
+					PL.SID AS ACTIVE_PRICE_LVL_SID,
+					SBS.SID AS SBS_SID,
+					INV.SID,
+					INV.ITEM_SIZE,
+					INV.ATTRIBUTE
+				FROM 
+					RPS.INVN_SBS_ITEM INV
+				LEFT JOIN RPS.SUBSIDIARY SBS ON SBS.SID = INV.SBS_SID
+				LEFT JOIN RPS.PRICE_LEVEL PL ON PL.SBS_SID = SBS.SID
+				{whereSql}
+			";
 
 			using (var connection = new OracleConnection(_connectionString))
 			{
