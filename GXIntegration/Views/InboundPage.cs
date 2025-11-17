@@ -321,7 +321,7 @@ namespace GXIntegration_Levis.Views
 									// Check if already exists in DB
 									if (IsFileAlreadyDownloaded(dbPath, fileName))
 									{
-										Logger.Log($"[INBOUND SFTP] Skipping '{fileName}' — already exists in database.");
+										//Logger.Log($"[INBOUND SFTP] Skipping '{fileName}' — already exists in database.");
 										continue;
 									}
 

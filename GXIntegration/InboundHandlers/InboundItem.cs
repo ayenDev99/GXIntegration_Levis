@@ -1,7 +1,7 @@
 ﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using Newtonsoft.Json;
-using Renci.SshNet;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -54,14 +54,12 @@ namespace GXIntegration_Levis.InboundHandlers
 							var upc = row["PROD_GTIN"]?.ToString();
 
 							var rps_isi_collection = await repository.GetRpsInvnSbsItem("UPC", upc);
-							var isi_collection = System.Text.Json.JsonSerializer.Serialize(rps_isi_collection);
 
 							if (rps_isi_collection != null && rps_isi_collection.Count > 0)
 							{
 								// UPDATE logic here
-								Logger.Log($"RPS.INVN_SBS_ITEM Collection: {isi_collection}");
 								Logger.Log($"[INBOUND - ITEM] Start UPDATE Process.");
-
+								await updateInventoryItem(row, session, isSuccess, rps_isi_collection);
 							}
 							else
 							{
@@ -130,10 +128,10 @@ namespace GXIntegration_Levis.InboundHandlers
 								, description2          = desc2
 								, description3          = desc3
 								, description4          = desc4
-								, alu                   = itemAlu	// remove for update
+								, alu                   = itemAlu
 								, itemsize              = itemSize
 								, attribute             = itemAttribute
-								, upc                   = itemUpc	// remove for update
+								, upc                   = itemUpc
 								, text1                 = txt1
 								, useqtydecimals        = 0
 								, active                = true
@@ -172,20 +170,168 @@ namespace GXIntegration_Levis.InboundHandlers
 			var upc = row["PROD_GTIN"]?.ToString();
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - ITEM] API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.Log($"❌ [INBOUND - ITEM] CREATE : API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - ITEM] Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.Log($"[INBOUND - ITEM] CREATE : Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
 			}
 		}
 
-		//private Task async updateInventoryItem()
-		//{
+		private async Task updateInventoryItem(dynamic row, string session, bool isSuccess, dynamic rps_isi_collection)
+		{
+			var list = rps_isi_collection as List<dynamic>;
+			if (list == null || list.Count == 0)
+			{
+				Logger.Log("[INBOUND - ITEM] UPDATE : RPS.INVN_SBS_ITEM Collection is empty!");
+				return;
+			}
 
-		//}
+			string SID = null;
+			var firstItem = list[0];
+			if (firstItem.SID != null)
+			{
+				SID = firstItem.SID.ToString();
+			}
 
+			Logger.Log($"[INBOUND - ITEM] UPDATE : SID: {SID}");
+
+			firstItem.SID = SID;
+
+			var isi_collection = System.Text.Json.JsonSerializer.Serialize(list);
+			Logger.Log($"[INBOUND - ITEM] UPDATE : RPS.INVN_SBS_ITEM Collection: {isi_collection}");
+
+			// Trim fieled value based on Prism DB field limits
+			var desc3 = StringExtensions.TrimMax(row["STYLE_CD"]?.ToString(), 30);
+			var desc4 = StringExtensions.TrimMax(row["PROD_JAN"]?.ToString(), 30);
+
+
+			var txt1 = StringExtensions.TrimMax(row["SAP_TAX_CD"]?.ToString(), 255);
+
+			var udf2 = StringExtensions.TrimMax(row["PROD_CAT_CD"]?.ToString(), 50);
+			var udf5 = StringExtensions.TrimMax(row["DEMAND_NM"]?.ToString(), 50);
+			var udf6 = StringExtensions.TrimMax(row["BRAND_CD"]?.ToString(), 50);
+			var udf8 = StringExtensions.TrimMax(row["SEASON_CD"]?.ToString(), 50);
+			var udf9 = StringExtensions.TrimMax(row["AFFILIATE"]?.ToString(), 50);
+			var udf10 = StringExtensions.TrimMax(row["CONSUMER_CD"]?.ToString(), 50);
+			var udf12 = StringExtensions.TrimMax(row["CLASS_CD"]?.ToString(), 50);
+			var udf14 = StringExtensions.TrimMax(row["SUB_CLASS_CD"]?.ToString(), 50);
+
+			var existingExtendJson = await getInventoryItemExtend(SID, session, isSuccess);
+			//Logger.Log($"[INBOUND - ITEM] UPDATE : Existing Inventory Extend JSON: {existingExtendJson}");
+
+			var root = JsonConvert.DeserializeObject<JObject>(existingExtendJson);
+
+			var item = root["data"]?.FirstOrDefault();  // get the first item in "data"
+			if (item == null)
+			{
+				Logger.Log("[INBOUND - ITEM] UPDATE : No inventory item found.");
+				return;
+			}
+
+			var invnextendArray = item["invnextend"] as JArray; // get "invnextend" array
+			if (invnextendArray == null || !invnextendArray.Any())
+			{
+				Logger.Log("[INBOUND - ITEM] UPDATE : No invnextend data found.");
+				return;
+			}
+
+			var extend = invnextendArray.FirstOrDefault();		// get first invnextend record
+			string invnextendSid = extend["sid"]?.ToString();   // get the SID from the invnextend record
+			//Logger.Log($"[INBOUND - ITEM] UPDATE : invnextend SID: {invnextendSid}");
+
+			var currentDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
+
+			// Start building payload
+			var payload = new
+			{
+				data = new[]
+				{
+					new
+					{
+						OriginApplication       = "RProPrismWeb"
+						, InventoryItems = new[]
+						{
+							new
+							{
+								sbssid                  = "555356986000134257"
+								, sid					= SID
+								, description3          = desc3
+								, description4          = desc4
+								, text1                 = txt1
+								, invnextend = new[]
+								{
+									new
+									{
+										invnsbsitemsid		= SID
+										, sid				= invnextendSid
+										, modifieddatetime	= currentDate
+										, udf2string		= udf2
+										, udf5string		= udf5
+										, udf6string		= udf6
+										, udf8string		= udf8
+										, udf9string		= udf9
+										, udf10string		= udf10
+										, udf12string		= udf12
+										, udf14string		= udf14
+									}
+								}
+							}
+						}
+					}
+				}
+			};
+
+			var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+			//Logger.Log("[INBOUND - ITEM] UPDATE : Payload:\n" + json);
+
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, "/api/backoffice/inventory?action=InventorySaveItems"
+									, json
+									, out bool isSuccessfulApi
+									, "POST"
+									, 1);
+
+			var alu = row["PROD_SKU"]?.ToString();
+			var upc = row["PROD_GTIN"]?.ToString();
+			if (!isSuccessfulApi)
+			{
+				Logger.Log($"❌ [INBOUND - ITEM] UPDATE : API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				isSuccess = false;
+			}
+			else
+			{
+				Logger.Log($"[INBOUND - ITEM] UPDATE : Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
+			}
+		}
+
+		private async Task<string> getInventoryItemExtend(string invnsbsitemsid, string session, bool isSuccess)
+		{
+			var payload = new { data = new[] { new { } } };
+			var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
+
+			string responseJson = GlobalInbound.CallPrismAPI(
+									session
+									, $"/api/backoffice/inventory?action=InventoryGetItems&cols=*,invnextend,invnextend.*,invnprice.*,invnquantity.*&filter=(sid,eq,{invnsbsitemsid})"
+									, json
+									, out bool isSuccessfulApi
+									, "POST"
+									, 1);
+
+			if (!isSuccessfulApi)
+			{
+				Logger.Log($"❌ [INBOUND - ITEM] API failed on getting Inventory Extend data");
+				isSuccess = false;
+				return null;
+			}
+			else
+			{
+				//Logger.Log($"[INBOUND - ITEM] Successfully processed on getting Inventory Extend data. INVN_SBS_SID: {invnsbsitemsid}");
+				return responseJson;
+			}
+		}
 
 		private List<Dictionary<string, string>> BuildItemCollection(string filePath)
 		{
