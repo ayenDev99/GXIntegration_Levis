@@ -261,6 +261,7 @@ namespace GXIntegration_Levis.Views
 		public async Task TriggerSFTPAsync()
 		{
 			await DownloadFromSftpAsync();
+			await DownloadFromLocalAsync();
 		}
 
 		// ***************************************************
@@ -283,7 +284,7 @@ namespace GXIntegration_Levis.Views
 			string inboundBaseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INBOUND", "SENDING");
 			string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INBOUND", "inbound_db.db");
 
-			var directoryMap = GlobalHelper.LoadSftpPathMap("InSFTPPath");
+			var directoryMap = GlobalHelper.LoadPathMap("InSFTPPath");
 
 			await Task.Run(() =>
 			{
@@ -353,6 +354,72 @@ namespace GXIntegration_Levis.Views
 				catch (Exception ex)
 				{
 					Logger.Log($"[INBOUND SFTP] Download failed: {ex}");
+				}
+			});
+		}
+
+		private async Task DownloadFromLocalAsync()
+		{
+			string inboundBaseDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INBOUND", "SENDING");
+			string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "INBOUND", "inbound_db.db");
+
+			// Read <InLocalPath> from config
+			var directoryMap = GlobalHelper.LoadPathMap("InLocalPath");
+
+			await Task.Run(() =>
+			{
+				try
+				{
+					InitializeInboundDb(dbPath);
+
+					foreach (var entry in directoryMap)
+					{
+						string key = entry.Key;
+						string remotePath = entry.Value;
+
+						try
+						{
+							if (!Directory.Exists(remotePath))
+							{
+								Logger.Log($"[INBOUND LOCAL] Directory not found: {remotePath}");
+								continue;
+							}
+
+							var files = Directory.GetFiles(remotePath)
+												 .Where(f => File.Exists(f))
+												 .ToList();
+
+							foreach (var filePath in files)
+							{
+								string fileName = Path.GetFileName(filePath);
+
+								// Skip if already processed
+								if (IsFileAlreadyDownloaded(dbPath, fileName))
+									continue;
+
+								string localFilePath = Path.Combine(inboundBaseDir, fileName);
+
+								// Copy to INBOUND/SENDING
+								File.Copy(filePath, localFilePath, overwrite: true);
+
+								Logger.Log($"[INBOUND LOCAL] Moved '{fileName}' from {remotePath}");
+
+								// Add to DB
+								InsertDownloadedFile(dbPath, fileName, remotePath, inboundBaseDir);
+								File.Delete(filePath);
+							}
+						}
+						catch (Exception ex)
+						{
+							Logger.Log($"[INBOUND LOCAL] Error processing directory '{remotePath}': {ex}");
+						}
+					}
+
+					Logger.Log("[INBOUND LOCAL] File copy completed.");
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"[INBOUND LOCAL] Local download failed: {ex}");
 				}
 			});
 		}

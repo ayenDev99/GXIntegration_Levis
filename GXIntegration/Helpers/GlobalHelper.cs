@@ -279,7 +279,7 @@ namespace GXIntegration_Levis.Helpers
 			return result;
 		}
 
-		public static Dictionary<string, string> LoadSftpPathMap(string blockName)
+		public static Dictionary<string, string> LoadPathMap(string blockName)
 		{
 			var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 			var doc = new System.Xml.XmlDocument();

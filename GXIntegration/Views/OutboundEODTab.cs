@@ -569,7 +569,7 @@ namespace GXIntegration_Levis.Views
 
 			string localDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "OUTBOUND");
 
-			var directoryMap = GlobalHelper.LoadSftpPathMap("OutSFTPPath");
+			var directoryMap = GlobalHelper.LoadPathMap("OutSFTPPath");
 
 			await Task.Run(() =>
 			{
