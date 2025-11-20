@@ -128,11 +128,11 @@ namespace GXIntegration_Levis.InboundHandlers
 				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
 				
 				Logger.Log("--------------------------------------------------------------------------");
-				Logger.Log("Address : " + prismAddress);
-				Logger.Log("Username : " + prismUsername);
-				Logger.Log("Password : [REDACTED]");
-				Logger.Log("Workstation Name : " + workstationName);
-				Logger.Log("Starting Prism authentication...");
+				Logger.Log("Address : " + prismAddress, true);
+				Logger.Log("Username : " + prismUsername, true);
+				Logger.Log("Password : [REDACTED]", true);
+				Logger.Log("Workstation Name : " + workstationName, true);
+				Logger.Log("Starting Prism authentication...", true);
 
 				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
 

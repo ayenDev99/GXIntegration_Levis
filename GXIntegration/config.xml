@@ -46,7 +46,6 @@
 	<!-- ======================================= -->
 	<!-- From SFTP to Local -->
 	<InSFTPPath>
-		<add key="WD" value="/OUT/IT101411/" />
 		<add key="ITEM" value="/OUT/IT101412/" />
 		<add key="HIERARCHY" value="/OUT/IT101412/" />
 		<add key="PRICE" value="/OUT/IT101413/" />

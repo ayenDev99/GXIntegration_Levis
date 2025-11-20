@@ -7,7 +7,10 @@ namespace GXIntegration_Levis.Helpers
 	{
 		private static readonly object _lock = new object();
 
-		public static void Log(string message)
+		// Event for log messages
+		public static event Action<string> OnLogMessage;
+
+		public static void Log(string message, bool isDisplay = false)
 		{
 			try
 			{
@@ -19,6 +22,12 @@ namespace GXIntegration_Levis.Helpers
 				string logMessage = $"[{timestamp}] {message}";
 
 				Console.WriteLine(logMessage);
+				
+				if(!isDisplay)
+				{
+					// Raise event so subscribers can react (like ProgressForm)
+					OnLogMessage?.Invoke(logMessage);
+				}
 
 				lock (_lock)
 				{
@@ -35,4 +44,5 @@ namespace GXIntegration_Levis.Helpers
 			}
 		}
 	}
+
 }

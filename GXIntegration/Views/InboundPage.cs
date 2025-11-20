@@ -5,6 +5,8 @@ using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.InboundHandlers;
 using Renci.SshNet;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
@@ -200,61 +202,173 @@ namespace GXIntegration_Levis.Views
 
 		public async Task ManualProcessAsync()
 		{
-			Logger.Log("[INBOUND-MANUAL] Start Manual Process...");
+			ProgressForm progressForm = new ProgressForm();
+			progressForm.Show();
 
+			Logger.Log("[INBOUND-MANUAL] Start Manual Process...", true);
+
+			BackgroundWorker worker = new BackgroundWorker
+			{
+				WorkerReportsProgress = true,
+				WorkerSupportsCancellation = false
+			};
+
+			worker.DoWork += (s, e) =>
+			{
+				try
+				{
+					var globalInbound = new GlobalInbound();
+
+					// Block async so BackgroundWorker waits
+					string session = globalInbound.AuthenticateFromConfigAsync()
+												 .GetAwaiter()
+												 .GetResult();
+
+					if (session == null)
+						return;
+
+					var selectedModules = guna1DataGridView1.Rows
+						.Cast<DataGridViewRow>()
+						.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
+						.Select(r => r.Cells["Name"].Value.ToString())
+						.ToList();
+
+					if (!selectedModules.Any())
+					{
+						Logger.Log("[INBOUND] No module selected.", true);
+						return;
+					}
+
+					int totalSteps = selectedModules.Count;
+					int currentStep = 0;
+
+					foreach (var moduleName in selectedModules)
+					{
+						currentStep++;
+
+						Logger.Log($"[INBOUND] Processing module: {moduleName}", true);
+
+						worker.ReportProgress(currentStep * 100 / totalSteps, moduleName);
+
+						switch (moduleName)
+						{
+							case "EMPLOYEE DETAILS":
+								inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository)
+									.GetAwaiter().GetResult();
+								break;
+
+							case "ITEM DETAILS":
+								inboundItem.RunItemSyncAsync(session, _prismRepository)
+									.GetAwaiter().GetResult();
+								break;
+
+							case "HIERARCHY DETAILS":
+								inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository)
+									.GetAwaiter().GetResult();
+								break;
+
+							case "ASN DETAILS":
+								inboundAsn.RunASNSyncAsync(session, _prismRepository)
+									.GetAwaiter().GetResult();
+								break;
+
+							case "PRICE DETAILS":
+								inboundPrice.RunPriceSyncAsync(session, _prismRepository)
+									.GetAwaiter().GetResult();
+								break;
+						}
+					}
+
+					Logger.Log("[INBOUND-MANUAL] Process Completed!", true);
+				}
+				catch (Exception ex)
+				{
+					Logger.Log($"[INBOUND] Error: {ex}", true);
+				}
+			};
+
+			worker.ProgressChanged += (s, e) =>
+			{
+				progressForm.UpdateProgress(e.ProgressPercentage, 100);
+				if (e.UserState != null)
+				{
+					progressForm.AppendLog($"Processing: {e.UserState}");
+				}
+			};
+
+			worker.RunWorkerCompleted += (s, e) =>
+			{
+				progressForm.AppendLog("All modules processed. You can now review logs.");
+			};
+
+			worker.RunWorkerAsync();
+		}
+
+		public async Task AutoProcessAsync()
+		{
+			Logger.Log("[INBOUND-AUTO] Start AUTO Process...", true);
+			
 			try
 			{
 				var globalInbound = new GlobalInbound();
 
-				string session = await globalInbound.AuthenticateFromConfigAsync();
+				// Block async so BackgroundWorker waits
+				string session = globalInbound.AuthenticateFromConfigAsync()
+												.GetAwaiter()
+												.GetResult();
+
 				if (session == null)
 					return;
 
-				var selectedModules = guna1DataGridView1.Rows
-					.Cast<DataGridViewRow>()
-					.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
-					.Select(r => r.Cells["Name"].Value.ToString())
-					.ToList();
-
-				if (!selectedModules.Any())
+				// Auto process all modules
+				var allModules = new List<string>
 				{
-					MessageBox.Show("Please select at least one module to process.", "No Selection",
-						MessageBoxButtons.OK, MessageBoxIcon.Warning);
-					return;
-				}
+					"EMPLOYEE DETAILS",
+					"ITEM DETAILS",
+					"HIERARCHY DETAILS",
+					"ASN DETAILS",
+					"PRICE DETAILS"
+				};
 
-				foreach (var moduleName in selectedModules)
+				foreach (var moduleName in allModules)
 				{
-					Logger.Log($"[INBOUND] Processing module: {moduleName}");
+
+					Logger.Log($"[INBOUND] Processing module: {moduleName}", true);
 
 					switch (moduleName)
 					{
 						case "EMPLOYEE DETAILS":
-							await inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository);
+							inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository)
+								.GetAwaiter().GetResult();
 							break;
+
 						case "ITEM DETAILS":
-							await inboundItem.RunItemSyncAsync(session, _prismRepository);
+							inboundItem.RunItemSyncAsync(session, _prismRepository)
+								.GetAwaiter().GetResult();
 							break;
+
 						case "HIERARCHY DETAILS":
-							await inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository);
+							inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository)
+								.GetAwaiter().GetResult();
 							break;
+
 						case "ASN DETAILS":
-							await inboundAsn.RunASNSyncAsync(session, _prismRepository);
+							inboundAsn.RunASNSyncAsync(session, _prismRepository)
+								.GetAwaiter().GetResult();
 							break;
+
 						case "PRICE DETAILS":
-							await inboundPrice.RunPriceSyncAsync(session, _prismRepository);
+							inboundPrice.RunPriceSyncAsync(session, _prismRepository)
+								.GetAwaiter().GetResult();
 							break;
 					}
 				}
 
-				MessageBox.Show("Selected sync operations completed successfully!", "Success",
-					MessageBoxButtons.OK, MessageBoxIcon.Information);
+				Logger.Log("[INBOUND-AUTO] Process Completed!", true);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND] Error: {ex}");
-				MessageBox.Show("An error occurred during synchronization. Check logs for details.",
-					"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				Logger.Log($"[INBOUND] Error: {ex}", true);
 			}
 		}
 
@@ -262,6 +376,8 @@ namespace GXIntegration_Levis.Views
 		{
 			await DownloadFromSftpAsync();
 			await DownloadFromLocalAsync();
+
+			await AutoProcessAsync();
 		}
 
 		// ***************************************************

@@ -175,6 +175,8 @@ namespace GXIntegration_Levis.InboundHandlers
 									rowIndex
 								);
 
+								Logger.Log($"API Response for row {rowIndex}:\n{FormatJson(responseJson)}");
+
 								if (!isSuccessfulApi)
 									isSuccess = false;
 							}
@@ -321,5 +323,22 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			return result;
 		}
+
+		public static string FormatJson(string json)
+		{
+			try
+			{
+				if (string.IsNullOrWhiteSpace(json))
+					return json;
+
+				var parsedJson = JsonConvert.DeserializeObject(json);
+				return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
+			}
+			catch
+			{
+				return json; // return raw if it is not valid JSON
+			}
+		}
+
 	}
 }
