@@ -70,19 +70,19 @@ namespace GXIntegration_Levis.Data.Access
 							, '1'					                AS CartonID
 							, '1'									AS CartonStatusCode
 
-							, TO_NUMBER(VI.ITEM_POS) * 10			AS LineNumber
+							, TO_NUMBER(PO_ITEM.ITEM_POS) * 10		AS LineNumber
 							, REPLACE(ISI.ALU, '-', '')				AS ItemID
 							, PO_ITEM.RCVD_QTY						AS ActualCount
 							, PO_ITEM.ORD_QTY						AS ExpectedCount
 							, PO_ITEM.RCVD_QTY						AS POSTEDCOUNT
 							, VOU.CREATED_DATETIME			        AS SaleLineBusinessDayDate
 							, VOU.VOU_NO							AS TransactionSequence
-							, VI.ITEM_POS							AS LineItemSequence
+							, PO_ITEM.ITEM_POS						AS LineItemSequence
 							, 'OTHER'							    AS RecordCreationType
 							, '1'									AS LineItemStatusCode
 
 							, ISI.ALU								AS ALU
-							, TO_NUMBER(VI.ITEM_POS) * 10			AS ItemLineNumber
+							, TO_NUMBER(PO_ITEM.ITEM_POS) * 10		AS ItemLineNumber
 							, ISI.ITEM_SIZE							AS PTDIM1
 							, ISI.ATTRIBUTE							AS PTDIM2
 							, ISI.DESCRIPTION1						AS PTStyle
@@ -94,13 +94,12 @@ namespace GXIntegration_Levis.Data.Access
 							, ISI.DESCRIPTION2				        AS Description
 						FROM
 							RPS.VOUCHER VOU
-						LEFT JOIN RPS.VOU_ITEM VI				ON VOU.SID = VI.VOU_SID
-						LEFT JOIN RPS.PO 						ON PO.PO_NO = VOU.PO_NO
-						LEFT JOIN RPS.PO_ITEM 					ON PO_ITEM.PO_SID = PO.SID
-						LEFT JOIN RPS.VOU_COMMENT 				ON VOU_COMMENT.VOU_SID = VOU.SID
-						LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
-						LEFT JOIN RPS.INVN_SBS_ITEM ISI			ON ISI.SID = VI.ITEM_SID
-						LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
+							LEFT JOIN RPS.PO 						ON PO.PO_NO = VOU.PO_NO
+							LEFT JOIN RPS.PO_ITEM 					ON PO_ITEM.PO_SID = PO.SID
+							LEFT JOIN RPS.VOU_COMMENT 				ON VOU_COMMENT.VOU_SID = VOU.SID
+							LEFT JOIN RPS.SUBSIDIARY SBS			ON SBS.SID = VOU.SBS_SID
+							LEFT JOIN RPS.INVN_SBS_ITEM ISI			ON ISI.SID = PO_ITEM.ITEM_SID
+							LEFT JOIN RPS.EMPLOYEE					ON SBS.SID = EMPLOYEE.SBS_SID AND PO.CLERK_SID = EMPLOYEE.SID
 						WHERE
 							{DATE_CONDITION}
 							AND VOU.PO_NO IS NOT NULL
@@ -109,7 +108,7 @@ namespace GXIntegration_Levis.Data.Access
 							AND VOU.STATUS = 4
 							AND PO.SHIPTO_STORE_SID IN (SELECT SID FROM RPS.STORE WHERE ADDRESS4 = :StoreCode)
 						ORDER BY
-							VI.ITEM_POS ASC
+							PO_ITEM.ITEM_POS ASC
 					";
 
 					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
