@@ -202,20 +202,20 @@ namespace GXIntegration_Levis.Views
 
 		public async Task ManualProcessAsync()
 		{
-			ProgressForm progressForm = new ProgressForm();
-			progressForm.Show();
+			//ProgressForm progressForm = new ProgressForm();
+			//progressForm.Show();
 
-			Logger.Log("[INBOUND-MANUAL] Start Manual Process...", true);
+			//Logger.Log("[INBOUND-MANUAL] Start Manual Process...", true);
 			var is_auto = false;
 
-			BackgroundWorker worker = new BackgroundWorker
-			{
-				WorkerReportsProgress = true,
-				WorkerSupportsCancellation = false
-			};
+			//BackgroundWorker worker = new BackgroundWorker
+			//{
+			//	WorkerReportsProgress = true,
+			//	WorkerSupportsCancellation = false
+			//};
 
-			worker.DoWork += (s, e) =>
-			{
+			//worker.DoWork += (s, e) =>
+			//{
 				try
 				{
 					var globalInbound = new GlobalInbound();
@@ -249,7 +249,7 @@ namespace GXIntegration_Levis.Views
 
 						Logger.Log($"[INBOUND] Processing module: {moduleName}", true);
 
-						worker.ReportProgress(currentStep * 100 / totalSteps, moduleName);
+						//worker.ReportProgress(currentStep * 100 / totalSteps, moduleName);
 
 						switch (moduleName)
 						{
@@ -286,23 +286,23 @@ namespace GXIntegration_Levis.Views
 				{
 					Logger.Log($"[INBOUND] Error: {ex}", true);
 				}
-			};
+			//};
 
-			worker.ProgressChanged += (s, e) =>
-			{
-				progressForm.UpdateProgress(e.ProgressPercentage, 100);
-				if (e.UserState != null)
-				{
-					//progressForm.AppendLog($"Processing: {e.UserState}");
-				}
-			};
+			//	worker.ProgressChanged += (s, e) =>
+			//	{
+			//		progressForm.UpdateProgress(e.ProgressPercentage, 100);
+			//		if (e.UserState != null)
+			//		{
+			//			//progressForm.AppendLog($"Processing: {e.UserState}");
+			//		}
+			//	};
 
-			worker.RunWorkerCompleted += (s, e) =>
-			{
-				progressForm.AppendLog("All modules processed. You can now review logs.");
-			};
+			//	worker.RunWorkerCompleted += (s, e) =>
+			//	{
+			//		progressForm.AppendLog("All modules processed. You can now review logs.");
+			//	};
 
-			worker.RunWorkerAsync();
+			//	worker.RunWorkerAsync();
 		}
 
 		public async Task AutoProcessAsync()
