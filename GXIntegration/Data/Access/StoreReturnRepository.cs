@@ -1,11 +1,12 @@
-﻿using GXIntegration_Levis.Model;
+﻿using Dapper;
+using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using GXIntegration_Levis.Helpers;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace GXIntegration_Levis.Data.Access
 {
@@ -16,7 +17,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			_connectionString = connectionString;
 		}
-		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime from_date, DateTime to_date, string storeCode, string processType)
+		public async Task<List<StoreReturnModel>> GetStoreReturnAsync(DateTime fromDate, DateTime toDate, string storeCode, string processType)
 		{
 			using (var connection = new OracleConnection(_connectionString))
 			{
@@ -40,7 +41,8 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = $@"
 							SELECT 
-                                '1'                                                     AS OrganizationID
+                                DOC.SID					                                AS DocSid
+                                , '1'                                                   AS OrganizationID
                                 , STORE.ADDRESS4			                            AS RetailStoreID
                                 , DOC.WORKSTATION_NO				                    AS WorkstationID
                                 , STORE.ADDRESS4 || DOC.WORKSTATION_NO                  AS TillID
@@ -58,6 +60,10 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC.DOC_NO                                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                                     AS Barcode
                                 , STORE.ADDRESS4                                        AS ReturnOriginalAltStoreID
+
+                                , ROUND(TO_NUMBER(TENDER.AMOUNT))                       AS TransactionGrandAmount
+                                , '0.00'                                                AS RoundedTotal
+
                                 , DOC_ITEM.ITEM_POS                                     AS LineItemSequenceNo
                                 , DOC_ITEM.ITEM_POS                                     AS LineItemLineNumber
                                 , DOC_ITEM.CREATED_DATETIME                             AS LineItemBeginDateTime
@@ -72,17 +78,21 @@ namespace GXIntegration_Levis.Data.Access
                                 , 'VERIFIED'                                            AS SaleReturnType
                                 , DOC.EMPLOYEE1_LOGIN_NAME                              AS AssociateID
                                 , '100'                                                 AS Percentage
+
                                 , 'PH_' || DOC_ITEM.TAX_AREA_NAME                       AS TaxAuthority
                                 , ROUND(DOC_ITEM.DIP_PRICE, 2) * -1                     AS TaxableAmount
                                 , ROUND(DOC_ITEM.DIP_TAX_AMT  * DOC_ITEM.QTY, 2) * -1   AS Amount
                                 , DOC.TAX_AREA_PERC / 100                               AS Percent
                                 , DOC.TAX_AREA_PERC / 100                               AS RawTaxPercentage
+                                , ''                                                    AS TaxLocationID
                                 , '1'                                                   AS TaxGroupID
+
                                 , STORE.ADDRESS4                                        AS TransLinkRetailStoreID
                                 , DOC.WORKSTATION_NO                                    AS TransLinkWorkstationID
                                 , DOC.DOC_NO                                            AS TransLinkSequenceNumber
                                 , DOC_ITEM.ITEM_POS                                     AS TransLinkLineItemSequenceNo
                                 , DOC_ITEM.CREATED_DATETIME                             AS TransLinkBusinessDayDate
+
                                 , 'yes'                                                 AS DealItemPercentOff
                                 , ''                                                    AS LineItemOriginalTlogSequence
                                 , STORE.ADDRESS4                                        AS LineItemReturnOrgAltStoreID
@@ -91,16 +101,18 @@ namespace GXIntegration_Levis.Data.Access
                                 , ISI.ATTRIBUTE						                    AS PTDIM2
                                 , ISI.DESCRIPTION1						                AS PTStyle
                                 , ISI.UPC							                    AS PTEAN   
+
                                 , '10'                                                  AS MerchHierarchyDivision
                                 , '00674'                                               AS MerchHierarchyDepartment
                                 , '00054'                                               AS MerchHierarchySubDepartment
                                 , '02'                                                  AS MerchHierarchyClass
-                                , ''                                                    AS TaxAuthority1
-                                , ROUND(DOC_ITEM.DIP_PRICE, 2) * -1                     AS TaxableAmount1
-                                , ROUND(DOC_ITEM.DIP_TAX_AMT, 2) * -1                   AS Amount1
-                                , DOC.TAX_AREA_PERC / 100                               AS Percent1
-                                , DOC.TAX_AREA_PERC / 100                               AS RawTaxPercentage1
-                                , ''                                                    AS TaxLocationID1
+
+                                , DOC_ITEM_DISC.DISC_POS                                AS DiscSequenceNo
+                                , (DOC_ITEM_DISC.NEW_DISC_AMT * DOC_ITEM.QTY) * -1      AS DiscAmount
+                                , DOC_ITEM_DISC.DISC_REASON                             AS DiscPromotionID
+                                , 'TRANSACTION_DISCOUNT'                                AS DiscReasonCode
+
+                                , TENDER.SID                                            AS TenderSID
                                 , TENDER.TENDER_POS                                     AS TenderSequenceNo
                                 , TENDER.TENDER_POS                                     AS TenderLineNumber
                                 , TENDER.CREATED_DATETIME                               AS TenderBeginDateTime
@@ -138,19 +150,12 @@ namespace GXIntegration_Levis.Data.Access
                                 END                                                     AS TenderID
                                 , CURRENCY.ALPHABETIC_CODE                              AS AmountCurrency 
                                 , TENDER.AMOUNT                                         AS TenderAmount
-                                , 'REFUND'                                              AS VoucherTypeCode
-                                , ''                                                    AS VoucherDescription
-                                , ''                                                    AS VoucherFaceValueAmount
-                                , ''                                                    AS VoucherUnspentAmount
-                                , ''                                                    AS VoucherCardNumber
-                                , TENDER.AMOUNT                                         AS TransGrandAmount
-                                , ROUND(TO_NUMBER(TENDER.AMOUNT))                       AS TransactionGrandAmount
-                                , '0.00'                                                AS RoundedTotal
-                                , DOC.SID					                            AS DocSid
+                                , TENDER_CREDIT_CARD.AUTH_CODE                          AS TenderAuthorizationNumber                   
                             FROM 
                                 RPS.DOCUMENT DOC
                             LEFT JOIN RPS.STORE			                                ON STORE.SID = DOC.STORE_SID
                             LEFT JOIN RPS.DOCUMENT_ITEM DOC_ITEM	                    ON DOC_ITEM.DOC_SID = DOC.SID
+                            LEFT JOIN RPS.DOCUMENT_ITEM_DISC DOC_ITEM_DISC              ON DOC_ITEM_DISC.DOC_ITEM_SID = DOC_ITEM.SID                        
                             LEFT JOIN RPS.INVN_SBS_ITEM ISI                             ON ISI.SID = DOC_ITEM.INVN_SBS_ITEM_SID
                             LEFT JOIN RPS.TENDER 			                            ON TENDER.DOC_SID = DOC.SID
                             LEFT JOIN RPS.TENDER_CREDIT_CARD		                    ON TENDER_CREDIT_CARD.TENDER_SID = TENDER.SID
@@ -168,19 +173,70 @@ namespace GXIntegration_Levis.Data.Access
                                 STORE.STORE_NO ASC
                                 , DOC.WORKSTATION_NO ASC
                                 , DOC.DOC_NO ASC
+                                , DOC_ITEM.ITEM_POS ASC
+                                , DOC_ITEM_DISC.DISC_POS ASC
 					";
 
 					//Logger.Log($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
-						FromDate = from_date,
-						ToDate = to_date,
+						FromDate = fromDate,
+						ToDate = toDate,
 						StoreCode = storeCode
 					};
 
-					var sales = await connection.QueryAsync<StoreReturnModel>(sql, parameters);
-					return sales.ToList();
+					var salesDictionary = new Dictionary<string, StoreReturnModel>();
+
+					var sales = await connection.QueryAsync<StoreReturnModel, ReturnItems, ReturnDiscount, ReturnTender, StoreReturnModel>(
+						sql,
+						(sale, item, disc, tender) =>
+						{
+							// Group by transaction (document)
+							if (!salesDictionary.TryGetValue(sale.SequenceNo, out var existingSale))
+							{
+								existingSale = sale;
+								existingSale.ReturnItems = new List<ReturnItems>();
+								existingSale.ReturnTenders = new List<ReturnTender>();
+								salesDictionary[sale.SequenceNo] = existingSale;
+							}
+
+							// --- Handle item ---
+							ReturnItems existingItem = null;
+							if (!string.IsNullOrEmpty(item?.LineItemSequenceNo))
+							{
+								existingItem = existingSale.ReturnItems
+									.FirstOrDefault(i => i.LineItemSequenceNo == item.LineItemSequenceNo);
+
+								if (existingItem == null)
+								{
+									existingItem = item;
+									existingItem.ReturnDiscounts = new List<ReturnDiscount>();
+									existingSale.ReturnItems.Add(existingItem);
+								}
+							}
+
+							// --- Handle discount (attach to correct item only) ---
+							if (!string.IsNullOrEmpty(disc?.DiscSequenceNo) && existingItem != null)
+							{
+								if (!existingItem.ReturnDiscounts.Any(d => d.DiscSequenceNo == disc.DiscSequenceNo))
+									existingItem.ReturnDiscounts.Add(disc);
+							}
+
+							// --- Handle tender (at sale level) ---
+							if (!string.IsNullOrEmpty(tender?.TenderSID))
+							{
+								if (!existingSale.ReturnTenders.Any(t => t.TenderSID == tender.TenderSID))
+									existingSale.ReturnTenders.Add(tender);
+							}
+
+							return existingSale;
+						}
+						, parameters
+						, splitOn: "LineItemSequenceNo,DiscSequenceNo,TenderSID"
+					).ConfigureAwait(false);
+
+					return salesDictionary.Values.ToList();
 				}
 				catch (Exception ex)
 				{
