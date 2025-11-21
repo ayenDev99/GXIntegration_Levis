@@ -17,13 +17,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 	{
 		public static string GenerateXml(List<StoreInventoryAdjustmentModel> items, string filePath, string generate_type)
 		{
-			if (!items.Any()) { return null; }
+			if (items == null || !items.Any())
+				return string.Empty;
 
 			var settings = new XmlWriterSettings
 			{
 				Indent = true,
 				Encoding = Encoding.UTF8,
-				OmitXmlDeclaration = true
+				OmitXmlDeclaration = true,
+				ConformanceLevel = ConformanceLevel.Fragment
 			};
 
 			if (generate_type == "template")
@@ -31,7 +33,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 				using (var stringWriter = new StringWriter())
 				using (var writer = XmlWriter.Create(stringWriter, settings))
 				{
-					WriteXmlContent(items, writer);
+					var grouped = items.GroupBy(s => s.SequenceNo?.Trim() ?? string.Empty).ToList();
+
+					foreach (var g in grouped)
+					{
+						WriteXmlContent(g.ToList(), writer);
+					}
+
 					writer.Flush();
 					return stringWriter.ToString();
 				}
@@ -49,12 +57,16 @@ namespace GXIntegration_Levis.OutboundHandlers
 			{
 				throw new ArgumentException("Invalid generate_type. Must be 'xml' or 'template'.");
 			}
-
 		}
 
 		public static void WriteXmlContent(List<StoreInventoryAdjustmentModel> items, XmlWriter writer)
 		{
-			// Transaction element
+			var first = items.FirstOrDefault();
+			if (first == null) return;
+
+			//---------------------
+			// Transaction Section
+			//---------------------
 			writer.WriteStartElement("Transaction");
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
@@ -64,74 +76,64 @@ namespace GXIntegration_Levis.OutboundHandlers
 			writer.WriteAttributeString("dtv", "InventoryDocumentType", GlobalOutbound.NsDtv, "ADJUSTMENT");
 			writer.WriteAttributeString("dtv", "TransactionType", GlobalOutbound.NsDtv, "INVENTORY_CONTROL");
 
-			// Grouping by store
-			foreach (var storeGroup in GlobalOutbound.GroupBySafe(items, i => i.OrganizationID))
+			// Transaction Header Info
+			GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, first.OrganizationID);
+			GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.RetailStoreID);
+			GlobalOutbound.WriteCDataElement(writer, "WorkstationID", first.WorkstationID);
+			GlobalOutbound.WriteCDataElement(writer, "TillID", first.TillID);
+			GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", first.SequenceNo);
+			GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(first.BusinessDayDate));
+			GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(first.BeginDateTime, true));
+			GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(first.EndDateTime, true));
+			GlobalOutbound.WriteCDataElement(writer, "OperatorID", first.OperatorID);
+			GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", first.CurrencyCode);
+
+			GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", first.InventoryMovementSuccess);
+			GlobalOutbound.WritePosTransactionProperties(writer, "REGION", first.Region);
+			GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", first.Country);
+			GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", first.AlternateStoreID);
+
+			writer.WriteStartElement("InventoryTransaction");
+			GlobalOutbound.WriteCDataElement(writer, "CountID", first.CountID);
+			GlobalOutbound.WriteCDataElement(writer, "CountType", first.CountType);
+			GlobalOutbound.WriteCDataElement(writer, "CountStatus", first.CountStatus);
+			GlobalOutbound.WriteCDataElement(writer, "ReasonCode", first.ReasonCode ?? "");
+			GlobalOutbound.WriteCDataElement(writer, "Comment", first.Comments ?? "");
+
+			//---------------------
+			// Line Items
+			//---------------------
+			foreach (var item in items)
 			{
-				var storeItem = storeGroup.FirstOrDefault();
-				if (storeItem == null) continue;
-
-				GlobalOutbound.WriteCDataElement(writer, "dtv", "OrganizationID", GlobalOutbound.NsDtv, storeItem.OrganizationID);
-				GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", storeItem.RetailStoreID);
-
-				// Group by Workstation
-				foreach (var wsGroup in GlobalOutbound.GroupBySafe(storeGroup, i => i.WorkstationID))
+				if (item.ItemID.Any() == true)
 				{
-					var wsItem = wsGroup.FirstOrDefault();
-					if (wsItem == null) continue;
-
-					GlobalOutbound.WriteCDataElement(writer, "WorkstationID", wsItem.WorkstationID);
-					GlobalOutbound.WriteCDataElement(writer, "TillID", wsItem.TillID);
-					GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", wsItem.SequenceNo);
-					GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(wsItem.BusinessDayDate));
-					GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(wsItem.BeginDateTime, true));
-					GlobalOutbound.WriteCDataElement(writer, "EndDateTime", GlobalOutbound.FormatDate(wsItem.EndDateTime, true));
-					GlobalOutbound.WriteCDataElement(writer, "OperatorID", wsItem.OperatorID);
-					GlobalOutbound.WriteCDataElement(writer, "CurrencyCode", wsItem.CurrencyCode);
-
-					GlobalOutbound.WritePosTransactionProperties(writer, "INVENTORY_MOVEMENT_SUCCESS", wsItem.InventoryMovementSuccess);
-					GlobalOutbound.WritePosTransactionProperties(writer, "REGION", wsItem.Region);
-					GlobalOutbound.WritePosTransactionProperties(writer, "COUNTRY", wsItem.Country);
-					GlobalOutbound.WritePosTransactionProperties(writer, "ALTERNATE_STOREID", wsItem.AlternateStoreID);
-
-					// InventoryTransaction block grouped by SequenceNo
-					foreach (var invTransGroup in GlobalOutbound.GroupBySafe(wsGroup, i => i.SequenceNo))
+					foreach (var invTransGroup in GlobalOutbound.GroupBySafe(items, i => i.ItemID))
 					{
-						var invTransItem = invTransGroup.FirstOrDefault();
-						if (invTransItem == null) continue;
+						var lineItem = invTransGroup.FirstOrDefault();
+						if (lineItem == null) continue;
 
-						writer.WriteStartElement("InventoryTransaction");
-						GlobalOutbound.WriteCDataElement(writer, "CountID", invTransItem.CountID);
-						GlobalOutbound.WriteCDataElement(writer, "CountType", invTransItem.CountType);
-						GlobalOutbound.WriteCDataElement(writer, "CountStatus", invTransItem.CountStatus);
-						GlobalOutbound.WriteCDataElement(writer, "ReasonCode", invTransItem.ReasonCode ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "Comment", invTransItem.Comments ?? "");
+					
+						writer.WriteStartElement("ItemCount");
+						writer.WriteAttributeString("VoidFlag", "false");
 
-						// ItemCount entries
-						foreach (var lineItem in invTransGroup)
-						{
-							writer.WriteStartElement("ItemCount");
-							writer.WriteAttributeString("VoidFlag", "false");
+						GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemID);
+						GlobalOutbound.WriteCDataElement(writer, "Quantity", lineItem.QuantityShipped);
+						GlobalOutbound.WriteCDataElement(writer, "dtv", "InventoryBucketId", GlobalOutbound.NsDtv, lineItem.InventoryBucketID);
 
-							GlobalOutbound.WriteCDataElement(writer, "ItemID", lineItem.ItemID);
-							GlobalOutbound.WriteCDataElement(writer, "Quantity", lineItem.QuantityShipped);
-							GlobalOutbound.WriteCDataElement(writer, "dtv", "InventoryBucketId", GlobalOutbound.NsDtv, lineItem.InventoryBucketID);
+						// LineItem properties
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", lineItem.PTDIM1);
+						GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", lineItem.PTDIM2);
+						GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", lineItem.PTStyle);
+						GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", lineItem.PTEAN);
 
-							// LineItem properties
-							GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", lineItem.PTDIM1);
-							GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", lineItem.PTDIM2);
-							GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", lineItem.PTStyle);
-							GlobalOutbound.WriteLineItemProperty(writer, "EAN", "STRING", lineItem.PTEAN);
-
-							writer.WriteEndElement(); // </ItemCount>
-						}
-
-						writer.WriteEndElement(); // </InventoryTransaction>
+						writer.WriteEndElement(); // </ItemCount>
 					}
 				}
+
+				writer.WriteEndElement(); // </InventoryTransaction>
 			}
-
+			
 			writer.WriteEndElement(); // </Transaction>
-
 		}
 
 	}

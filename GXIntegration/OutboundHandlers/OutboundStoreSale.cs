@@ -79,7 +79,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			GlobalOutbound.WriteCDataElement(writer, "RetailStoreID", first.TransRetailStoreID ?? "");
 			GlobalOutbound.WriteCDataElement(writer, "WorkstationID", first.TransWorkstationID ?? "");
 			GlobalOutbound.WriteCDataElement(writer, "TillID", first.TransTillID ?? "");
-			//GlobalOutbound.WriteCDataElement(writer, "dtv", "CashDrawerID", GlobalOutbound.NsDtv, first.TransCashDrawerID ?? "");
+
 			GlobalOutbound.WriteCDataElement(writer, "SequenceNumber", first.TransSequenceNo ?? "");
 			GlobalOutbound.WriteCDataElement(writer, "BusinessDayDate", GlobalOutbound.FormatDate(first.TransBusinessDayDate));
 			GlobalOutbound.WriteCDataElement(writer, "BeginDateTime", GlobalOutbound.FormatDate(first.TransBeginDateTime, true));
