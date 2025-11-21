@@ -118,6 +118,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 		public async Task<string> AuthenticateFromConfigAsync()
 		{
+			var is_auto = true;
 			try
 			{
 				var config = XDocument.Load("config.xml");
@@ -127,12 +128,12 @@ namespace GXIntegration_Levis.InboundHandlers
 				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
 				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
 				
-				Logger.Log("--------------------------------------------------------------------------");
-				Logger.Log("Address : " + prismAddress, true);
-				Logger.Log("Username : " + prismUsername, true);
-				Logger.Log("Password : [REDACTED]", true);
-				Logger.Log("Workstation Name : " + workstationName, true);
-				Logger.Log("Starting Prism authentication...", true);
+				Logger.Log("--------------------------------------------------------------------------", is_auto);
+				Logger.Log("Address : " + prismAddress, is_auto);
+				Logger.Log("Username : " + prismUsername, is_auto);
+				Logger.Log("Password : [REDACTED]", is_auto);
+				Logger.Log("Workstation Name : " + workstationName, is_auto);
+				Logger.Log("Starting Prism authentication...", is_auto);
 
 				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
 
@@ -144,12 +145,12 @@ namespace GXIntegration_Levis.InboundHandlers
 					return null;
 				}
 
-				Logger.Log("Authentication successful. Session: " + session);
+				Logger.Log("Authentication successful. Session: " + session, is_auto);
 				return session;
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ Error during AuthenticateFromConfigAsync: {ex}");
+				Logger.Log($"❌ Error during AuthenticateFromConfigAsync: {ex}", is_auto);
 				return null;
 			}
 		}

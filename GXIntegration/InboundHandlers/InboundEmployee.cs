@@ -14,17 +14,19 @@ namespace GXIntegration_Levis.InboundHandlers
 	public class InboundEmployee
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
+		private bool is_log_auto = false;
 
-		public async Task RunEmployeeSyncAsync(string session, PrismRepository repository)
+		public async Task RunEmployeeSyncAsync(string session, PrismRepository repository, bool is_auto)
 		{
+			is_log_auto = is_auto;
 			string inboundDir = GlobalInbound.InboundDir;
 			string sentDir = GlobalInbound.SentDir;
 			string unsentDir = GlobalInbound.UnsentDir;
 
 			try
 			{
-				Logger.Log($"--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - EMPLOYEE] STARTING EMPLOYEE Sync Process...");
+				Logger.Log($"--------------------------------------------------------------------------", is_log_auto);
+				Logger.Log("[INBOUND - EMPLOYEE] STARTING EMPLOYEE Sync Process...", is_log_auto);
 
 				string fileNameFormat = "LSPI_WD_*.*";
 				string sendingDir = Path.Combine(inboundDir, "SENDING");
@@ -32,7 +34,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (files.Count == 0)
 				{
-					Logger.Log($"[INBOUND - EMPLOYEE] No {fileNameFormat} file format found.");
+					Logger.Log($"[INBOUND - EMPLOYEE] No {fileNameFormat} file format found.", is_log_auto);
 					return;
 				}
 
@@ -40,12 +42,12 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					bool isSuccess = true;
 					string fileName = Path.GetFileName(file);
-					Logger.Log($"[INBOUND - EMPLOYEE] Processing file: {fileName}");
+					Logger.Log($"[INBOUND - EMPLOYEE] Processing file: {fileName}", is_log_auto);
 
 					try
 					{
 						var result = BuildItemCollection(file);
-						Logger.Log($"[INBOUND - EMPLOYEE] Records found: {result.Count}");
+						Logger.Log($"[INBOUND - EMPLOYEE] Records found: {result.Count}", is_log_auto);
 
 						int rowIndex = 1;
 						foreach (var row in result)
@@ -55,7 +57,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							if (prism_store == null || prism_store.Count == 0)
 							{
-								Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} is not existing.");
+								Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} is not existing.", is_log_auto);
 								rowIndex++;
 								continue;
 							}
@@ -65,7 +67,7 @@ namespace GXIntegration_Levis.InboundHandlers
 							long? empExtendRowVersion = null;
 							string employeeSid = null;
 
-							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | StoreSID : {baseStoreSid}");
+							Logger.Log($"[INBOUND - EMPLOYEE] [{rowIndex}] StoreCode : {storeCode} | StoreSID : {baseStoreSid}", is_log_auto);
 
 							string workAddress = row["WorkAddress"]?.ToString();
 							workAddress = workAddress?.Length > 40 ? workAddress.Substring(0, 40) : workAddress;
@@ -73,13 +75,13 @@ namespace GXIntegration_Levis.InboundHandlers
 							// Get SBS Result
 							var sbs_res = await GetSbsResult(repository);
 							var sbs_sid = sbs_res[0].SID.ToString();
-							Logger.Log($"[INBOUND - EMPLOYEE] SBS SID : {sbs_sid}");
+							Logger.Log($"[INBOUND - EMPLOYEE] SBS SID : {sbs_sid}", is_log_auto);
 
 							// Get User Group Result
 							string jobTitle = row["JobTitle"]?.ToString();
 							var user_group_res = await GetUserGroupResult(repository, jobTitle);
 							var user_group_sid = user_group_res[0].SID.ToString();
-							Logger.Log($"[INBOUND - EMPLOYEE] USER_GROUP SID : {user_group_sid}");
+							Logger.Log($"[INBOUND - EMPLOYEE] USER_GROUP SID : {user_group_sid}", is_log_auto);
 
 							//***************************************************************
 							// Build employeeextend base structure
@@ -162,7 +164,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							if (prism_employee == null || prism_employee.Count == 0)
 							{
-								Logger.Log($"[INBOUND - EMPLOYEE] [CREATE]");
+								Logger.Log($"[INBOUND - EMPLOYEE] [CREATE]", is_log_auto);
 								var payload = new { data = new[] { employeeData } };
 								string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 
@@ -175,14 +177,14 @@ namespace GXIntegration_Levis.InboundHandlers
 									rowIndex
 								);
 
-								Logger.Log($"API Response for row {rowIndex}:\n{FormatJson(responseJson)}");
+								Logger.Log($"API Response for row {rowIndex}:\n{FormatJson(responseJson)}", is_log_auto);
 
 								if (!isSuccessfulApi)
 									isSuccess = false;
 							}
 							else
 							{
-								Logger.Log($"[INBOUND - EMPLOYEE] [UPDATE]");
+								Logger.Log($"[INBOUND - EMPLOYEE] [UPDATE]", is_log_auto);
 								var emp = prism_employee[0];
 
 								// Log employee data
@@ -209,7 +211,7 @@ namespace GXIntegration_Levis.InboundHandlers
 										{
 											empExtendRowVersion = Convert.ToInt64(extendDict["ROW_VERSION"]);
 											employeeExtend["rowversion"] = empExtendRowVersion.Value;
-											Logger.Log($"[INBOUND - EMPLOYEE] EMPLOYEE_EXTEND RowVersion: {empExtendRowVersion}");
+											Logger.Log($"[INBOUND - EMPLOYEE] EMPLOYEE_EXTEND RowVersion: {empExtendRowVersion}", is_log_auto);
 										}
 									}
 
@@ -231,11 +233,11 @@ namespace GXIntegration_Levis.InboundHandlers
 									if (!isSuccessfulApi)
 										isSuccess = false;
 
-									Logger.Log($"[INBOUND - EMPLOYEE] API Response: {responseJson}");
+									Logger.Log($"[INBOUND - EMPLOYEE] API Response: {responseJson}", is_log_auto);
 								}
 								catch (Exception ex)
 								{
-									Logger.Log($"❌ [INBOUND - EMPLOYEE] Error updating employee: {ex.Message}");
+									Logger.Log($"❌ [INBOUND - EMPLOYEE] Error updating employee: {ex.Message}", is_log_auto);
 									isSuccess = false;
 								}
 							}
@@ -245,7 +247,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"❌ [INBOUND - EMPLOYEE] Error processing file {fileName}: {ex}");
+						Logger.Log($"❌ [INBOUND - EMPLOYEE] Error processing file {fileName}: {ex}", is_log_auto);
 						isSuccess = false;
 					}
 
@@ -253,11 +255,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					globalInbound.MoveFile(file, isSuccess);
 				}
 
-				Logger.Log("[INBOUND - EMPLOYEE] END Sync Process.");
+				Logger.Log("[INBOUND - EMPLOYEE] END Sync Process.", is_log_auto);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND - EMPLOYEE] Critical Error in RunEmployeeSyncAsync: {ex}");
+				Logger.Log($"❌ [INBOUND - EMPLOYEE] Critical Error in RunEmployeeSyncAsync: {ex}", is_log_auto);
 			}
 		}
 
@@ -266,7 +268,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			// Get default SBS No from config.xml
 			XDocument config = XDocument.Load("config.xml");
 			var sbs_no = config.Root.Element("EmpSubsidiaries").Element("Subsidiary").Value;
-			Logger.Log($"[INBOUND - EMPLOYEE] Config SBS No. to process: {sbs_no}");
+			Logger.Log($"[INBOUND - EMPLOYEE] Config SBS No. to process: {sbs_no}", is_log_auto);
 
 			// Fetch from prism subsidiary
 			var sbs_result = await repository.GetRpsSubsidiary("SBS_NO", sbs_no);
@@ -319,7 +321,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND - EMPLOYEE] Error in BuildItemCollection: {ex.Message}");
+				Logger.Log($"❌ [INBOUND - EMPLOYEE] Error in BuildItemCollection: {ex.Message}", is_log_auto);
 			}
 			return result;
 		}

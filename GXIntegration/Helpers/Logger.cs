@@ -10,7 +10,7 @@ namespace GXIntegration_Levis.Helpers
 		// Event for log messages
 		public static event Action<string> OnLogMessage;
 
-		public static void Log(string message, bool isDisplay = false)
+		public static void Log(string message, bool isAuto = false)
 		{
 			try
 			{
@@ -23,7 +23,7 @@ namespace GXIntegration_Levis.Helpers
 
 				Console.WriteLine(logMessage);
 				
-				if(!isDisplay)
+				if(!isAuto)
 				{
 					// Raise event so subscribers can react (like ProgressForm)
 					OnLogMessage?.Invoke(logMessage);

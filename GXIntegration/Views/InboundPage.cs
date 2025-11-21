@@ -206,6 +206,7 @@ namespace GXIntegration_Levis.Views
 			progressForm.Show();
 
 			Logger.Log("[INBOUND-MANUAL] Start Manual Process...", true);
+			var is_auto = false;
 
 			BackgroundWorker worker = new BackgroundWorker
 			{
@@ -253,7 +254,7 @@ namespace GXIntegration_Levis.Views
 						switch (moduleName)
 						{
 							case "EMPLOYEE DETAILS":
-								inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository)
+								inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, is_auto)
 									.GetAwaiter().GetResult();
 								break;
 
@@ -292,7 +293,7 @@ namespace GXIntegration_Levis.Views
 				progressForm.UpdateProgress(e.ProgressPercentage, 100);
 				if (e.UserState != null)
 				{
-					progressForm.AppendLog($"Processing: {e.UserState}");
+					//progressForm.AppendLog($"Processing: {e.UserState}");
 				}
 			};
 
@@ -307,7 +308,8 @@ namespace GXIntegration_Levis.Views
 		public async Task AutoProcessAsync()
 		{
 			Logger.Log("[INBOUND-AUTO] Start AUTO Process...", true);
-			
+			var is_auto = true;
+
 			try
 			{
 				var globalInbound = new GlobalInbound();
@@ -338,7 +340,7 @@ namespace GXIntegration_Levis.Views
 					switch (moduleName)
 					{
 						case "EMPLOYEE DETAILS":
-							inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository)
+							inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, is_auto)
 								.GetAwaiter().GetResult();
 							break;
 
@@ -423,7 +425,7 @@ namespace GXIntegration_Levis.Views
 							{
 								if (!sftp.Exists(remotePath))
 								{
-									Logger.Log($"[INBOUND SFTP] Directory not found: {remotePath}");
+									Logger.Log($"[INBOUND SFTP] Directory not found: {remotePath}", true);
 									continue;
 								}
 
@@ -450,7 +452,7 @@ namespace GXIntegration_Levis.Views
 										sftp.DownloadFile(file.FullName, fileStream);
 									}
 
-									Logger.Log($"[INBOUND SFTP] Downloaded '{fileName}' from {remotePath}");
+									Logger.Log($"[INBOUND SFTP] Downloaded '{fileName}' from {remotePath}", true);
 
 									// Insert new record into DB
 									InsertDownloadedFile(dbPath, fileName, remotePath, inboundBaseDir);
@@ -458,18 +460,18 @@ namespace GXIntegration_Levis.Views
 							}
 							catch (Exception ex)
 							{
-								Logger.Log($"[INBOUND SFTP] Error processing directory '{remotePath}': {ex}");
+								Logger.Log($"[INBOUND SFTP] Error processing directory '{remotePath}': {ex}", true);
 							}
 						}
 
 						sftp.Disconnect();
 					}
 
-					Logger.Log("[INBOUND SFTP] File download completed.");
+					Logger.Log("[INBOUND SFTP] File download completed.", true);
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[INBOUND SFTP] Download failed: {ex}");
+					Logger.Log($"[INBOUND SFTP] Download failed: {ex}", true);
 				}
 			});
 		}
@@ -497,7 +499,7 @@ namespace GXIntegration_Levis.Views
 						{
 							if (!Directory.Exists(remotePath))
 							{
-								Logger.Log($"[INBOUND LOCAL] Directory not found: {remotePath}");
+								Logger.Log($"[INBOUND LOCAL] Directory not found: {remotePath}", true);
 								continue;
 							}
 
@@ -518,7 +520,7 @@ namespace GXIntegration_Levis.Views
 								// Copy to INBOUND/SENDING
 								File.Copy(filePath, localFilePath, overwrite: true);
 
-								Logger.Log($"[INBOUND LOCAL] Moved '{fileName}' from {remotePath}");
+								Logger.Log($"[INBOUND LOCAL] Moved '{fileName}' from {remotePath}", true);
 
 								// Add to DB
 								InsertDownloadedFile(dbPath, fileName, remotePath, inboundBaseDir);
@@ -527,15 +529,15 @@ namespace GXIntegration_Levis.Views
 						}
 						catch (Exception ex)
 						{
-							Logger.Log($"[INBOUND LOCAL] Error processing directory '{remotePath}': {ex}");
+							Logger.Log($"[INBOUND LOCAL] Error processing directory '{remotePath}': {ex}", true);
 						}
 					}
 
-					Logger.Log("[INBOUND LOCAL] File copy completed.");
+					Logger.Log("[INBOUND LOCAL] File copy completed.", true);
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[INBOUND LOCAL] Local download failed: {ex}");
+					Logger.Log($"[INBOUND LOCAL] Local download failed: {ex}", true);
 				}
 			});
 		}
