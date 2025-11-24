@@ -86,7 +86,7 @@ namespace GXIntegration_Levis.Data.Access
 							, ISI.ITEM_SIZE							AS PTDIM1
 							, ISI.ATTRIBUTE							AS PTDIM2
 							, ISI.DESCRIPTION1						AS PTStyle
-							, VOU_COMMENT.COMMENTS					AS PTControlNumber
+							, PO.PO_NO								AS PTControlNumber
 							, ISI.UPC								AS PTEAN
 							, PO_ITEM.ORD_QTY						AS QuantityOrdered
 							, PO_ITEM.RCVD_QTY                      AS QuantityReceived
