@@ -8,6 +8,7 @@ namespace GXIntegration_Levis.Model
 {
 	public class StoreInventoryAdjustmentModel
 	{
+		public string AdjSid { get; set; }
 		public string OrganizationID { get; set; }
 		public string RetailStoreID { get; set; }
 		public string WorkstationID { get; set; }
@@ -34,8 +35,6 @@ namespace GXIntegration_Levis.Model
 		public string PTDIM2 { get; set; }
 		public string PTStyle { get; set; }
 		public string PTEAN { get; set; }
-
-		public string AdjSid { get; set; }
 
 	}
 }

@@ -40,7 +40,8 @@ namespace GXIntegration_Levis.Data.Access
 
 					string sql = $@"
 							SELECT
-                                '1'										AS OrganizationID
+								ADJ.SID									AS AdjSid
+                                , '1'									AS OrganizationID
                                 , S.ADDRESS4							AS RetailStoreID
                                 , WS.WORKSTATION_NO						AS WorkstationID
                                 , S.ADDRESS4 || WS.WORKSTATION_NO		AS TillID
@@ -71,7 +72,6 @@ namespace GXIntegration_Levis.Data.Access
 								, ISI.ATTRIBUTE							AS PTDIM2
 								, ISI.DESCRIPTION1						AS PTStyle
 								, ISI.UPC								AS PTEAN                               
-								, ADJ.SID								AS AdjSid
 							FROM
 								RPS.ADJUSTMENT ADJ
 							LEFT JOIN RPS.ADJ_ITEM ADJ_ITEM		ON ADJ.SID = ADJ_ITEM.ADJ_SID
@@ -90,6 +90,7 @@ namespace GXIntegration_Levis.Data.Access
 								{dateCondition}
 								AND ADJ.ADJ_TYPE = 0
 								AND S.ADDRESS4 = :StoreCode
+								AND ADJ.ADJ_NO IS NOT NULL
 							ORDER BY 
 								ADJ.POST_DATE DESC
 					";
