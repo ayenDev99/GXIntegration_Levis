@@ -143,10 +143,11 @@ namespace GXIntegration_Levis.Helpers
 		{
 			// Get current local system time
 			DateTime toDate = DateTime.Now;
-			DateTime fromDate = toDate.AddMinutes(-minutesAgo);
+			DateTime fromDate = toDate.AddMinutes((-minutesAgo));
 
 			return (fromDate, toDate);
 		} 
+
 		// ***************************************************
 		// Parsing Methods
 		// ***************************************************

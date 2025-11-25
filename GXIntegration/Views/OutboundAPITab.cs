@@ -303,7 +303,7 @@ namespace GXIntegration_Levis.Views
 					return;
 				}
 
-				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime);
+				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime+1);
 				Logger.LogOutbound($"[AUTO - API] Process DateRange From: {fromDate}, To: {toDate}", isAuto);
 
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");

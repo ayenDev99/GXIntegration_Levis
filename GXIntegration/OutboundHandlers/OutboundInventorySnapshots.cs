@@ -76,11 +76,18 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 			foreach (var item in items)
 			{
+				var productCode = item.ProductCode;
+				var trimmedProductCode = productCode.Remove(productCode.Length - 1, 1);
+
+				//var result = $"{d}{item.StoreCode}";
+				//var trimmed = result.Remove(result.Length - 1, 1);
+
+
 				sb.AppendLine(
 					$"{item.CurrencyId}" +
 					$"{d}{item.StoreCode}" +
 					$"{d}ON_HAND" +
-					$"{d}{item.ProductCode}" +
+					$"{d}{trimmedProductCode}" +
 					$"{d}{item.Sku}" +
 					$"{d}{item.Waist}" +
 					$"{d}{item.Inseam}" +

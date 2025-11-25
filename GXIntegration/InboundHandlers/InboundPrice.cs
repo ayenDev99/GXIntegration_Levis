@@ -439,8 +439,8 @@ namespace GXIntegration_Levis.InboundHandlers
 						// Map only relevant indices
 						if (fields.Length > 0) rowDict["CountryCode"] = fields[0].Trim();
 						if (fields.Length > 1) rowDict["StoreCode"] = fields[1].Trim();
-						//if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
-						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim();
+						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
+						//if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim();
 						if (fields.Length > 3) rowDict["ColorCode"] = fields[3].Trim();
 						if (fields.Length > 4) rowDict["SizeCode"] = fields[4].Trim();
 						if (fields.Length > 5) rowDict["SKU"] = fields[5].Trim();

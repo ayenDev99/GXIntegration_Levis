@@ -212,9 +212,9 @@ namespace GXIntegration_Levis.Views
 
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
-				await OutboundPrice.Execute(repositories.PriceRepository, config, fromDate);
-				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, fromDate);
-				await OutboundInTransit.Execute(repositories.InTransitRepository, config, fromDate);
+				await OutboundPrice.Execute(repositories.PriceRepository, config, fromDate, isAuto);
+				await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, fromDate, isAuto);
+				await OutboundInTransit.Execute(repositories.InTransitRepository, config, fromDate, isAuto);
 				await ExecuteStoreInventoryCountAsync(prismStores, fromDate, toDate, isAuto);
 				await ExecuteAllAndSaveToSingleXmlAsync(prismStores, fromDate, toDate);
 
@@ -280,9 +280,9 @@ namespace GXIntegration_Levis.Views
 
 				var processActions = new Dictionary<string, Func<DateTime, Task>>(StringComparer.OrdinalIgnoreCase)
 				{
-					["PRICE"] = async (date) => await OutboundPrice.Execute(repositories.PriceRepository, config, date),
-					["INVENTORY SNAPSHOTS"] = async (date) => await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, date),
-					["INTRANSIT"] = async (date) => await OutboundInTransit.Execute(repositories.InTransitRepository, config, date),
+					["PRICE"] = async (date) => await OutboundPrice.Execute(repositories.PriceRepository, config, date, isAuto),
+					["INVENTORY SNAPSHOTS"] = async (date) => await OutboundInventorySnapshots.Execute(repositories.InventoryRepository, config, prismStores, date, isAuto),
+					["INTRANSIT"] = async (date) => await OutboundInTransit.Execute(repositories.InTransitRepository, config, date, isAuto),
 					["INVENTORYCOUNT"] = async (date) => await ExecuteStoreInventoryCountAsync(prismStores, date, date, isAuto),
 					["POSLOG"] = async (date) => await ExecuteAllAndSaveToSingleXmlAsync(prismStores, date, date)
 				};
