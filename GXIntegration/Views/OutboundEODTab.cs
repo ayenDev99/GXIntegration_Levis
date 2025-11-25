@@ -208,7 +208,7 @@ namespace GXIntegration_Levis.Views
 				DateTime fromDate = today;
 				DateTime toDate = today.Add(toTime);
 
-				Logger.LogOutbound($"[OUTBOUND EOD-AUTO] Processing Date Range From: {fromDate:yyyy-MM-dd HH:mm:ss} To: {toDate:yyyy-MM-dd HH:mm:ss}");
+				Logger.LogOutbound($"[EOD-AUTO] Processing Date Range From: {fromDate:yyyy-MM-dd HH:mm:ss} To: {toDate:yyyy-MM-dd HH:mm:ss}");
 
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 
@@ -218,10 +218,10 @@ namespace GXIntegration_Levis.Views
 				await ExecuteStoreInventoryCountAsync(prismStores, fromDate, toDate, isAuto);
 				await ExecuteAllAndSaveToSingleXmlAsync(prismStores, fromDate, toDate);
 
-				Logger.LogOutbound("[OUTBOUND EOD-AUTO] [SFTP] Start Uploading generated files to SFTP...");
+				Logger.LogOutbound("[EOD-AUTO] [SFTP] Start Uploading generated files to SFTP...");
 				await UploadToSftpAsync();
 
-				Logger.LogOutbound("[OUTBOUND EOD-AUTO] Process completed successfully.");
+				Logger.LogOutbound("[EOD-AUTO] Process completed successfully.");
 			}
 			catch (Exception ex)
 			{
@@ -231,7 +231,7 @@ namespace GXIntegration_Levis.Views
 
 		private async Task ManualProcess()
 		{
-			Logger.LogOutbound("[OUTBOUND EOD-MANUAL] Start Manual Process...");
+			Logger.LogOutbound("[EOD-MANUAL] Start Manual Process...");
 			bool isAuto = false;
 			guna1DataGridView1.EndEdit();
 
@@ -250,7 +250,7 @@ namespace GXIntegration_Levis.Views
 				.Where(s => !string.IsNullOrEmpty(s))
 				.ToHashSet();
 
-			Logger.LogOutbound("[OUTBOUND EOD-MANUAL] Selected Transaction Types: " + string.Join(",", selectedDocTypes));
+			Logger.LogOutbound("[EOD-MANUAL] Selected Transaction Types: " + string.Join(",", selectedDocTypes));
 
 			if (!selectedDocTypes.Any())
 			{
@@ -276,7 +276,7 @@ namespace GXIntegration_Levis.Views
 			try
 			{
 				var prismStores = await repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
-				Logger.LogOutbound($"[OUTBOUND EOD-MANUAL] Processing Date Range From: {fromDate:yyyy-MM-dd} To: {toDate:yyyy-MM-dd}");
+				Logger.LogOutbound($"[EOD-MANUAL] Processing Date Range From: {fromDate:yyyy-MM-dd} To: {toDate:yyyy-MM-dd}");
 
 				var processActions = new Dictionary<string, Func<DateTime, Task>>(StringComparer.OrdinalIgnoreCase)
 				{
@@ -289,26 +289,26 @@ namespace GXIntegration_Levis.Views
 
 				for (var date = fromDate; date <= toDate; date = date.AddDays(1))
 				{
-					Logger.LogOutbound($"[OUTBOUND EOD] Processing date: {date:yyyy-MM-dd}");
+					Logger.LogOutbound($"[EOD] Processing date: {date:yyyy-MM-dd}");
 
 					foreach (var docType in selectedDocTypes)
 					{
 						if (processActions.TryGetValue(docType, out var action))
 						{
-							Logger.LogOutbound($"[OUTBOUND EOD] Executing {docType} for {date:yyyy-MM-dd}...");
+							Logger.LogOutbound($"[EOD] Executing {docType} for {date:yyyy-MM-dd}...");
 							var sw = System.Diagnostics.Stopwatch.StartNew();
 							await action(date);
 							sw.Stop();
-							Logger.LogOutbound($"[OUTBOUND EOD] Finished {docType} for {date:yyyy-MM-dd} in {sw.ElapsedMilliseconds} ms");
+							Logger.LogOutbound($"[EOD] Finished {docType} for {date:yyyy-MM-dd} in {sw.ElapsedMilliseconds} ms");
 						}
 						else
 						{
-							Logger.LogOutbound($"[OUTBOUND EOD] No action defined for {docType}");
+							Logger.LogOutbound($"[EOD] No action defined for {docType}");
 						}
 					}
 				}
 
-				Logger.LogOutbound("[OUTBOUND EOD] [SFTP] Start Uploading generated files to SFTP...");
+				Logger.LogOutbound("[EOD] [SFTP] Start Uploading generated files to SFTP...");
 				await UploadToSftpAsync();
 
 				MessageBox.Show("OUTBOUND EOD Processed Successfully.");
@@ -332,7 +332,7 @@ namespace GXIntegration_Levis.Views
 
 			string countryCode = config.CountryCode ?? "XX";
 
-			Logger.LogOutbound("[OUTBOUND EOD] [XML] Start Generating POSLOG per day...");
+			Logger.LogOutbound("[EOD] [XML] Start Generating POSLOG per day...");
 
 			for (var currentDate = fromDate.Date; currentDate <= toDate.Date; currentDate = currentDate.AddDays(1))
 			{
@@ -342,7 +342,7 @@ namespace GXIntegration_Levis.Views
 				string archiveDir = Path.Combine(baseArchiveDir, dateStr);
 				Directory.CreateDirectory(archiveDir);
 
-				Logger.LogOutbound($"[OUTBOUND EOD] Processing date: {dateStr}");
+				Logger.LogOutbound($"[EOD] Processing date: {dateStr}");
 
 				foreach (var store in prismStores)
 				{
@@ -350,7 +350,7 @@ namespace GXIntegration_Levis.Views
 						? addr?.ToString()
 						: "N/A";
 
-					Logger.LogOutbound($"[OUTBOUND EOD] [XML] STORE_CODE: {storeCode} | DATE: {dateStr}");
+					Logger.LogOutbound($"[EOD] [XML] STORE_CODE: {storeCode} | DATE: {dateStr}");
 
 					try
 					{
@@ -411,22 +411,22 @@ namespace GXIntegration_Levis.Views
 									}
 
 									int count = countsByType[xmlType];
-									Logger.LogOutbound($"[OUTBOUND EOD] [XML] Successfully generated {xmlType} XML for {storeCode} | Date: {dateStr} | Count: {count}");
+									Logger.LogOutbound($"[EOD] [XML] Successfully generated {xmlType} XML for {storeCode} | Date: {dateStr} | Count: {count}");
 								}
 								catch (Exception ex)
 								{
-									Logger.LogOutbound($"[OUTBOUND EOD] [XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
+									Logger.LogOutbound($"[EOD] [XML] Failed to parse {xmlType} XML for store {storeCode}: {ex.Message}");
 								}
 							}
 							else
 							{
-								Logger.LogOutbound($"[OUTBOUND EOD] [XML] No {xmlType} data for store {storeCode} | Date: {dateStr}");
+								Logger.LogOutbound($"[EOD] [XML] No {xmlType} data for store {storeCode} | Date: {dateStr}");
 							}
 						}
 
 						if (!validFragments.Any())
 						{
-							Logger.LogOutbound($"[OUTBOUND EOD] [XML] No POSLOG data for store {storeCode} | Date: {dateStr}. Skipping file creation.");
+							Logger.LogOutbound($"[EOD] [XML] No POSLOG data for store {storeCode} | Date: {dateStr}. Skipping file creation.");
 							continue;
 						}
 
@@ -471,7 +471,7 @@ namespace GXIntegration_Levis.Views
 							await writer.FlushAsync();
 						}
 
-						Logger.LogOutbound($"[OUTBOUND EOD] [XML] File generated successfully | {fileName}");
+						Logger.LogOutbound($"[EOD] [XML] File generated successfully | {fileName}");
 					}
 					catch (Exception ex)
 					{
@@ -480,7 +480,7 @@ namespace GXIntegration_Levis.Views
 				}
 			}
 
-			Logger.LogOutbound("[OUTBOUND EOD] [XML] Completed all dates.");
+			Logger.LogOutbound("[EOD] [XML] Completed all dates.");
 		}
 
 		private async Task ExecuteStoreInventoryCountAsync(dynamic prismStores, DateTime fromDate, DateTime toDate, bool isAuto)
@@ -491,7 +491,7 @@ namespace GXIntegration_Levis.Views
 			Directory.CreateDirectory(outboundDir);
 			Directory.CreateDirectory(baseArchiveDir);
 
-			Logger.LogOutbound($"[OUTBOUND EOD] [XML] Start Generating INVENTORYCOUNT per day...");
+			Logger.LogOutbound($"[EOD] [XML] Start Generating INVENTORYCOUNT per day...");
 
 			for (var currentDate = fromDate.Date; currentDate <= toDate.Date; currentDate = currentDate.AddDays(1))
 			{
@@ -501,7 +501,7 @@ namespace GXIntegration_Levis.Views
 				string archiveDir = Path.Combine(baseArchiveDir, dateStr);
 				Directory.CreateDirectory(archiveDir);
 
-				Logger.LogOutbound($"[OUTBOUND EOD] Processing date: {dateStr}");
+				Logger.LogOutbound($"[EOD] Processing date: {dateStr}");
 
 				foreach (var store in prismStores)
 				{
@@ -529,14 +529,14 @@ namespace GXIntegration_Levis.Views
 								allItems.AddRange(batch);
 								totalFetched += batch.Count;
 
-								Logger.LogOutbound($"[OUTBOUND EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
+								Logger.LogOutbound($"[EOD] [XML] Fetched batch of {batch.Count} (Total: {totalFetched}) for StoreCode {storeCode}");
 
 								startRow += pageSize;
 							}
 
 							if (!allItems.Any())
 							{
-								Logger.LogOutbound($"[OUTBOUND EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
+								Logger.LogOutbound($"[EOD] [XML] No INVENTORYCOUNT data generated for store {storeCode}. File will not be created.");
 								continue;
 							}
 
@@ -544,12 +544,12 @@ namespace GXIntegration_Levis.Views
 						}
 						catch (Exception ex)
 						{
-							Logger.LogError($"[OUTBOUND EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
+							Logger.LogError($"[EOD] Failed for StoreCode: {storeCode} | Exception: {ex.Message}");
 						}
 					}
 					else
 					{
-						Logger.LogOutbound("[OUTBOUND EOD] Store skipped due to missing ADDRESS4 field");
+						Logger.LogOutbound("[EOD] Store skipped due to missing ADDRESS4 field");
 					}
 				}
 			}
@@ -578,7 +578,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (!Directory.Exists(localDirectory))
 					{
-						Logger.LogOutbound($"[OUTBOUND EOD] [SFTP] Local directory does not exist: {localDirectory}");
+						Logger.LogOutbound($"[EOD] [SFTP] Local directory does not exist: {localDirectory}");
 						return;
 					}
 
@@ -589,7 +589,7 @@ namespace GXIntegration_Levis.Views
 
 					if (!files.Any())
 					{
-						Logger.LogOutbound("[OUTBOUND EOD] [SFTP] No outbound files found to upload.");
+						Logger.LogOutbound("[EOD] [SFTP] No outbound files found to upload.");
 						return;
 					}
 
@@ -619,7 +619,7 @@ namespace GXIntegration_Levis.Views
 
 								ArchiveFile(filePath, localDirectory);
 
-								Logger.LogOutbound($"[OUTBOUND EOD] [SFTP] Uploaded '{fileName}' → {remoteDirectory} and archived.");
+								Logger.LogOutbound($"[EOD] [SFTP] Uploaded '{fileName}' → {remoteDirectory} and archived.");
 							}
 							catch (Exception ex)
 							{
@@ -630,7 +630,7 @@ namespace GXIntegration_Levis.Views
 						sftp.Disconnect();
 					}
 
-					Logger.LogOutbound("[OUTBOUND EOD] [SFTP] Upload to SFTP process completed.");
+					Logger.LogOutbound("[EOD] [SFTP] Upload to SFTP process completed.");
 				}
 				catch (Exception ex)
 				{

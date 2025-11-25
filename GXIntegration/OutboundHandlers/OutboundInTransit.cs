@@ -22,7 +22,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string countryCode = config.CountryCode ?? "XX";
 				if (!items.Any())
 				{
-					// Logger.LogOutbound("[OUTBOUND - EOD] [TXT] No INTRANSIT data was found in Prism for today.", isAuto);
+					// Logger.LogOutbound("[- EOD] [TXT] No INTRANSIT data was found in Prism for today.", isAuto);
 					return;
 				}
 

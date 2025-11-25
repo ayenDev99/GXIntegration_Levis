@@ -26,7 +26,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					var items = await repository.GetInventoryAsync(procDate, storeCode);
 					if (!items.Any())
 					{
-						// Logger.LogOutbound($"[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}", isAuto);
+						// Logger.LogOutbound($"[- EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}", isAuto);
 						return;
 					}
 

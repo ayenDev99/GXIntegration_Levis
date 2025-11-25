@@ -21,7 +21,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				var items = await repository.GetPriceAsync(procDate);
 				if (!items.Any())
 				{
-					//Logger.LogOutbound("[OUTBOUND - EOD] [TXT] No PRICE data was found in Prism for today.", isAuto);
+					//Logger.LogOutbound("[- EOD] [TXT] No PRICE data was found in Prism for today.", isAuto);
 					return;
 				}
 
