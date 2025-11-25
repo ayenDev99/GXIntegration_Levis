@@ -14,7 +14,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInTransit
 	{
-		public static async Task Execute(InTransitRepository repository, GXConfig config, DateTime procDate)
+		public static async Task Execute(InTransitRepository repository, GXConfig config, DateTime procDate, bool isAuto)
 		{
 			try
 			{
@@ -22,7 +22,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string countryCode = config.CountryCode ?? "XX";
 				if (!items.Any())
 				{
-					Logger.Log("[OUTBOUND - EOD] [TXT] No INTRANSIT data was found in Prism for today.");
+					// Logger.LogOutbound("[OUTBOUND - EOD] [TXT] No INTRANSIT data was found in Prism for today.", isAuto);
 					return;
 				}
 
@@ -47,19 +47,17 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_INTRANSIT_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[OUTBOUND - EOD] [TXT]	InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.LogOutbound($"[EOD] InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}", isAuto);
 
 				string output = Format(items, "|");
 
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
-
-				//MessageBox.Show($"Intransit synced.\n{grouped.Count()} file(s) created.");
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"Error: {ex.Message}");
+				Logger.LogError($"Error: {ex.Message}", isAuto);
 			}
 		}
 		private static string Format(List<InTransitModel> items, string d)

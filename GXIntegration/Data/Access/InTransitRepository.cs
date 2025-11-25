@@ -131,7 +131,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching INTRANSIT data: {ex.Message}");
+					Logger.LogError($"Error fetching INTRANSIT data: {ex.Message}");
 					Console.WriteLine($"Error fetching INTRANSIT data: {ex.Message}");
 					return new List<InTransitModel>();
 				}

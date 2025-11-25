@@ -7,12 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-
 namespace GXIntegration_Levis.InboundHandlers
 {
 		public class InboundHierarchy
 		{
 			private readonly GlobalInbound globalInbound = new GlobalInbound();
+			private bool isAuto = false;
 
 			private readonly Dictionary<string, string> columnToUdfMap = new Dictionary<string, string>
 			{
@@ -28,61 +28,61 @@ namespace GXIntegration_Levis.InboundHandlers
 				{ "SUB_CLASS_NM", "UDF3" }
 			};
 
-			public async Task RunHierarchySyncAsync(string session, PrismRepository repository)
+			public async Task RunHierarchySyncAsync(string session, PrismRepository repository, bool is_auto)
 			{
+				isAuto = is_auto;
 				string inboundDir = GlobalInbound.InboundDir;
 				string sentDir = GlobalInbound.SentDir;
 				string unsentDir = GlobalInbound.UnsentDir;
 
 				try
 				{
-					Logger.Log("--------------------------------------------------------------------------");
-					Logger.Log("[INBOUND - HIERARCHY] STARTING HIERARCHY Sync Process...");
-
 					string fileNameFormat = "LSPI_HIERARCHY_*.*";
 					string sendingDir = Path.Combine(inboundDir, "SENDING");
 					var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
+
 					if (files.Count == 0)
 					{
-						Logger.Log($"[INBOUND - HIERARCHY] No {fileNameFormat} file format found.");
+						Logger.LogInbound($"0 HIERARCHY {fileNameFormat} file found.", isAuto);
 						return;
 					}
+
+					Logger.LogInbound($"[HIERARCHY] {files.Count} {fileNameFormat} file found.", isAuto);
 
 					foreach (string file in files)
 					{
 						string fileName = Path.GetFileName(file);
 						bool isSuccess = true;
+						var udfData = BuildHierarchyByUdf(file);
 
-						Logger.Log($"[INBOUND - HIERARCHY] Processing file: {fileName}");
+						Logger.LogInbound($"-----------------------------------", isAuto);
+						Logger.LogInbound($"[HIERARCHY] Processing file: {fileName} | Row No found: {udfData.Count}", isAuto);
 
 						try
 						{
-							var udfData = BuildHierarchyByUdf(file);
-							Logger.Log($"[INBOUND - HIERARCHY] UDF_NO Records found: {udfData.Count}");
-
 							// Extract and prepare data
 							var filteredUdfValues = new Dictionary<string, List<string>>
-						{
-							{ "6", udfData.TryGetValue("UDF6", out var bc) ? bc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "7", udfData.TryGetValue("UDF7", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "10", udfData.TryGetValue("UDF10", out var cc) ? cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "11", udfData.TryGetValue("UDF11", out var cn) ? cn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "2", udfData.TryGetValue("UDF2", out var pc) ? pc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "4", udfData.TryGetValue("UDF4", out var pn) ? pn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "12", udfData.TryGetValue("UDF12", out var clsC) ? clsC.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "13", udfData.TryGetValue("UDF13", out var clsN) ? clsN.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "14", udfData.TryGetValue("UDF14", out var sc) ? sc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
-							{ "3", udfData.TryGetValue("UDF3", out var sn) ? sn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() }
-						};
+							{
+								{ "6", udfData.TryGetValue("UDF6", out var bc) ? bc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "7", udfData.TryGetValue("UDF7", out var bn) ? bn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "10", udfData.TryGetValue("UDF10", out var cc) ? cc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "11", udfData.TryGetValue("UDF11", out var cn) ? cn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "2", udfData.TryGetValue("UDF2", out var pc) ? pc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "4", udfData.TryGetValue("UDF4", out var pn) ? pn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "12", udfData.TryGetValue("UDF12", out var clsC) ? clsC.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "13", udfData.TryGetValue("UDF13", out var clsN) ? clsN.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "14", udfData.TryGetValue("UDF14", out var sc) ? sc.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() },
+								{ "3", udfData.TryGetValue("UDF3", out var sn) ? sn.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() : new List<string>() }
+							};
 
 							// Fetch subsidiaries
 							var SBS_result = await repository.GetRpsSubsidiary("ACTIVE", "1");
-							Logger.Log($"[INBOUND - HIERARCHY] SBS Count : {SBS_result.Count}");
+							Logger.LogInbound($"[HIERARCHY] SBS Count : {SBS_result.Count}", isAuto);
 
 							int rowIndex = 1;
 							foreach (var sbsItem in SBS_result)
 							{
-								Logger.Log($"[INBOUND - HIERARCHY] [{rowIndex}] SBS Name : {sbsItem.SBS_NAME} | SBS_NO : {sbsItem.SBS_NO} | SID: {sbsItem.SID}");
+								Logger.LogInbound($"[HIERARCHY] [{rowIndex}] SBS Name : {sbsItem.SBS_NAME} | SBS_NO : {sbsItem.SBS_NO} | SID: {sbsItem.SID}", isAuto);
 
 								foreach (var udfType in filteredUdfValues)
 								{
@@ -111,7 +111,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 												var json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
-												Logger.Log($"[INBOUND - HIERARCHY] [CREATE] UDF_NO : {udfType.Key} | Value: '{udfValue}'");
+												Logger.LogInbound($"[HIERARCHY] [CREATE] UDF_NO : {udfType.Key} | Value: '{udfValue}'", isAuto);
 
 												string responseJson = GlobalInbound.CallPrismAPI(
 													session,
@@ -124,18 +124,18 @@ namespace GXIntegration_Levis.InboundHandlers
 
 												if (!isSuccessfulApi)
 												{
-													Logger.Log($"❌ [INBOUND - HIERARCHY] API failed for UDF_NO : {udfType.Key} | Value: '{udfValue}'");
+													Logger.LogInbound($"❌ [HIERARCHY] API failed for UDF_NO : {udfType.Key} | Value: '{udfValue}'", isAuto);
 													isSuccess = false;
 												}
 											}
 											else
 											{
-												Logger.Log($"[INBOUND - HIERARCHY] UDF_NO : {udfType.Key} | Value: '{udfValue}' already exists.");
+												Logger.LogInbound($"[HIERARCHY] UDF_NO : {udfType.Key} | Value: '{udfValue}' already exists.", isAuto);
 											}
 										}
 										catch (Exception innerEx)
 										{
-											Logger.Log($"❌ [INBOUND - HIERARCHY] Error processing UDF Value '{udfValue}': {innerEx.Message}");
+											Logger.LogError($"❌ [HIERARCHY] Error processing UDF Value '{udfValue}': {innerEx.Message}", isAuto);
 											isSuccess = false;
 										}
 									}
@@ -146,19 +146,17 @@ namespace GXIntegration_Levis.InboundHandlers
 						}
 						catch (Exception ex)
 						{
-							Logger.Log($"❌ [INBOUND - HIERARCHY] Error processing file {fileName}: {ex}");
+							Logger.LogError($"❌ [HIERARCHY] Error processing file {fileName}: {ex}", isAuto);
 							isSuccess = false;
 						}
 
-					// MOVE FILE
-					globalInbound.MoveFile(file, isSuccess);
-				}
-
-				Logger.Log("[INBOUND - HIERARCHY] END Sync Process.");
+						// MOVE FILE
+						globalInbound.MoveFile(file, isSuccess);
+					}
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"❌ [INBOUND - HIERARCHY] Critical Error in RunHierarchySyncAsync: {ex}");
+					Logger.LogError($"❌ [HIERARCHY] Critical Error in RunHierarchySyncAsync: {ex}", isAuto);
 				}
 			}
 
@@ -171,7 +169,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					var lines = File.ReadAllLines(filePath);
 					if (lines.Length == 0)
 					{
-						Logger.Log($"⚠️ [INBOUND - HIERARCHY] File is empty: {filePath}");
+						Logger.LogInbound($"[HIERARCHY] File is empty: {filePath}", isAuto);
 						return result;
 					}
 
@@ -201,7 +199,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"❌ [INBOUND - HIERARCHY] Error in BuildHierarchyByUdf: {ex.Message}");
+					Logger.LogError($"❌ [HIERARCHY] Error in BuildHierarchyByUdf: {ex.Message}", isAuto);
 				}
 
 				return result;

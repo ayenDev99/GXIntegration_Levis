@@ -110,7 +110,7 @@ namespace GXIntegration_Levis.Data.Access
 
 					sql = sql.Replace("{DATE_CONDITION}", dateCondition);
 
-					//Logger.Log($"Generated SQL: {sql}");
+					//Logger.LogOutbound($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
@@ -157,7 +157,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching Store_Goods_Return data: {ex.Message}");
+					// logger.log($"Error fetching Store_Goods_Return data: {ex.Message}");
 					return new List<StoreGoodsReturnModel>();
 				}
 			}

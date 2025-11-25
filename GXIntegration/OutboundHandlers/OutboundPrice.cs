@@ -14,14 +14,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundPrice
 	{
-		public static async Task Execute(PriceRepository repository, GXConfig config, DateTime procDate)
+		public static async Task Execute(PriceRepository repository, GXConfig config, DateTime procDate, bool isAuto)
 		{
 			try
 			{
 				var items = await repository.GetPriceAsync(procDate);
 				if (!items.Any())
 				{
-					Logger.Log("[OUTBOUND - EOD] [TXT] No PRICE data was found in Prism for today.");
+					//Logger.LogOutbound("[OUTBOUND - EOD] [TXT] No PRICE data was found in Prism for today.", isAuto);
 					return;
 				}
 
@@ -46,7 +46,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[OUTBOUND - EOD] [TXT] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.LogOutbound($"[EOD] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}", isAuto);
 
 				string output = Format(items, ",");
 
@@ -54,12 +54,11 @@ namespace GXIntegration_Levis.OutboundHandlers
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 
 				return;
-				//MessageBox.Show($"✅ Price synced file(s) created.");
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"❌ Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log("❌ Error: " + ex.Message);
+				Logger.LogError("❌ Error: " + ex.Message, isAuto);
 
 				return;
 			}

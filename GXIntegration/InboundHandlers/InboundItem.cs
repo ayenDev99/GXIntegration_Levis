@@ -14,27 +14,28 @@ namespace GXIntegration_Levis.InboundHandlers
 	public class InboundItem
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
+		private bool isAuto = false;
 
-		public async Task RunItemSyncAsync(string session, PrismRepository repository)
+		public async Task RunItemSyncAsync(string session, PrismRepository repository, bool is_auto)
 		{
+			isAuto = is_auto;
 			string inboundDir = GlobalInbound.InboundDir;
 			string sentDir = GlobalInbound.SentDir;
 			string unsentDir = GlobalInbound.UnsentDir;
 
 			try
 			{
-				Logger.Log("--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - ITEM] STARTING ITEM Sync Process...");
-
 				string fileNameFormat = "LSPI_ITEM_*.*";
 				string sendingDir = Path.Combine(inboundDir, "SENDING");
 				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
 
 				if (files.Count == 0)
 				{
-					Logger.Log($"[INBOUND - ITEM] No {fileNameFormat} file format found.");
+					Logger.LogInbound($"0 ITEM {fileNameFormat} file found.", isAuto);
 					return;
 				}
+
+				Logger.LogInbound($"[ITEM] {files.Count} {fileNameFormat} file found.", isAuto);
 
 				foreach (string file in files)
 				{
@@ -42,11 +43,10 @@ namespace GXIntegration_Levis.InboundHandlers
 					bool isSuccess = true;
 
 					try
-					{
-						Logger.Log($"[INBOUND - ITEM] Processing file: {fileName}");
-
+					{						
 						var result = BuildItemCollection(file);
-						Logger.Log($"[INBOUND - ITEM] ITEM loaded. Rows found: {result.Count}");
+						Logger.LogInbound($"-----------------------------------", isAuto);
+						Logger.LogInbound($"[ITEM] Processing file: {fileName} | Row No found: {result.Count}", isAuto);
 
 						foreach (var row in result)
 						{
@@ -58,37 +58,35 @@ namespace GXIntegration_Levis.InboundHandlers
 							if (rps_isi_collection != null && rps_isi_collection.Count > 0)
 							{
 								// UPDATE logic here
-								Logger.Log($"[INBOUND - ITEM] Start UPDATE Process.");
 								await updateInventoryItem(row, session, isSuccess, rps_isi_collection);
 							}
 							else
 							{
 								// CREATE logic here
-								Logger.Log($"[INBOUND - ITEM] Start CREATE Process.");
 								await createInventoryItem(row, session, isSuccess);
 							}
 						}
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"❌ [INBOUND - ITEM] Error processing file {fileName}: {ex.Message}");
+						Logger.LogError($"❌ [ITEM] Error processing file {fileName}: {ex.Message}", isAuto);
 						isSuccess = false;
 					}
 
 					// MOVE FILE
 					globalInbound.MoveFile(file, isSuccess);
 				}
-
-				Logger.Log("[INBOUND - ITEM] END Sync Process.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND - ITEM] Critical Error in RunItemSyncAsync: {ex}");
+				Logger.LogError($"❌ [ITEM] Critical Error in RunItemSyncAsync: {ex}", isAuto);
 			}
 		}
 
 		private async Task createInventoryItem(dynamic row, string session, bool isSuccess)
 		{
+			Logger.LogInbound($"[ITEM] [CREATE] Creating new record...", isAuto);
+
 			// Trim fieled value based on Prism DB field limits
 			var desc1 = StringExtensions.TrimMax(row["PRODUCT_CD"]?.ToString().Replace("-", ""), 30);
 			var desc2 = StringExtensions.TrimMax(row["PRODUCT_NM"]?.ToString(), 30);
@@ -156,7 +154,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			};
 
 			var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-			//Logger.Log("Payload:\n" + json);
+			//Logger.LogInbound("Payload:\n" + json);
 
 			string responseJson = GlobalInbound.CallPrismAPI(
 									session
@@ -165,26 +163,33 @@ namespace GXIntegration_Levis.InboundHandlers
 									, out bool isSuccessfulApi
 									, "POST"
 									, 1);
+			var itemSid = JObject.Parse(responseJson)["data"]?[0]?["sid"]?.ToString();
+
+			//Logger.LogInbound($"[ITEM] API Response: {responseJson}", isAuto);
+			//Logger.LogInbound($"[ITEM] SID: {itemSid}", isAuto);
 
 			var alu = row["PROD_SKU"]?.ToString();
 			var upc = row["PROD_GTIN"]?.ToString();
+
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - ITEM] CREATE : API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.LogInbound($"❌ [ITEM] CREATE : API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - ITEM] CREATE : Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.LogInbound($"[ITEM] CREATE : Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
 			}
 		}
 
 		private async Task updateInventoryItem(dynamic row, string session, bool isSuccess, dynamic rps_isi_collection)
 		{
+			Logger.LogInbound($"[ITEM] [UPDATE] Updating existing record...", isAuto);
+
 			var list = rps_isi_collection as List<dynamic>;
 			if (list == null || list.Count == 0)
 			{
-				Logger.Log("[INBOUND - ITEM] UPDATE : RPS.INVN_SBS_ITEM Collection is empty!");
+				//Logger.LogInbound("[ITEM] RPS.INVN_SBS_ITEM Collection is empty!", isAuto);
 				return;
 			}
 
@@ -195,18 +200,16 @@ namespace GXIntegration_Levis.InboundHandlers
 				SID = firstItem.SID.ToString();
 			}
 
-			Logger.Log($"[INBOUND - ITEM] UPDATE : SID: {SID}");
+			Logger.LogInbound($"[ITEM] INVN_SBS_ITEM SID: {SID}", isAuto);
 
 			firstItem.SID = SID;
 
 			var isi_collection = System.Text.Json.JsonSerializer.Serialize(list);
-			Logger.Log($"[INBOUND - ITEM] UPDATE : RPS.INVN_SBS_ITEM Collection: {isi_collection}");
+			Logger.LogInbound($"[ITEM] RPS.INVN_SBS_ITEM Collection: {isi_collection}", isAuto);
 
 			// Trim fieled value based on Prism DB field limits
 			var desc3 = StringExtensions.TrimMax(row["STYLE_CD"]?.ToString(), 30);
 			var desc4 = StringExtensions.TrimMax(row["PROD_JAN"]?.ToString(), 30);
-
-
 			var txt1 = StringExtensions.TrimMax(row["SAP_TAX_CD"]?.ToString(), 255);
 
 			var udf2 = StringExtensions.TrimMax(row["PROD_CAT_CD"]?.ToString(), 50);
@@ -219,27 +222,27 @@ namespace GXIntegration_Levis.InboundHandlers
 			var udf14 = StringExtensions.TrimMax(row["SUB_CLASS_CD"]?.ToString(), 50);
 
 			var existingExtendJson = await getInventoryItemExtend(SID, session, isSuccess);
-			//Logger.Log($"[INBOUND - ITEM] UPDATE : Existing Inventory Extend JSON: {existingExtendJson}");
+			//Logger.LogInbound($"[ITEM] Existing Inventory Extend JSON: {existingExtendJson}");
 
 			var root = JsonConvert.DeserializeObject<JObject>(existingExtendJson);
 
 			var item = root["data"]?.FirstOrDefault();  // get the first item in "data"
 			if (item == null)
 			{
-				Logger.Log("[INBOUND - ITEM] UPDATE : No inventory item found.");
+				Logger.LogInbound("[ITEM] No inventory item found.", isAuto);
 				return;
 			}
 
 			var invnextendArray = item["invnextend"] as JArray; // get "invnextend" array
 			if (invnextendArray == null || !invnextendArray.Any())
 			{
-				Logger.Log("[INBOUND - ITEM] UPDATE : No invnextend data found.");
+				Logger.LogInbound("[ITEM] No invnextend data found.", isAuto);
 				return;
 			}
 
 			var extend = invnextendArray.FirstOrDefault();		// get first invnextend record
 			string invnextendSid = extend["sid"]?.ToString();   // get the SID from the invnextend record
-			//Logger.Log($"[INBOUND - ITEM] UPDATE : invnextend SID: {invnextendSid}");
+			//Logger.LogInbound($"[ITEM] invnextend SID: {invnextendSid}");
 
 			var currentDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
 
@@ -284,7 +287,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			};
 
 			var json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
-			//Logger.Log("[INBOUND - ITEM] UPDATE : Payload:\n" + json);
+			//Logger.LogInbound("[ITEM] Payload:\n" + json);
 
 			string responseJson = GlobalInbound.CallPrismAPI(
 									session
@@ -294,16 +297,22 @@ namespace GXIntegration_Levis.InboundHandlers
 									, "POST"
 									, 1);
 
+			var itemSid = JObject.Parse(responseJson)["data"]?[0]?["sid"]?.ToString();
+
+			//Logger.LogInbound($"[ITEM] API Response: {responseJson}", isAuto);
+			//Logger.LogInbound($"[ITEM] SID: {itemSid}", isAuto);
+
 			var alu = row["PROD_SKU"]?.ToString();
 			var upc = row["PROD_GTIN"]?.ToString();
+
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - ITEM] UPDATE : API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.LogInbound($"❌ [ITEM] API failed for PROD_GTIN/UPC: {upc} | ALU: {alu}");
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - ITEM] UPDATE : Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
+				Logger.LogInbound($"[ITEM] Successfully processed PROD_GTIN/UPC: {upc} | ALU: {alu}");
 			}
 		}
 
@@ -322,13 +331,13 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - ITEM] API failed on getting Inventory Extend data");
+				Logger.LogInbound($"❌ [ITEM] API failed on getting Inventory Extend data");
 				isSuccess = false;
 				return null;
 			}
 			else
 			{
-				//Logger.Log($"[INBOUND - ITEM] Successfully processed on getting Inventory Extend data. INVN_SBS_SID: {invnsbsitemsid}");
+				//Logger.LogInbound($"[ITEM] Successfully processed on getting Inventory Extend data. INVN_SBS_SID: {invnsbsitemsid}");
 				return responseJson;
 			}
 		}
@@ -362,7 +371,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND - ITEM] Error in BuildItemCollection: {ex.Message}");
+				Logger.LogError($"[ITEM] Error in BuildItemCollection: {ex.Message}", isAuto);
 			}
 
 			return result;

@@ -72,7 +72,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching price data: {ex.Message}");
+					Logger.LogError($"Error fetching price data: {ex.Message}");
 					Console.WriteLine($"Error fetching price data: {ex.Message}");
 					return new List<PriceModel>();
 				}

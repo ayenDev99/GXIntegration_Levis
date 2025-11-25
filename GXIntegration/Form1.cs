@@ -317,12 +317,12 @@ namespace GXIntegration
 		private void InitialCreateDatabase()
 		{
 			string folderPath = Path.Combine(Application.StartupPath, "AppData");
-			//Logger.Log("[INIT] Checking for AppData folder...");
+			//// logger.log("[INIT] Checking for AppData folder...");
 
 			if (!Directory.Exists(folderPath))
 			{
 				Directory.CreateDirectory(folderPath);
-				Logger.Log($"[INIT] Created AppData folder at: {folderPath}");
+				// logger.log($"[INIT] Created AppData folder at: {folderPath}");
 			}
 
 			string dbPath = Path.Combine(folderPath, "TRANSACTION_PROCESS.db");
@@ -351,17 +351,17 @@ namespace GXIntegration
 				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
 				{
 					cmd.ExecuteNonQuery();
-					Logger.Log("[INIT] 'TRANSACTION_PROCESS' table created or already exists.");
+					// logger.log("[INIT] 'TRANSACTION_PROCESS' table created or already exists.");
 				}
 
 				string countQuery = "SELECT COUNT(*) FROM TRANSACTION_PROCESS;";
 				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
 				{
 					long count = (long)countCmd.ExecuteScalar();
-					Logger.Log($"[INIT] DB Record count: {count}");
+					// logger.log($"[INIT] DB Record count: {count}");
 				}
 
-				Logger.Log("[INIT] Database initialization complete.");
+				// logger.log("[INIT] Database initialization complete.");
 			}
 		}
 
@@ -371,7 +371,7 @@ namespace GXIntegration
 			if (!Directory.Exists(folderPath))
 			{
 				Directory.CreateDirectory(folderPath);
-				Logger.Log($"[INIT] Created AppData folder at: {folderPath}");
+				// logger.log($"[INIT] Created AppData folder at: {folderPath}");
 			}
 
 			string dbPath = Path.Combine(folderPath, "TempInboundPriceData.db");
@@ -417,17 +417,17 @@ namespace GXIntegration
 				using (SQLiteCommand cmd = new SQLiteCommand(createTableQuery, conn))
 				{
 					cmd.ExecuteNonQuery();
-					Logger.Log("[INIT] 'TempInboundPriceData' table created or already exists.");
+					// logger.log("[INIT] 'TempInboundPriceData' table created or already exists.");
 				}
 
 				string countQuery = "SELECT COUNT(*) FROM TempInboundPriceData;";
 				using (SQLiteCommand countCmd = new SQLiteCommand(countQuery, conn))
 				{
 					long count = (long)countCmd.ExecuteScalar();
-					Logger.Log($"[INIT] DB Record count: {count}");
+					// logger.log($"[INIT] DB Record count: {count}");
 				}
 
-				Logger.Log("[INIT] Database initialization complete.");
+				// logger.log("[INIT] Database initialization complete.");
 			}
 		}
 

@@ -15,8 +15,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public class OutboundStoreInventoryCount
 	{
-		public static async Task Execute(DateTime processDate, List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode)
+
+		public static async Task Execute(DateTime processDate, List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode, bool isAuto)
 		{
+
 			try
 			{
 				if (!items.Any()) { return; }
@@ -41,14 +43,14 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.Log($"[OUTBOUND - EOD] [XML]			StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}");
+				Logger.LogOutbound($"[EOD] StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}", isAuto);
 
 				GenerateXml(items, filePath, generate_type);
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log($"Error: {ex.Message}");
+				Logger.LogError($"Error: {ex.Message}", isAuto);
 			}
 		}
 

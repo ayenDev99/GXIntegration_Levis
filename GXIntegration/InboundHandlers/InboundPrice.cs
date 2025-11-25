@@ -1,5 +1,4 @@
-﻿using GXIntegration.Properties;
-using GXIntegration_Levis.Data.Access;
+﻿using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
@@ -14,34 +13,34 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using JsonFormatting = Newtonsoft.Json.Formatting;
 
-
 namespace GXIntegration_Levis.InboundHandlers
 {
 	public class InboundPrice
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
 		bool isSuccess = true;
+		private bool isAuto = false;
 
-		public async Task RunPriceSyncAsync(string session, PrismRepository repository)
+		public async Task RunPriceSyncAsync(string session, PrismRepository repository, bool is_auto)
 		{
+			isAuto = is_auto;
 			string inboundDir = GlobalInbound.InboundDir;
 			string sentDir = GlobalInbound.SentDir;
 			string unsentDir = GlobalInbound.UnsentDir;
 
 			try
 			{
-				Logger.Log($"--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - PRICE] Starting PRICE Sync Process...");
-
 				string fileNameFormat = "LSPI_PRTARI_*.*";
 				string sendingDir = Path.Combine(inboundDir, "SENDING");
 				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
 
 				if (files.Count == 0)
 				{
-					Logger.Log($"[INBOUND - PRICE] No {fileNameFormat} file format found.");
+					Logger.LogInbound($"0 PRICE {fileNameFormat} file found.", isAuto);
 					return;
 				}
+
+				Logger.LogInbound($"[PRICE] {files.Count} {fileNameFormat} file found.", isAuto);
 
 				foreach (string file in files)
 				{
@@ -49,10 +48,9 @@ namespace GXIntegration_Levis.InboundHandlers
 
 					try
 					{
-						Logger.Log($"[INBOUND - PRICE] Processing file: {fileName}");
-
 						var result = BuildPriceCollection(file);
-						Logger.Log($"[INBOUND - PRICE] PRICE loaded. Rows found: {result.Count}");
+						Logger.LogInbound($"-----------------------------------", isAuto);
+						Logger.LogInbound($"[PRICE] Processing file: {fileName} | Row No found: {result.Count}", isAuto);
 
 						await processPriceSyncAsync(result, repository, session, false);
 						await reprocessPriceDbSyncAsync(repository, session);
@@ -60,19 +58,17 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"❌ [INBOUND - PRICE] Error processing file {fileName}: {ex.Message}");
+						Logger.LogError($"❌ [PRICE] Error processing file {fileName}: {ex.Message}", isAuto);
 						isSuccess = false;
 					}
 
 					// MOVE FILE
 					globalInbound.MoveFile(file, isSuccess);
 				}
-
-				Logger.Log("[INBOUND - PRICE] END Sync Process.");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND - PRICE] Error in RunPriceSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				Logger.LogError($"❌[PRICE] Error in RunPriceSyncAsync: {ex.Message}\nStackTrace: {ex.StackTrace}", isAuto);
 				isSuccess = false;
 			}
 		}
@@ -85,7 +81,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			foreach (var sbsNo in sbsNos)
 			{
-				Logger.Log($"[INBOUND - PRICE] Processing for SBS_NO: {sbsNo}");
+				Logger.LogInbound($"[PRICE] Processing for SBS_NO: {sbsNo}", isAuto);
 
 				// Filter only rows that have valid effectivity date <= today
 				var validRows = new List<Dictionary<string, string>>();
@@ -100,7 +96,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (!validRows.Any())
 				{
-					Logger.Log("[INBOUND - PRICE] No valid rows for adjustment.");
+					Logger.LogInbound("[PRICE] No valid rows for adjustment.", isAuto);
 					continue;
 				}
 
@@ -124,23 +120,26 @@ namespace GXIntegration_Levis.InboundHandlers
 
 					if (!itemList.Any())
 					{
-						Logger.Log("[INBOUND - PRICE] No items found in Prism DB for this batch.");
+						Logger.LogInbound("[PRICE] No items found in Prism DB for this batch.", isAuto);
 						continue;
 					}
 
 					// Create single adjustment for this batch
 					var adjustmentData = await createRpsAdjustment(session, itemList[0]);
 					var adjustmentSid = JObject.Parse(adjustmentData)?["data"]?[0]?["sid"]?.ToString();
-					Logger.Log($"[INBOUND - PRICE] Adjustment SID: {adjustmentSid}");
+					Logger.LogInbound($"[PRICE] Adjustment SID: {adjustmentSid}", isAuto);
+					Logger.LogInbound($"[PRICE] Item Count: {itemList.Count}", isAuto);
 
 					// Add all items in the batch
+					var itemCount = 0;
 					foreach (var item in itemList)
 					{
+						itemCount++;
 						// Find matching row for this item
 						var row = batch.FirstOrDefault(r => r["ProductCode"] == item.DESCRIPTION1);
 						if (row != null)
 						{
-							await createRpsAdjItem(session, item, row, adjustmentSid);
+							await createRpsAdjItem(session, item, row, adjustmentSid, itemCount);
 						}
 					}
 
@@ -159,7 +158,7 @@ namespace GXIntegration_Levis.InboundHandlers
 						}
 					}
 
-					Logger.Log($"[INBOUND - PRICE] Batch of {batch.Count} items processed for adjustment {adjustmentSid}");
+					Logger.LogInbound($"[PRICE] Batch of {batch.Count} items processed for adjustment {adjustmentSid}", isAuto);
 				}
 			}
 
@@ -183,7 +182,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			if (tempRecords.Count == 0)
 			{
-				Logger.Log("[INBOUND - PRICE] No reprocess records found on TempInboundPriceData.db.");
+				Logger.LogInbound("[PRICE] No reprocess records found on TempInboundPriceData.db.", isAuto);
 
 				return;
 			}
@@ -225,7 +224,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		// ***************************************************
 		private async Task<string> createRpsAdjustment(string session, dynamic item)
 		{
-			Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJUSTMENT");
+			Logger.LogInbound($"[PRICE] [CREATE] Creating ADJUSTMENT new record...", isAuto);
 
 			string price_lvl_sid = item?.ACTIVE_PRICE_LVL_SID?.ToString();
 			string sbs_sid = item?.SBS_SID?.ToString();
@@ -254,14 +253,19 @@ namespace GXIntegration_Levis.InboundHandlers
 									, 1
 									);
 
+			var priceSid = JObject.Parse(responseJson)["data"]?[0]?["sid"]?.ToString();
+
+			//Logger.LogInbound($"[EMPLOYEE] API Response: {responseJson}", isAuto);
+			Logger.LogInbound($"[PRICE] SID: {priceSid}", isAuto);
+
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				Logger.LogInbound($"❌ [PRICE] API failed.", isAuto);
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+				//Logger.LogInbound($"[PRICE] Successfully processed.", isAuto);
 			}
 
 			return responseJson;
@@ -269,7 +273,8 @@ namespace GXIntegration_Levis.InboundHandlers
 
 		private async Task<string> updateRpsAdjustment(string session, string adjusmentSid, string rowversion)
 		{
-			Logger.Log($"[INBOUND - PRICE]		[UPDATE] ADJUSTMENT");
+			Logger.LogInbound($"[ITEM] [UPDATE] Updating existing ADJUSTMENT record...", isAuto);
+
 			var currentDate = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz");
 			int rowVersion = Convert.ToInt32(rowversion);
 
@@ -284,7 +289,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			string endpointCreate = $"/api/backoffice/adjustment/{adjusmentSid}?";
 			var payload = new { data = new[] { adjustmentPayload } };
-			//Logger.Log($"Payload: {JsonConvert.SerializeObject(payload, Formatting.Indented)}");
+			//Logger.LogInbound($"Payload: {JsonConvert.SerializeObject(payload, Formatting.Indented)}");
 			string json = JsonConvert.SerializeObject(payload, JsonFormatting.Indented);
 			string responseJson = GlobalInbound.CallPrismAPI(
 									session
@@ -294,29 +299,35 @@ namespace GXIntegration_Levis.InboundHandlers
 									, "PUT"
 									, 1
 									);
+
+			var priceSid = JObject.Parse(responseJson)["data"]?[0]?["sid"]?.ToString();
+
+			//Logger.LogInbound($"[EMPLOYEE] API Response: {responseJson}", isAuto);
+			Logger.LogInbound($"[PRICE] SID: {priceSid}", isAuto);
+
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				Logger.LogError($"❌ [PRICE] API failed.", isAuto);
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+				//Logger.LogError($"[PRICE] Successfully processed.", isAuto);
 			}
 
 			return responseJson;
 		}
 
-		private async Task<string> createRpsAdjItem(string session, dynamic item, dynamic fileRowData, string adjustmentSid)
+		private async Task<string> createRpsAdjItem(string session, dynamic item, dynamic fileRowData, string adjustmentSid, int itemCount)
 		{
-			//Logger.Log($"[INBOUND - PRICE]		[CREATE] ADJ_ITEM");
+			Logger.LogInbound($"[PRICE] [CREATE] ItemCount : {itemCount} | Creating ADJ_ITEM new record...", isAuto);
 
 			string item_sid = item?.SID?.ToString();
 			string sbs_sid = item?.SBS_SID?.ToString();
 			decimal adjValue = 0m;
 			if (!decimal.TryParse(fileRowData["Price"], out adjValue))
 			{
-				Logger.Log($"[INBOUND - PRICE] Could not parse Price '{fileRowData["Price"]}' to decimal. Defaulting to 0.");
+				Logger.LogInbound($"[PRICE] Could not parse Price '{fileRowData["Price"]}' to decimal. Defaulting to 0.");
 			}
 			var adjustmentPayload = new Dictionary<string, object>
 			{
@@ -340,14 +351,19 @@ namespace GXIntegration_Levis.InboundHandlers
 									, 1
 									);
 
+			var priceSid = JObject.Parse(responseJson)["data"]?[0]?["sid"]?.ToString();
+
+			//Logger.LogInbound($"[EMPLOYEE] API Response: {responseJson}", isAuto);
+			Logger.LogInbound($"[PRICE] SID: {priceSid}", isAuto);
+
 			if (!isSuccessfulApi)
 			{
-				Logger.Log($"❌ [INBOUND - PRICE] API failed.");
+				Logger.LogError($"❌ [PRICE] API failed.", isAuto);
 				isSuccess = false;
 			}
 			else
 			{
-				Logger.Log($"[INBOUND - PRICE] Successfully processed.");
+				//Logger.LogInbound($"[PRICE] Successfully processed.", isAuto);
 			}
 
 			return responseJson;
@@ -393,7 +409,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[ERROR] Error inserting data ProductCode: {row["ProductCode"]} - {ex.Message}\nStackTrace: {ex.StackTrace}");
+				Logger.LogError($"[ERROR] Error inserting data ProductCode: {row["ProductCode"]} - {ex.Message}\nStackTrace: {ex.StackTrace}", isAuto);
 				isSuccess = false;
 			}
 			
@@ -423,7 +439,8 @@ namespace GXIntegration_Levis.InboundHandlers
 						// Map only relevant indices
 						if (fields.Length > 0) rowDict["CountryCode"] = fields[0].Trim();
 						if (fields.Length > 1) rowDict["StoreCode"] = fields[1].Trim();
-						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
+						//if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim() + "0";
+						if (fields.Length > 2) rowDict["ProductCode"] = fields[2].Trim();
 						if (fields.Length > 3) rowDict["ColorCode"] = fields[3].Trim();
 						if (fields.Length > 4) rowDict["SizeCode"] = fields[4].Trim();
 						if (fields.Length > 5) rowDict["SKU"] = fields[5].Trim();
@@ -450,7 +467,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND - PRICE] Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}");
+				Logger.LogError($"[PRICE] Error in BuildPriceCollection: {ex.Message}\nStackTrace: {ex.StackTrace}", isAuto);
 				isSuccess = false;
 			}
 

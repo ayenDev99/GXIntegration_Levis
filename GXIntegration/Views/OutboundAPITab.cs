@@ -173,7 +173,8 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		public async Task ManualSendXmlFilesToApi()
 		{
-			Logger.Log("[OUTBOUND API-MANUAL] Start Manual Process...");
+			bool isAuto = false;
+			Logger.LogOutbound("[MANUAL - API] Start Manual Process...", isAuto);
 
 			guna1DataGridView1.EndEdit();
 
@@ -200,7 +201,7 @@ namespace GXIntegration_Levis.Views
 								.Where(s => !string.IsNullOrEmpty(s))
 								.ToHashSet();
 
-			Logger.Log("[OUTBOUND API-MANUAL]		Selected Transaction Types: " + string.Join(",", selectedRows));
+			Logger.LogOutbound("[MANUAL - API]		Selected Transaction Types: " + string.Join(",", selectedRows), isAuto);
 
 			if (!selectedRows.Any())
 			{
@@ -216,7 +217,7 @@ namespace GXIntegration_Levis.Views
 				var fromDate = datePickerFrom.Value;
 				var toDate = datePickerTo.Value;
 
-				Logger.Log($"[OUTBOUND API-MANUAL]		Process DateRange From: {fromDate}, To: {toDate}");
+				Logger.LogOutbound($"[MANUAL - API] Process DateRange From: {fromDate}, To: {toDate}", isAuto);
 
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 				foreach (var store in prismStores)
@@ -224,7 +225,7 @@ namespace GXIntegration_Levis.Views
 					var storeCode = ((IDictionary<string, object>)store)
 						.TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					Logger.Log($"[OUTBOUND API-MANUAL]		StoreCode: {storeCode}");
+					Logger.LogOutbound($"[MANUAL - API]		StoreCode: {storeCode}", isAuto);
 
 					var (storeSaleItems
 						, storeReturnItems
@@ -254,7 +255,7 @@ namespace GXIntegration_Levis.Views
 						var itemsList = cfg.Items.ToList();
 						if (!itemsList.Any())
 						{
-							Logger.Log($"[OUTBOUND API-MANUAL]			No records for {cfg.DocType} in store {storeCode}");
+							Logger.LogOutbound($"[MANUAL - API]			No records for {cfg.DocType} in store {storeCode}", isAuto);
 							continue;
 						}
 
@@ -269,7 +270,8 @@ namespace GXIntegration_Levis.Views
 								cfg.DocType,
 								cfg.ApiUrl,
 								username,
-								password
+								password,
+								isAuto
 							);
 						}
 					}
@@ -286,7 +288,7 @@ namespace GXIntegration_Levis.Views
 
 		public async Task AutoSendXmlFilesToApi(int reprocessTime)
 		{
-			Logger.Log("[OUTBOUND API-AUTO] Start Auto Process...");
+			bool isAuto = true;
 
 			try
 			{
@@ -297,12 +299,12 @@ namespace GXIntegration_Levis.Views
 					!apiConfig.TryGetValue("SaleApiUrl", out string saleApiUrl) ||
 					!apiConfig.TryGetValue("InventoryApiUrl", out string inventoryApiUrl))
 				{
-					Logger.Log("[ERROR] API configuration is missing. Please configure API settings first.");
+					Logger.LogError("[ERROR] API configuration is missing. Please configure API settings first.", isAuto);
 					return;
 				}
 
 				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime);
-				Logger.Log($"[OUTBOUND API-AUTO]	Process DateRange From: {fromDate}, To: {toDate}");
+				Logger.LogOutbound($"[AUTO - API] Process DateRange From: {fromDate}, To: {toDate}", isAuto);
 
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 				foreach (var store in prismStores)
@@ -310,7 +312,7 @@ namespace GXIntegration_Levis.Views
 					var storeCode = ((IDictionary<string, object>)store)
 						.TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					Logger.Log($"[OUTBOUND API-AUTO]	StoreCode: {storeCode}");
+					// logger.log($"[AUTO - API]	StoreCode: {storeCode}");
 
 					var (storeSaleItems
 						, storeReturnItems
@@ -337,7 +339,7 @@ namespace GXIntegration_Levis.Views
 						var itemsList = cfg.Items.ToList();
 						if (!itemsList.Any())
 						{
-							Logger.Log($"[OUTBOUND API-AUTO]		No records for {cfg.DocType} in store {storeCode}");
+							// logger.log($"[AUTO - API]		No records for {cfg.DocType} in store {storeCode}");
 							continue;
 						}
 
@@ -352,7 +354,8 @@ namespace GXIntegration_Levis.Views
 								cfg.DocType,
 								cfg.ApiUrl,
 								username,
-								password
+								password, 
+								isAuto
 							);
 						}
 					}
@@ -360,7 +363,7 @@ namespace GXIntegration_Levis.Views
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[ERROR] AutoSendXmlFilesToApi failed: {ex}");
+				Logger.LogError($"[ERROR] AutoSendXmlFilesToApi failed: {ex}", isAuto);
 			}
 		}
 
@@ -532,11 +535,13 @@ namespace GXIntegration_Levis.Views
 		string docType,
 		string apiUrl,
 		string username,
-		string password)
+		string password, 
+		bool isAuto)
 		{
+
 			if (items == null || !items.Any())
 			{
-				Logger.Log($"No {docType} data found to send.");
+				Logger.LogOutbound($"No {docType} data found to send.", isAuto);
 				MessageBox.Show($"No {docType} data found to send.", "API Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 				return;
 			}
@@ -557,7 +562,7 @@ namespace GXIntegration_Levis.Views
 
 						if (IsSidAlreadyProcessed(sid))
 						{
-							Logger.Log($"SID {sid} already processed. Skipping.");
+							Logger.LogOutbound($"SID {sid} already processed. Skipping.", isAuto);
 							continue;
 						}
 
@@ -572,7 +577,7 @@ namespace GXIntegration_Levis.Views
     {xml}
 </POSLog>";
 
-						//Logger.Log($"SOAP Payload for SID {sid}:\n{soapEnvelope}");
+						// Logger.LogOutbound($"SOAP Payload for SID {sid}:\n{soapEnvelope}", isAuto);
 
 						// Save to OUTBOUND\API\PERTRANSACTION
 						string folderFormattedDate = docDate.ToString("MMddyyyy");
@@ -600,16 +605,16 @@ namespace GXIntegration_Levis.Views
 						string responseContent = await response.Content.ReadAsStringAsync();
 
 						string singleLineResponse = responseContent.Replace("\r", "").Replace("\n", "").Trim();
-						Logger.Log($"[OUTBOUND API]			Response for SID {sid}: {singleLineResponse}");
+						Logger.LogOutbound($"[API] Response for SID {sid}: {responseContent}", isAuto);
 
 						if (response.IsSuccessStatusCode)
 						{
-							Logger.Log($"[OUTBOUND API]			XML sent to API Mulesoft SUCCESSFULLY | Type: {docType} | SID: {sid} | DocNo: {docNo} | Status: {response.StatusCode}");
+							Logger.LogOutbound($"[API] XML sent to API Mulesoft SUCCESSFULLY | Type: {docType} | SID: {sid} | DocNo: {docNo}", isAuto);
 							InsertProcessedTransaction(sid, docNo, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Success", responseContent);
 						}
 						else
 						{
-							Logger.Log($"[OUTBOUND API]			XML sent to API Mulesoft FAILED | Type: {docType} | SID: {sid} | DocNo: {docNo} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}");
+							Logger.LogOutbound($"[API] XML sent to API Mulesoft FAILED | Type: {docType} | SID: {sid} | DocNo: {docNo} | Status: {response.StatusCode} | Reason: {response.ReasonPhrase}", isAuto);
 							InsertProcessedTransaction(sid, docNo, docType, docDate.ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Failed", responseContent);
 						}
 
@@ -618,13 +623,11 @@ namespace GXIntegration_Levis.Views
 					{
 						string sid = getSid(item);
 						string docNo = getDocNo(item);
-						Logger.Log($"[API ERROR] {docType} | SID {sid} | Exception: {ex}");
+						Logger.LogError($"[API ERROR] {docType} | SID {sid} | Exception: {ex}", isAuto);
 						InsertProcessedTransaction(sid, docNo, docType, getCreatedDate(item).ToString("dd-MMM-yy hh:mm:ss tt zzz"), "Error");
 					}
 				}
 			}
-
-			//MessageBox.Show($"{docType.ToUpper()} data processed. Full API responses saved to AppData folder.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		private bool IsSidAlreadyProcessed(string sid)

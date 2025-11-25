@@ -3,6 +3,7 @@ using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Views;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
@@ -17,26 +18,28 @@ namespace GXIntegration_Levis.InboundHandlers
 	public class InboundASN
 	{
 		private readonly GlobalInbound globalInbound = new GlobalInbound();
+		private bool isAuto = false;
 
-		public async Task RunASNSyncAsync(string session, PrismRepository repository)
+		public async Task RunASNSyncAsync(string session, PrismRepository repository, bool is_auto)
 		{
+			isAuto = is_auto;
 			string inboundDir = GlobalInbound.InboundDir;
 			string sentDir = GlobalInbound.SentDir;
 			string unsentDir = GlobalInbound.UnsentDir;
 
 			try
 			{
-				Logger.Log("--------------------------------------------------------------------------");
-				Logger.Log("[INBOUND - ASN] STARTING ASN Sync Process...");
-
 				string fileNameFormat = "LSPI_PRTRDX_*.*";
 				string sendingDir = Path.Combine(inboundDir, "SENDING");
 				var files = globalInbound.GetInboundFiles(sendingDir, fileNameFormat);
+
 				if (files.Count == 0)
 				{
-					Logger.Log($"[INBOUND - ASN] No {fileNameFormat} file format found.");
+					Logger.LogInbound($"0 ASN {fileNameFormat} file found.", isAuto);
 					return;
 				}
+
+				Logger.LogInbound($"[ASN] {files.Count} {fileNameFormat} file found.", isAuto);
 
 				foreach (string file in files)
 				{
@@ -45,9 +48,9 @@ namespace GXIntegration_Levis.InboundHandlers
 
 					try
 					{
-						Logger.Log($"[INBOUND - ASN] Processing file: {fileName}");
 						var result = BuildASNCollection(file);
-						Logger.Log($"[INBOUND - ASN] ASN file loaded. Rows found: {result.Count}");
+						Logger.LogInbound($"-----------------------------------", isAuto);
+						Logger.LogInbound($"[ASN] Processing file: {fileName} | Row No found: {result.Count}", isAuto);
 
 						var groupedByDocument = result
 							.Where(r => r.ContainsKey("DocumentNumber"))
@@ -79,13 +82,13 @@ namespace GXIntegration_Levis.InboundHandlers
 							var isPONumExist = await IsPONumExistAsync(repository, documentNumber);
 							if (isPONumExist)
 							{
-								Logger.Log($"[INBOUND - ASN] PO already exists. Skipping...");
+								Logger.LogInbound($"[ASN] PO already exists. Skipping...", isAuto);
 								isSuccess = false;
 							}
 
 							XDocument config = XDocument.Load("config.xml");
 							bool acceptPartial = bool.Parse(config.Descendants("AcceptPartial").First().Value);
-							Logger.Log($"[INBOUND - ASN] AcceptPartial: {acceptPartial}");
+							Logger.LogInbound($"[ASN] AcceptPartial: {acceptPartial}", isAuto);
 
 							var validProducts = await GetValidPOItemsAsync(repository, productCodes, acceptPartial);
 							var invalidProducts = productCodes
@@ -98,18 +101,18 @@ namespace GXIntegration_Levis.InboundHandlers
 
 							foreach (var invalid in invalidProducts)
 							{
-								Logger.Log($"[INBOUND - ASN] Invalid item → ProductCode={invalid.ProductCode}, Color={invalid.ColorCode}, Size={invalid.SizeCode}, Store={invalid.StoreCode}");
+								Logger.LogInbound($"[ASN] Invalid item → ProductCode={invalid.ProductCode}, Color={invalid.ColorCode}, Size={invalid.SizeCode}, Store={invalid.StoreCode}", isAuto);
 							}
 
 							if (!acceptPartial && validProducts.Count != productCodes.Count)
 							{
-								Logger.Log($"[INBOUND - ASN] Rejecting PO {documentNumber}. Invalid items found.");
+								Logger.LogInbound($"[ASN] Rejecting PO {documentNumber}. Invalid items found.", isAuto);
 								isSuccess = false;
 							}
 
 							if (!validProducts.Any())
 							{
-								Logger.Log($"[INBOUND - ASN] No valid items found for PO {documentNumber}. Skipping...");
+								Logger.LogInbound($"[ASN] No valid items found for PO {documentNumber}. Skipping...", isAuto);
 								isSuccess = false;
 							}
 
@@ -132,7 +135,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					}
 					catch (Exception ex)
 					{
-						Logger.Log($"[INBOUND - ASN] Error processing file {fileName}: {ex.Message}");
+						Logger.LogError($"[ASN] Error processing file {fileName}: {ex.Message}", isAuto);
 						isSuccess = false;
 					}
 					finally
@@ -141,12 +144,10 @@ namespace GXIntegration_Levis.InboundHandlers
 						globalInbound.MoveFile(file, isSuccess);
 					}
 				}
-
-				Logger.Log("[INBOUND - ASN] END Sync Process");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND - ASN] Error in RunASNSyncAsync: {ex.Message}");
+				Logger.LogError($"[ASN] Error in RunASNSyncAsync: {ex.Message}", isAuto);
 			}
 		}
 
@@ -154,7 +155,7 @@ namespace GXIntegration_Levis.InboundHandlers
 		{
 			if (string.IsNullOrWhiteSpace(documentNumber))
 			{
-				Logger.Log("[INBOUND - ASN]		Document number is null or empty.");
+				Logger.LogInbound("[ASN] Document number is null or empty.", isAuto);
 				return false;
 			}
 
@@ -162,7 +163,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			var resultList = poResult as List<dynamic> ?? new List<dynamic>();
 
 			int count = resultList?.Count ?? 0;
-			Logger.Log($"[INBOUND - ASN]	PO_NO : '{documentNumber}'");
+			Logger.LogInbound($"[ASN] PO_NO : '{documentNumber}'", isAuto);
 
 			return count > 0;
 		}
@@ -182,7 +183,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (prismStore == null || prismStore.Count == 0)
 				{
-					Logger.Log($"[INBOUND - ASN] StoreCode : {storeCode} does not exist in Prism DB.");
+					 Logger.LogInbound($"[ASN] StoreCode : {storeCode} does not exist in Prism DB.", isAuto);
 					if (!isAcceptPartial) return new List<ProductCodeInfo>(); // invalid → return empty
 					continue;
 				}
@@ -200,17 +201,17 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				if (resultList.Count > 0)
 				{
-					Logger.Log($"[INBOUND - ASN]		ProductCode: {productCode.ProductCode} | " +
-							   $"ColorCode: {productCode.ColorCode} | SizeCode: {productCode.SizeCode} EXISTS in Prism DB");
+					Logger.LogInbound($"[ASN] ProductCode: {productCode.ProductCode} | " +
+							   $"ColorCode: {productCode.ColorCode} | SizeCode: {productCode.SizeCode} EXISTS in Prism DB", isAuto);
 					validProducts.Add(productCode);
 				}
 				else
 				{
 					if (!isAcceptPartial)
 					{
-						Logger.Log($"[INBOUND - ASN] Rejecting PO. " +
-								   $"ALU: {productCode.ProductCode}{productCode.SizeCode}{productCode.ColorCode} " +
-								   $"does NOT exist in Prism DB.");
+						Logger.LogInbound($"[ASN] Rejecting PO. " +
+								  $"ALU: {productCode.ProductCode}{productCode.SizeCode}{productCode.ColorCode} " +
+								  $"does NOT exist in Prism DB.", isAuto);
 						return new List<ProductCodeInfo>(); // immediately stop
 					}
 				}
@@ -224,15 +225,15 @@ namespace GXIntegration_Levis.InboundHandlers
 		// ***************************************************
 		private async Task<string> createRpsPOAsync(dynamic repo, string session, IDictionary<string, string> item)
 		{
-			//Logger.Log("[INBOUND - ASN] [CREATE] PO - Item Details:");
-			//item?.ToList().ForEach(kv => Logger.Log($"   {kv.Key} = {kv.Value}"));
+			// Logger.LogInbound("[ASN] [CREATE] PO - Item Details:");
+			//item?.ToList().ForEach(kv => // Logger.LogInbound($"   {kv.Key} = {kv.Value}"));
 
 			var storeCode		= GlobalHelper.GetStringValue(item, "StoreCode");
 			var prismStore		= await repo.GetRpsStore("ADDRESS4", storeCode);
 
 			if (prismStore == null || prismStore.Count == 0) 
 			{ 
-				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
+				//Logger.LogInbound($"[ASN] StoreCode : {storeCode} is not existing on Prism DB.", isAuto);
 				return null;
 			}
 
@@ -263,7 +264,8 @@ namespace GXIntegration_Levis.InboundHandlers
 			var payload = new { data = new[] { poPayload } };
 			string json = JsonConvert.SerializeObject(payload, Formatting.Indented);
 
-			Logger.Log($"[INBOUND - ASN]		[CREATE] PO");
+			Logger.LogInbound($"[ASN] [CREATE] Creating new record...", isAuto);
+
 			// Call API to CREATE RPS.PO
 			string endpointCreate = "/api/backoffice/purchaseorder";
 			string responseJson = GlobalInbound.CallPrismAPI(
@@ -276,7 +278,9 @@ namespace GXIntegration_Levis.InboundHandlers
 									);
 
 			var sid = JsonConvert.DeserializeObject<dynamic>(responseJson)?.data[0]?.sid;
-			Logger.Log($"[INBOUND - ASN]		PO SID: {sid}");
+
+			//Logger.LogInbound($"[EMPLOYEE] API Response: {responseJson}", isAuto);
+			Logger.LogInbound($"[ASN] SID: {sid}", isAuto);
 
 			return sid;	
 		}
@@ -288,7 +292,7 @@ namespace GXIntegration_Levis.InboundHandlers
 
 			if (prismStore == null || prismStore.Count == 0)
 			{
-				Logger.Log($"[INBOUND - ASN]		StoreCode : {storeCode} is not existing on Prism DB.");
+				Logger.LogInbound($"[ASN] StoreCode : {storeCode} is not existing on Prism DB.", isAuto);
 				return null;
 			}
 
@@ -334,6 +338,12 @@ namespace GXIntegration_Levis.InboundHandlers
 									, "POST"
 									, 1
 									);
+
+			var sid = JsonConvert.DeserializeObject<dynamic>(responseJson)?.data[0]?.sid;
+
+			//Logger.LogInbound($"[EMPLOYEE] API Response: {responseJson}", isAuto);
+			Logger.LogInbound($"[ASN] SID: {sid}", isAuto);
+
 			return responseJson;
 		}
 
@@ -409,7 +419,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Error in BuildPriceCollection for file '{filePath}': {ex}");
+				 Logger.LogError($"Error in BuildPriceCollection for file '{filePath}': {ex}");
 			}
 
 			return result;

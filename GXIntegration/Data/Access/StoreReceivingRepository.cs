@@ -123,7 +123,7 @@ namespace GXIntegration_Levis.Data.Access
 									VOU.POST_DATE DESC
 					";
 
-					//Logger.Log($"Generated SQL: {sql}");
+					//Logger.LogOutbound($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
@@ -137,7 +137,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching Store_Receiving data: {ex.Message}");
+					Logger.LogError($"Error fetching Store_Receiving data: {ex.Message}");
 					Console.WriteLine($"Error fetching Store_Receiving data: {ex.Message}");
 					return new List<StoreReceivingModel>();
 				}

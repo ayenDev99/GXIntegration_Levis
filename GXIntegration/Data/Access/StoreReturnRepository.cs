@@ -177,7 +177,7 @@ namespace GXIntegration_Levis.Data.Access
                                 , DOC_ITEM_DISC.DISC_POS ASC
 					";
 
-					//Logger.Log($"Generated SQL: {sql}");
+					//Logger.LogOutbound($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
@@ -240,8 +240,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching sales data: {ex.Message}");
-					Console.WriteLine($"Error fetching sakes data: {ex.Message}");
+					Logger.LogError($"Error fetching sales data: {ex.Message}");
 					return new List<StoreReturnModel>();
 				}
 			}

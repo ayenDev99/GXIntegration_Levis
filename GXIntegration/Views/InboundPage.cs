@@ -6,7 +6,6 @@ using GXIntegration_Levis.InboundHandlers;
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.SQLite;
 using System.Drawing;
 using System.IO;
@@ -200,13 +199,21 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSaveToPrism);
 		}
 
+		public async Task TriggerSFTPAsync(int reprocessTime, string session)
+		{
+			await DownloadFromSftpAsync();
+			await DownloadFromLocalAsync();
+
+			await AutoProcessAsync(reprocessTime);
+		}
+
 		public async Task ManualProcessAsync()
 		{
 			//ProgressForm progressForm = new ProgressForm();
 			//progressForm.Show();
 
-			//Logger.Log("[INBOUND-MANUAL] Start Manual Process...", true);
-			var is_auto = false;
+			// Logger.log("[INBOUND-MANUAL] Start Manual Process...", true);
+			var isAuto = false;
 
 			//BackgroundWorker worker = new BackgroundWorker
 			//{
@@ -236,7 +243,7 @@ namespace GXIntegration_Levis.Views
 
 					if (!selectedModules.Any())
 					{
-						Logger.Log("[INBOUND] No module selected.", true);
+						Logger.LogInbound("[INBOUND] No module selected.", true);
 						return;
 					}
 
@@ -247,44 +254,44 @@ namespace GXIntegration_Levis.Views
 					{
 						currentStep++;
 
-						Logger.Log($"[INBOUND] Processing module: {moduleName}", true);
+						Logger.LogInbound($"[INBOUND] Processing module: {moduleName}", true);
 
 						//worker.ReportProgress(currentStep * 100 / totalSteps, moduleName);
 
 						switch (moduleName)
 						{
 							case "EMPLOYEE DETAILS":
-								inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, is_auto)
+								inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, isAuto)
 									.GetAwaiter().GetResult();
 								break;
 
 							case "ITEM DETAILS":
-								inboundItem.RunItemSyncAsync(session, _prismRepository)
+								inboundItem.RunItemSyncAsync(session, _prismRepository, isAuto)
 									.GetAwaiter().GetResult();
 								break;
 
 							case "HIERARCHY DETAILS":
-								inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository)
+								inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository, isAuto)
 									.GetAwaiter().GetResult();
 								break;
 
 							case "ASN DETAILS":
-								inboundAsn.RunASNSyncAsync(session, _prismRepository)
+								inboundAsn.RunASNSyncAsync(session, _prismRepository, isAuto)
 									.GetAwaiter().GetResult();
 								break;
 
 							case "PRICE DETAILS":
-								inboundPrice.RunPriceSyncAsync(session, _prismRepository)
+								inboundPrice.RunPriceSyncAsync(session, _prismRepository, isAuto)
 									.GetAwaiter().GetResult();
 								break;
 						}
 					}
 
-					Logger.Log("[INBOUND-MANUAL] Process Completed!", true);
+					Logger.LogInbound("[INBOUND-MANUAL] Process Completed!", true);
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[INBOUND] Error: {ex}", true);
+					Logger.LogError($"[INBOUND] Error: {ex}", true);
 				}
 			//};
 
@@ -305,19 +312,23 @@ namespace GXIntegration_Levis.Views
 			//	worker.RunWorkerAsync();
 		}
 
-		public async Task AutoProcessAsync()
+		public async Task AutoProcessAsync(int reprocessTime)
 		{
-			Logger.Log("[INBOUND-AUTO] Start AUTO Process...", true);
-			var is_auto = true;
+			var isAuto = true;
 
 			try
 			{
 				var globalInbound = new GlobalInbound();
 
+				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime);
+				Logger.LogInbound($"-----------------------------------", isAuto);
+				Logger.LogInbound($"[AUTO - SFTP] Process Time : {fromDate}", isAuto);
+				
 				// Block async so BackgroundWorker waits
 				string session = globalInbound.AuthenticateFromConfigAsync()
 												.GetAwaiter()
 												.GetResult();
+
 
 				if (session == null)
 					return;
@@ -335,51 +346,43 @@ namespace GXIntegration_Levis.Views
 				foreach (var moduleName in allModules)
 				{
 
-					Logger.Log($"[INBOUND] Processing module: {moduleName}", true);
+					// Logger.LogInbound($"[INBOUND] Processing module: {moduleName}", true);
 
 					switch (moduleName)
 					{
 						case "EMPLOYEE DETAILS":
-							inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, is_auto)
+							inboundEmployee.RunEmployeeSyncAsync(session, _prismRepository, isAuto)
 								.GetAwaiter().GetResult();
 							break;
 
 						case "ITEM DETAILS":
-							inboundItem.RunItemSyncAsync(session, _prismRepository)
+							inboundItem.RunItemSyncAsync(session, _prismRepository, isAuto)
 								.GetAwaiter().GetResult();
 							break;
 
 						case "HIERARCHY DETAILS":
-							inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository)
+							inboundHierarchy.RunHierarchySyncAsync(session, _prismRepository, isAuto)
 								.GetAwaiter().GetResult();
 							break;
 
 						case "ASN DETAILS":
-							inboundAsn.RunASNSyncAsync(session, _prismRepository)
+							inboundAsn.RunASNSyncAsync(session, _prismRepository, isAuto)
 								.GetAwaiter().GetResult();
 							break;
 
 						case "PRICE DETAILS":
-							inboundPrice.RunPriceSyncAsync(session, _prismRepository)
+							inboundPrice.RunPriceSyncAsync(session, _prismRepository, isAuto)
 								.GetAwaiter().GetResult();
 							break;
 					}
 				}
 
-				Logger.Log("[INBOUND-AUTO] Process Completed!", true);
+				// Logger.LogInbound("[INBOUND-AUTO] Process Completed!", true);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"[INBOUND] Error: {ex}", true);
+				Logger.LogError($"[INBOUND] Error: {ex}", true);
 			}
-		}
-
-		public async Task TriggerSFTPAsync()
-		{
-			await DownloadFromSftpAsync();
-			await DownloadFromLocalAsync();
-
-			await AutoProcessAsync();
 		}
 
 		// ***************************************************
@@ -425,7 +428,7 @@ namespace GXIntegration_Levis.Views
 							{
 								if (!sftp.Exists(remotePath))
 								{
-									Logger.Log($"[INBOUND SFTP] Directory not found: {remotePath}", true);
+									Logger.LogInbound($"[INBOUND SFTP] Directory not found: {remotePath}", true);
 									continue;
 								}
 
@@ -440,7 +443,7 @@ namespace GXIntegration_Levis.Views
 									// Check if already exists in DB
 									if (IsFileAlreadyDownloaded(dbPath, fileName))
 									{
-										//Logger.Log($"[INBOUND SFTP] Skipping '{fileName}' — already exists in database.");
+										// Logger.LogInbound($"[INBOUND SFTP] Skipping '{fileName}' — already exists in database.");
 										continue;
 									}
 
@@ -452,7 +455,7 @@ namespace GXIntegration_Levis.Views
 										sftp.DownloadFile(file.FullName, fileStream);
 									}
 
-									Logger.Log($"[INBOUND SFTP] Downloaded '{fileName}' from {remotePath}", true);
+									Logger.LogInbound($"[INBOUND SFTP] Downloaded '{fileName}' from {remotePath}", true);
 
 									// Insert new record into DB
 									InsertDownloadedFile(dbPath, fileName, remotePath, inboundBaseDir);
@@ -460,18 +463,18 @@ namespace GXIntegration_Levis.Views
 							}
 							catch (Exception ex)
 							{
-								Logger.Log($"[INBOUND SFTP] Error processing directory '{remotePath}': {ex}", true);
+								Logger.LogError($"[INBOUND SFTP] Error processing directory '{remotePath}': {ex}", true);
 							}
 						}
 
 						sftp.Disconnect();
 					}
 
-					Logger.Log("[INBOUND SFTP] File download completed.", true);
+					//Logger.LogInbound("[INBOUND SFTP] File download completed.", true);
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[INBOUND SFTP] Download failed: {ex}", true);
+					Logger.LogError($"[INBOUND SFTP] Download failed: {ex}", true);
 				}
 			});
 		}
@@ -499,7 +502,7 @@ namespace GXIntegration_Levis.Views
 						{
 							if (!Directory.Exists(remotePath))
 							{
-								Logger.Log($"[INBOUND LOCAL] Directory not found: {remotePath}", true);
+								Logger.LogInbound($"[AUTO - LOCAL] Directory not found: {remotePath}", true);
 								continue;
 							}
 
@@ -509,18 +512,31 @@ namespace GXIntegration_Levis.Views
 
 							foreach (var filePath in files)
 							{
+
 								string fileName = Path.GetFileName(filePath);
+								
 
 								// Skip if already processed
 								if (IsFileAlreadyDownloaded(dbPath, fileName))
+								{
+									Logger.LogInbound($"[AUTO - LOCAL] File {fileName} already downloaded. Moved to DUPLICATE folder.", true);
+									var duplicatePath = Path.Combine(remotePath, "DUPLICATE");
+									string dupliFilePath = Path.Combine(duplicatePath, fileName);
+
+									if (!Directory.Exists(duplicatePath))
+										Directory.CreateDirectory(duplicatePath);
+
+									File.Copy(filePath, dupliFilePath, overwrite: true);
+									File.Delete(filePath);
 									continue;
+								}
 
 								string localFilePath = Path.Combine(inboundBaseDir, fileName);
 
 								// Copy to INBOUND/SENDING
 								File.Copy(filePath, localFilePath, overwrite: true);
 
-								Logger.Log($"[INBOUND LOCAL] Moved '{fileName}' from {remotePath}", true);
+								Logger.LogInbound($"[AUTO - LOCAL] Moved '{fileName}' from {remotePath}", true);
 
 								// Add to DB
 								InsertDownloadedFile(dbPath, fileName, remotePath, inboundBaseDir);
@@ -529,15 +545,15 @@ namespace GXIntegration_Levis.Views
 						}
 						catch (Exception ex)
 						{
-							Logger.Log($"[INBOUND LOCAL] Error processing directory '{remotePath}': {ex}", true);
+							Logger.LogError($"[AUTO - LOCAL] Error processing directory '{remotePath}': {ex}", true);
 						}
 					}
 
-					Logger.Log("[INBOUND LOCAL] File copy completed.", true);
+					//Logger.LogInbound("[INBOUND LOCAL] File copy completed.", true);
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[INBOUND LOCAL] Local download failed: {ex}", true);
+					Logger.LogError($"[AUTO - LOCAL] Local download failed: {ex}", true);
 				}
 			});
 		}
@@ -598,6 +614,7 @@ namespace GXIntegration_Levis.Views
 				{
 					command.Parameters.AddWithValue("@FileName", fileName);
 					long count = (long)command.ExecuteScalar();
+
 					return count > 0;
 				}
 			}

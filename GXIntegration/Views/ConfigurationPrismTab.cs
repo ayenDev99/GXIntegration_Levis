@@ -280,7 +280,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Failed to get Auth-Nonce. Status: {response.StatusCode}");
+						Logger.LogError($"Failed to get Auth-Nonce. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -304,7 +304,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Login failed. Status: {response.StatusCode}");
+						Logger.LogError($"Login failed. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -323,7 +323,7 @@ namespace GXIntegration_Levis.Views
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Workstation bind failed. Status: {response.StatusCode}");
+						Logger.LogError($"Workstation bind failed. Status: {response.StatusCode}");
 						return null;
 					}
 				}
@@ -339,17 +339,17 @@ namespace GXIntegration_Levis.Views
 					{
 						var errorResponse = reader.ReadToEnd();
 						errorMessage += $" Response: {errorResponse}";
-						Logger.Log(errorMessage + ex);
+						Logger.LogError(errorMessage + ex);
 						return null;
 					}
 				}
 
-				Logger.Log($"{errorMessage} Exception: {ex.Message}" + ex);
+				Logger.LogError($"{errorMessage} Exception: {ex.Message}" + ex);
 				return null;
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Unexpected error: {ex.Message}" + ex);
+				Logger.LogError($"Unexpected error: {ex.Message}" + ex);
 				return null;
 			}
 		}

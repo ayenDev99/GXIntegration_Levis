@@ -1,6 +1,7 @@
 ﻿using GXIntegration;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
+using GXIntegration_Levis.InboundHandlers;
 using System;
 using System.IO;
 using System.Threading;
@@ -26,10 +27,13 @@ class Program
 		{
 			form = new GXIntegration.Form1();
 
+			Logger.LogOutbound($"---- APPLICATION STARTED", true);
+			Logger.LogInbound($"---- APPLICATION STARTED", true);
+
 			form.Load += async (sender, e) =>
 			{
-				Task.Run(() => RunAutoOutboundAPIAsync(cts.Token));
 				Task.Run(() => RunAutoOutboundEODAsync(cts.Token));
+				Task.Run(() => RunAutoOutboundAPIAsync(cts.Token));
 				Task.Run(() => RunAutoInboundDownloadSFTPAsync(cts.Token));
 			};
 
@@ -58,25 +62,22 @@ class Program
 	{
 		int iteration = 0;
 		int processInterval = config.OutApiAutoProcessTime; // in minutes
+		var is_auto = true;
+
+		Logger.LogOutbound($"[AUTO - API] Interval = {processInterval} minute(s)", is_auto);
 
 		while (!token.IsCancellationRequested)
 		{
 			iteration++;
 			try
 			{
-				Logger.Log("**************************************************************************");
-				Logger.Log($">>> [AUTO OUTBOUND - API] START iteration {iteration} at {CurrentTime}");
-				Logger.Log("**************************************************************************");
-				Logger.Log($">>> Interval = {processInterval} minute(s)");
-
 				await form.OutboundAPITab.TriggerAPIAsync(processInterval);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("ERROR (API): " + ex);
+				Logger.LogError($"ERROR (API): {ex}", is_auto);
 			}
 
-			Logger.Log($">>> Waiting {processInterval} minute(s) before next API run...");
 			try
 			{
 				await Task.Delay(TimeSpan.FromMinutes(processInterval), token);
@@ -93,9 +94,11 @@ class Program
 	// ------------------------------
 	static async Task RunAutoOutboundEODAsync(CancellationToken token)
 	{
+		var is_auto = true;
+
 		if (!TimeSpan.TryParse(config.OutEodAutoProcessTime, out TimeSpan scheduledTime))
 		{
-			Logger.Log("ERROR: Invalid OutEodAutoProcessTime in config.xml. Expected format HH:mm:ss");
+			Logger.LogError("ERROR: Invalid OutEodAutoProcessTime in config.xml. Expected format HH:mm:ss", is_auto);
 			return;
 		}
 
@@ -112,9 +115,7 @@ class Program
 
 			TimeSpan delay = nextRun - now;
 
-			Logger.Log("**************************************************************************");
-			Logger.Log($">>> [AUTO OUTBOUND - EOD] Scheduled run at {nextRun:yyyy-MM-dd HH:mm:ss}");
-			Logger.Log("**************************************************************************");
+			Logger.LogOutbound($"[AUTO - EOD] Scheduled run at {nextRun:yyyy-MM-dd HH:mm:ss}", is_auto);
 
 			try
 			{
@@ -122,12 +123,11 @@ class Program
 				if (token.IsCancellationRequested) break;
 
 				iteration++;
-				Logger.Log($">>> [AUTO OUTBOUND - EOD] START iteration {iteration} at {CurrentTime}");
+				Logger.LogOutbound($"[AUTO - EOD] START iteration {iteration} at {CurrentTime}", is_auto);
 
-				// ✅ Pass the scheduled time string (e.g., "11:30:00")
 				await form.OutboundEODTab.TriggerEODAsync(config.OutEodAutoProcessTime);
 
-				Logger.Log($">>> [AUTO OUTBOUND - EOD] Completed iteration {iteration}");
+				Logger.LogOutbound($"[AUTO - EOD] Completed iteration {iteration}", is_auto);
 			}
 			catch (TaskCanceledException)
 			{
@@ -135,7 +135,7 @@ class Program
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("ERROR (EOD): " + ex);
+				Logger.LogError($"ERROR (EOD): {ex}", is_auto);
 			}
 		}
 	}
@@ -147,25 +147,28 @@ class Program
 	{
 		int iteration = 0;
 		int processInterval = config.InAutoDownloadProcessTime;
+		bool isAuto = true;
+
+		Logger.LogInbound($"[AUTO - SFTP] Interval = {processInterval} minute(s)", isAuto);
+
+		var globalInbound = new GlobalInbound();
+		// Block async so BackgroundWorker waits
+		string session = globalInbound.AuthenticateFromConfigAsync()
+										.GetAwaiter()
+										.GetResult();
 
 		while (!token.IsCancellationRequested)
 		{
 			iteration++;
 			try
 			{
-				Logger.Log("**************************************************************************");
-				Logger.Log($">>> [AUTO INBOUND - SFTP] START iteration {iteration} at {CurrentTime}");
-				Logger.Log("**************************************************************************");
-				Logger.Log($">>> Interval = {processInterval} minute(s)");
-
-				await form.InboundPage.TriggerSFTPAsync();
+				await form.InboundPage.TriggerSFTPAsync(processInterval, session);
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("ERROR (SFTP): " + ex);
+				Logger.LogError("ERROR (SFTP): " + ex);
 			}
 
-			Logger.Log($">>> Waiting {processInterval} minute(s) before next SFTP run...");
 			try
 			{
 				await Task.Delay(TimeSpan.FromMinutes(processInterval), token);

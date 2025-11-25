@@ -72,7 +72,7 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			if (await IsDuplicatePriceRecordAsync(productCode, effectivityDate, price))
 			{
-				Logger.Log($"[DB- TempInboundPriceData][SKIP] Duplicate found for ProductCode: {productCode} | EffectivityDate: {effectivityDate} | Price: {price}");
+				Logger.LogInbound($"[DB - TempInboundPriceData] [SKIP] Duplicate found for ProductCode: {productCode} | EffectivityDate: {effectivityDate} | Price: {price}");
 
 				return;
 			}
@@ -163,12 +163,12 @@ namespace GXIntegration_Levis.Data.Access
 						await cmd.ExecuteNonQueryAsync();
 					}
 
-					Logger.Log($"[INBOUND - PRICE] Successfully inserted to TempInboundPriceData record for ProductCode: {productCode} | EffectivityDate: {effectivityDate}");
+					Logger.LogInbound($"[INBOUND - PRICE] Successfully inserted to TempInboundPriceData record for ProductCode: {productCode} | EffectivityDate: {effectivityDate}");
 				
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[ERROR] Failed to insert TempInboundPriceData record. Exception: {ex.Message}\nStackTrace: {ex.StackTrace}");
+					Logger.LogError($"[ERROR] Failed to insert TempInboundPriceData record. Exception: {ex.Message}\nStackTrace: {ex.StackTrace}");
 					throw;
 				}
 			}
@@ -209,7 +209,7 @@ namespace GXIntegration_Levis.Data.Access
 			}
 
 			// Log the total count
-			Logger.Log($"[INBOUND - PRICE] Retrieved {results.Count} data from temp db with EffectivityDate <= {currentDate:yyyyMMdd}");
+			Logger.LogInbound($"[INBOUND - PRICE] Retrieved {results.Count} data from temp db with EffectivityDate <= {currentDate:yyyyMMdd}");
 
 			// Optionally log details of each row (e.g., ProductCode and EffectivityDate)
 			foreach (var row in results)
@@ -217,7 +217,7 @@ namespace GXIntegration_Levis.Data.Access
 				if (row.TryGetValue("ProductCode", out var productCode) &&
 					row.TryGetValue("EffectivityDate", out var effectivityDate))
 				{
-					Logger.Log($"[DB] Eligible Row - ProductCode: {productCode}, EffectivityDate: {effectivityDate}");
+					Logger.LogInbound($"[DB] Eligible Row - ProductCode: {productCode}, EffectivityDate: {effectivityDate}");
 				}
 			}
 
@@ -230,7 +230,7 @@ namespace GXIntegration_Levis.Data.Access
 			{
 				await connection.OpenAsync();
 				var command = connection.CreateCommand();
-				Logger.Log($"[DBtest] {row["ProductCode"]}");
+				//Logger.LogInbound($"[DB] {row["ProductCode"]}");
 
 
 				command.CommandText = @"

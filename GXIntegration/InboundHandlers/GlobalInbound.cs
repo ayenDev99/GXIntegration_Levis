@@ -42,7 +42,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Failed to get Auth-Nonce. Status: {response.StatusCode}");
+						Logger.LogInbound($"Failed to get Auth-Nonce. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -66,7 +66,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Login failed. Status: {response.StatusCode}");
+						Logger.LogInbound($"Login failed. Status: {response.StatusCode}");
 						return null;
 					}
 
@@ -85,7 +85,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				{
 					if (response.StatusCode != HttpStatusCode.OK)
 					{
-						Logger.Log($"Workstation bind failed. Status: {response.StatusCode}");
+						Logger.LogInbound($"Workstation bind failed. Status: {response.StatusCode}");
 						return null;
 					}
 				}
@@ -101,17 +101,17 @@ namespace GXIntegration_Levis.InboundHandlers
 					{
 						var errorResponse = reader.ReadToEnd();
 						errorMessage += $" Response: {errorResponse}";
-						Logger.Log(errorMessage + ex);
+						Logger.LogError(errorMessage + ex);
 						return null;
 					}
 				}
 
-				Logger.Log($"{errorMessage} Exception: {ex.Message}" + ex);
+				Logger.LogError($"{errorMessage} Exception: {ex.Message}" + ex);
 				return null;
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"Unexpected error: {ex.Message}" + ex);
+				Logger.LogError($"Unexpected error: {ex.Message}" + ex);
 				return null;
 			}
 		}
@@ -128,29 +128,27 @@ namespace GXIntegration_Levis.InboundHandlers
 				string prismPassword = config.Root.Element("PrismConfig").Element("Password").Value;
 				string workstationName = config.Root.Element("PrismConfig").Element("WorkstationName").Value;
 				
-				Logger.Log("--------------------------------------------------------------------------", is_auto);
-				Logger.Log("Address : " + prismAddress, is_auto);
-				Logger.Log("Username : " + prismUsername, is_auto);
-				Logger.Log("Password : [REDACTED]", is_auto);
-				Logger.Log("Workstation Name : " + workstationName, is_auto);
-				Logger.Log("Starting Prism authentication...", is_auto);
+				//Logger.LogInbound("Address : " + prismAddress, is_auto);
+				//Logger.LogInbound("Username : " + prismUsername, is_auto);
+				//Logger.LogInbound("Password : [REDACTED]", is_auto);
+				//Logger.LogInbound("Workstation Name : " + workstationName, is_auto);
 
 				string session = await Authenticate(prismAddress, prismUsername, prismPassword, workstationName);
 
 				if (string.IsNullOrEmpty(session))
 				{
-					Logger.Log("❌ Authentication failed.");
+					Logger.LogInbound("❌ Authentication failed.");
 					string exMessage = "Prism authentication failed. Please check the prism connection and configuration then try again.";
 					MessageBox.Show($"Error: {exMessage}", "Prism Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					return null;
 				}
 
-				Logger.Log("Authentication successful. Session: " + session, is_auto);
+				Logger.LogInbound($"Authentication successful. Session: {session} | Address: {prismAddress} | WS Name: {workstationName}", is_auto);
 				return session;
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ Error during AuthenticateFromConfigAsync: {ex}", is_auto);
+				Logger.LogError($"❌ Error during AuthenticateFromConfigAsync: {ex}", is_auto);
 				return null;
 			}
 		}
@@ -170,14 +168,14 @@ namespace GXIntegration_Levis.InboundHandlers
 			request.Headers.Add("Auth-Session", auth_session);
 			request.Accept = "application/json,text/plain,version=2";
 			request.ContentType = "application/json";
-			//Logger.Log($" Calling Prism API...");
-			//Logger.Log($" URL: {requestUri}");
-			//Logger.Log($" Method: {request.Method}");
+			// Logger.LogInbound($" Calling Prism API...");
+			// Logger.LogInbound($" URL: {requestUri}");
+			// Logger.LogInbound($" Method: {request.Method}");
 
 			if (Method != "GET")
 			{
-				//Logger.Log("Payload:");
-				//Logger.Log(string.IsNullOrWhiteSpace(obj) ? "[Empty Body]" : obj);
+				// Logger.LogInbound("Payload:");
+				// Logger.LogInbound(string.IsNullOrWhiteSpace(obj) ? "[Empty Body]" : obj);
 			}
 
 			try
@@ -219,7 +217,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				}
 
 				issuccessful = false;
-				Logger.Log($"❌ API call failed");
+				Logger.LogError($"❌ API call failed");
 			}
 
 			try
@@ -228,20 +226,20 @@ namespace GXIntegration_Levis.InboundHandlers
 				if (errorResponse?.errors != null && errorResponse.errors.Count > 0)
 				{
 					string errorMsg = errorResponse.errors[0].errormsg;
-					Logger.Log($"❌ Prism Error: {errorMsg}");
+					Logger.LogError($"❌ Prism Error: {errorMsg}");
 				}
 				else
 				{
 					// !Note:Uncomment for debugging file content.
-					//Logger.Log("✅ [INBOUND] Response: " + responseContent);
-					Logger.Log($" DATA SAVED SUCCESSFULLY!");
+					// Logger.LogInbound("Response: " + responseContent);
+					Logger.LogInbound($"DATA SAVED SUCCESSFULLY!");
 				}
 			
 			}
 			catch
 			{
 				// fallback: raw log if not valid JSON
-				Logger.Log("Response: " + responseContent);
+				Logger.LogInbound("Response: " + responseContent);
 			}
 
 			return responseContent;
@@ -277,16 +275,16 @@ namespace GXIntegration_Levis.InboundHandlers
 
 				//if (files.Length == 0)
 				//{
-				//	Logger.Log($"No '{filePattern}' files found in: {inboundDir}");
+				// Logger.LogInbound($"No '{filePattern}' files found in: {inboundDir}");
 				//	return new List<string>();
 				//}
 
-				//Logger.Log("Files to be processed : ");
+				// Logger.LogInbound("Files to be processed : ");
 				var fileList = new List<string>();
 				foreach (string file in files)
 				{
 					string fileName = Path.GetFileName(file);
-					//Logger.Log("-> " + fileName);
+					// Logger.LogInbound("-> " + fileName);
 					fileList.Add(file);
 				}
 
@@ -294,7 +292,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			}
 			catch (Exception ex)
 			{
-				Logger.Log("❌ Error retrieving inbound files: " + ex);
+				Logger.LogError("❌ Error retrieving inbound files: " + ex);
 				return new List<string>();
 			}
 		}
@@ -311,11 +309,11 @@ namespace GXIntegration_Levis.InboundHandlers
 					File.Delete(destinationPath);
 
 				File.Move(filePath, destinationPath);
-				Logger.Log($"[INBOUND] File moved to {(successFlag ? "SENT" : "UNSENT")} folder: {destinationPath}");
+				Logger.LogInbound($"File moved to {(successFlag ? "SENT" : "UNSENT")} folder: {destinationPath}");
 			}
 			catch (Exception ex)
 			{
-				Logger.Log($"❌ [INBOUND] Failed to move file {Path.GetFileName(filePath)}: {ex.Message}");
+				Logger.LogError($"❌ [ERROR] Failed to move file {Path.GetFileName(filePath)}: {ex.Message}");
 			}
 		}
 

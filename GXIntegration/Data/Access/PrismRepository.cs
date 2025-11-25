@@ -41,7 +41,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS job SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS job SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS job SID: {ex.Message}");
 					return null;
 				}
@@ -89,7 +89,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS store data: {ex.Message}");
+					Logger.LogError($"Error fetching RPS store data: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS store data: {ex.Message}");
 					return new List<dynamic>();
 				}
@@ -129,7 +129,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS INVN_SBS_ITEM SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS INVN_SBS_ITEM SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS INVN_SBS_ITEM SID: {ex.Message}");
 					return null;
 				}
@@ -168,7 +168,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS EMPLOYEE SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS EMPLOYEE SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS EMPLOYEE SID: {ex.Message}");
 					return null;
 				}
@@ -207,7 +207,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS EMPLOYEE_EXTEND SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS EMPLOYEE_EXTEND SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS EMPLOYEE_EXTEND SID: {ex.Message}");
 					return null;
 				}
@@ -246,7 +246,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS Subsidiary SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS Subsidiary SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS Subsidiary SID: {ex.Message}");
 					return null;
 				}
@@ -255,7 +255,6 @@ namespace GXIntegration_Levis.Data.Access
 
 		public async Task<dynamic> GetRpsUserGroup(string columnName, string columnValue)
 		{
-			Logger.Log("test");
 			// Validate columnName to prevent SQL injection
 			// Add column names to this list as needed
 			var allowedColumns = new HashSet<string> { "USER_GROUP_NAME" };
@@ -278,15 +277,15 @@ namespace GXIntegration_Levis.Data.Access
 							{columnName} = :ColumnValue
 					";
 
-					Logger.Log(columnName);
-					Logger.Log(columnValue);
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
 
 					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
 					return results;
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS USER_GROUP: {ex.Message}");
+					Logger.LogError($"Error fetching RPS USER_GROUP: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS USER_GROUP: {ex.Message}");
 					return null;
 				}
@@ -328,7 +327,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching UDF details: {ex.Message}");
+					Logger.LogError($"Error fetching UDF details: {ex.Message}");
 					Console.WriteLine($"Error fetching UDF details: {ex.Message}");
 					return new List<dynamic>();
 				}
@@ -366,7 +365,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching UDF details: {ex.Message}");
+					Logger.LogError($"Error fetching UDF details: {ex.Message}");
 					Console.WriteLine($"Error fetching UDF details: {ex.Message}");
 					return new List<dynamic>();
 				}
@@ -407,7 +406,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS PO SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS PO SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS PO SID: {ex.Message}");
 					return new List<dynamic>();
 				}
@@ -418,15 +417,15 @@ namespace GXIntegration_Levis.Data.Access
 		{
 			// Whitelisted column names with their table aliases
 			var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-	{
-		{ "DESCRIPTION1", "INV" },
-		{ "ACTIVE", "INV" },
-		{ "ATTRIBUTE", "INV" },
-		{ "ITEM_SIZE", "INV" },
-		{ "SBS_NO", "SBS" },
-		{ "PRICE_LVL_NAME", "PL" },
-		{ "SBS_SID", "INV" }
-	};
+			{
+				{ "DESCRIPTION1", "INV" },
+				{ "ACTIVE", "INV" },
+				{ "ATTRIBUTE", "INV" },
+				{ "ITEM_SIZE", "INV" },
+				{ "SBS_NO", "SBS" },
+				{ "PRICE_LVL_NAME", "PL" },
+				{ "SBS_SID", "INV" }
+			};
 
 			var whereClauses = new List<string>();
 			var parameters = new DynamicParameters();
@@ -491,7 +490,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"[ERROR] Failed to query inbound items: {ex.Message}");
+					Logger.LogError($"[ERROR] Failed to query inbound items: {ex.Message}");
 					return Enumerable.Empty<dynamic>();
 				}
 			}
@@ -521,15 +520,15 @@ namespace GXIntegration_Levis.Data.Access
 							{columnName} = :ColumnValue
 					";
 
-					Logger.Log(columnName);
-					Logger.Log(columnValue);
+					//Logger.Log(columnName);
+					//Logger.Log(columnValue);
 
 					var results = await connection.QueryAsync(sql, new { ColumnValue = columnValue });
 					return results;
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching RPS ADJUSTMENT SID: {ex.Message}");
+					Logger.LogError($"Error fetching RPS ADJUSTMENT SID: {ex.Message}");
 					Console.WriteLine($"Error fetching RPS ADJUSTMENT SID: {ex.Message}");
 					return null;
 				}

@@ -95,7 +95,7 @@ namespace GXIntegration_Levis.Data.Access
 								ADJ.POST_DATE DESC
 					";
 
-					//Logger.Log($"Generated SQL: {sql}");
+					//Logger.LogOutbound($"Generated SQL: {sql}");
 
 					var parameters = new
 					{
@@ -109,7 +109,7 @@ namespace GXIntegration_Levis.Data.Access
 				}
 				catch (Exception ex)
 				{
-					Logger.Log($"Error fetching Store Inventory Adjustment data: {ex.Message}");
+					Logger.LogError($"Error fetching Store Inventory Adjustment data: {ex.Message}");
 					Console.WriteLine($"Error fetching Store Inventory Adjustment data: {ex.Message}");
 					return new List<StoreInventoryAdjustmentModel>();
 				}

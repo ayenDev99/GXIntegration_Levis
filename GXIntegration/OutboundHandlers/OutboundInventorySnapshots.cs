@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 {
 	public static class OutboundInventorySnapshots
 	{
-		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores, DateTime procDate)
+		public static async Task Execute(InventoryRepository repository, GXConfig config, dynamic prismStores, DateTime procDate, bool isAuto)
 		{
 			try
 			{
@@ -26,7 +26,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 					var items = await repository.GetInventoryAsync(procDate, storeCode);
 					if (!items.Any())
 					{
-						Logger.Log($"[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}");
+						// Logger.LogOutbound($"[OUTBOUND - EOD] [TXT] No INVENTORY SNAPSHOTS data was found in Prism for today for StoreCode: {storeCode}", isAuto);
 						return;
 					}
 
@@ -52,22 +52,20 @@ namespace GXIntegration_Levis.OutboundHandlers
 					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
 
-					Logger.Log($"[OUTBOUND - EOD] [TXT] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count()} | File Name: {fileName}");
+					Logger.LogOutbound($"[EOD] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count()} | File Name: {fileName}", isAuto);
 
 					string output = Format(items, config.Delimiter ?? "|");
 
-					//Logger.Log($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
+					// Logger.LogOutbound($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
 
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
 				}
-
-				//MessageBox.Show($"Inventory synced.\n{grouped.Count()} file(s) created.");
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show($"Error: {ex.Message}", "Oracle Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				Logger.Log("Error: " + ex.Message);
+				Logger.LogOutbound("Error: " + ex.Message, isAuto);
 			}
 		}
 

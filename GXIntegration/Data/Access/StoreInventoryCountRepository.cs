@@ -85,7 +85,7 @@ namespace GXIntegration_Levis.Data.Access
 					EndRow = endRow
 				};
 
-				//Logger.Log($"[TEST {sql}");
+				//Logger.LogOutbound($"Generated SQL: {sql}");
 
 				var result = await connection.QueryAsync<StoreInventoryCountModel>(
 					sql,
