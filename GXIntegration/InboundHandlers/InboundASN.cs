@@ -244,6 +244,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			var instruction1		= GlobalHelper.GetStringValue(item, "StoreOrderNumber");
 			string shippingDate		= GlobalHelper.FormatDateToIso8601(item?["ShipmentDate"]);
 			string orderDate		= GlobalHelper.FormatDateToIso8601(item?["OrderDate"]);
+			string modifieddatetime = GlobalHelper.FormatDateToIso8601(DateTime.Now.ToString("yyyyMMdd"));
 
 			// CREATE RPS.PO
 			var poPayload = new Dictionary<string, object>
@@ -259,6 +260,7 @@ namespace GXIntegration_Levis.InboundHandlers
 				, ["pono"]				= poNo ?? string.Empty
 				, ["ordqty"]			= orderQty ?? 0
 				, ["instruction1"]		= instruction1 ?? string.Empty
+				, ["modifieddatetime"]	= modifieddatetime ?? ""
 			};
 
 			var payload = new { data = new[] { poPayload } };
@@ -302,6 +304,7 @@ namespace GXIntegration_Levis.InboundHandlers
 			var productCode = GlobalHelper.GetStringValue(item, "ProductCode");
 			var sizeCode = GlobalHelper.GetStringValue(item, "SizeCode");
 			var colorCode = GlobalHelper.GetStringValue(item, "ColorCode");
+			var productLine = GlobalHelper.GetStringValue(item, "ProductLine");
 			var itemAlu = productCode + sizeCode + colorCode;
 			var sbs_sid = prismStore?.Count > 0 ? prismStore[0].SBS_SID.ToString() : null;
 			int? orderQty = GlobalHelper.GetIntValue(item, "Quantity");
@@ -314,6 +317,7 @@ namespace GXIntegration_Levis.InboundHandlers
 					activeItems.Add(x);
 
 			var itemSid = ((IDictionary<string, object>)activeItems.First())["SID"]?.ToString();
+			string modifieddatetime = GlobalHelper.FormatDateToIso8601(DateTime.Now.ToString("yyyyMMdd"));
 
 			var poItemPayload = new Dictionary<string, object>
 			{
@@ -323,6 +327,8 @@ namespace GXIntegration_Levis.InboundHandlers
 				, ["cost"] = landedCost ?? 0
 				, ["taxamount"] = taxCost ?? 0
 				, ["ordqty"] = orderQty ?? 0
+				, ["itemnote1"] = productLine ?? string.Empty
+				, ["modifieddatetime"] = modifieddatetime ?? ""
 			};
 			
 			var payload = new { data = new[] { poItemPayload } };

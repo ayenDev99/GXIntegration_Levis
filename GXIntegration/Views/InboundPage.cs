@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace GXIntegration_Levis.Views
 {
@@ -212,7 +213,7 @@ namespace GXIntegration_Levis.Views
 			//ProgressForm progressForm = new ProgressForm();
 			//progressForm.Show();
 
-			// Logger.log("[INBOUND-MANUAL] Start Manual Process...", true);
+			//Logger.LogInbound("[INBOUND-MANUAL] Start Manual Process...", isAuto);
 			var isAuto = false;
 
 			//BackgroundWorker worker = new BackgroundWorker
@@ -243,7 +244,7 @@ namespace GXIntegration_Levis.Views
 
 					if (!selectedModules.Any())
 					{
-						Logger.LogInbound("[INBOUND] No module selected.", true);
+						Logger.LogInbound("[INBOUND] No module selected.", isAuto);
 						return;
 					}
 
@@ -254,7 +255,7 @@ namespace GXIntegration_Levis.Views
 					{
 						currentStep++;
 
-						Logger.LogInbound($"[INBOUND] Processing module: {moduleName}", true);
+						//Logger.LogInbound($"[INBOUND] Processing module: {moduleName}", isAuto);
 
 						//worker.ReportProgress(currentStep * 100 / totalSteps, moduleName);
 
@@ -287,29 +288,29 @@ namespace GXIntegration_Levis.Views
 						}
 					}
 
-					Logger.LogInbound("[INBOUND-MANUAL] Process Completed!", true);
+					Logger.LogInbound("[INBOUND-MANUAL] Process Completed!", isAuto);
 				}
 				catch (Exception ex)
 				{
-					Logger.LogError($"[INBOUND] Error: {ex}", true);
+					Logger.LogError($"[INBOUND] Error: {ex}", isAuto);
 				}
 			//};
 
-			//	worker.ProgressChanged += (s, e) =>
+			//worker.ProgressChanged += (s, e) =>
+			//{
+			//	progressForm.UpdateProgress(e.ProgressPercentage, 100);
+			//	if (e.UserState != null)
 			//	{
-			//		progressForm.UpdateProgress(e.ProgressPercentage, 100);
-			//		if (e.UserState != null)
-			//		{
-			//			//progressForm.AppendLog($"Processing: {e.UserState}");
-			//		}
-			//	};
+			//		//progressForm.AppendLog($"Processing: {e.UserState}");
+			//	}
+			//};
 
-			//	worker.RunWorkerCompleted += (s, e) =>
-			//	{
-			//		progressForm.AppendLog("All modules processed. You can now review logs.");
-			//	};
+			//worker.RunWorkerCompleted += (s, e) =>
+			//{
+			//	progressForm.AppendLog("PROCESS Completed!");
+			//};
 
-			//	worker.RunWorkerAsync();
+			//worker.RunWorkerAsync();
 		}
 
 		public async Task AutoProcessAsync(int reprocessTime)

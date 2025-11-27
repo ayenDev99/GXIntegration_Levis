@@ -70,11 +70,11 @@ namespace GXIntegration_Levis.Data.Access
 							, '1'					                AS CartonID
 							, '1'									AS CartonStatusCode
 
-							, TO_NUMBER(PO_ITEM.ITEM_POS) * 10		AS LineNumber
+							, TO_NUMBER(PO_ITEM.ITEM_NOTE1) * 10	AS LineNumber
 							, REPLACE(ISI.ALU, '-', '')				AS ItemID
 							, PO_ITEM.RCVD_QTY						AS ActualCount
 							, PO_ITEM.ORD_QTY						AS ExpectedCount
-							, PO_ITEM.RCVD_QTY						AS POSTEDCOUNT
+							, PO_ITEM.RCVD_QTY						AS PostedCount
 							, VOU.CREATED_DATETIME			        AS SaleLineBusinessDayDate
 							, VOU.VOU_NO							AS TransactionSequence
 							, PO_ITEM.ITEM_POS						AS LineItemSequence
@@ -82,7 +82,7 @@ namespace GXIntegration_Levis.Data.Access
 							, '1'									AS LineItemStatusCode
 
 							, ISI.ALU								AS ALU
-							, TO_NUMBER(PO_ITEM.ITEM_POS) * 10		AS ItemLineNumber
+							, TO_NUMBER(PO_ITEM.ITEM_NOTE1) * 10	AS ItemLineNumber
 							, ISI.ITEM_SIZE							AS PTDIM1
 							, ISI.ATTRIBUTE							AS PTDIM2
 							, ISI.DESCRIPTION1						AS PTStyle
