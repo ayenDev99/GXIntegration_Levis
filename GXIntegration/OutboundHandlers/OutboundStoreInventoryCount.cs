@@ -18,7 +18,6 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		public static async Task Execute(DateTime processDate, List<StoreInventoryCountModel> items, GXConfig config, string generate_type, string storeCode, bool isAuto)
 		{
-
 			try
 			{
 				if (!items.Any()) { return; }
@@ -109,7 +108,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 					var item = wsGroup.FirstOrDefault();
 					if (item == null) continue;
 
-					writer.WriteStartElement("Transaction");
+					//---------------------
+					// Transaction Section
+					//---------------------
+					writer.WriteStartElement("Transaction", GlobalOutbound.NsIXRetail);
 					writer.WriteAttributeString("CancelFlag", "false");
 					writer.WriteAttributeString("OfflineFlag", "false");
 					writer.WriteAttributeString("TrainingModeFlag", "false");

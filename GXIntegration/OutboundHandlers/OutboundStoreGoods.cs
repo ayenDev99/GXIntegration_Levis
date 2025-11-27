@@ -66,7 +66,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 			//---------------------
 			// Transaction Section
 			//---------------------
-			writer.WriteStartElement("Transaction");
+			writer.WriteStartElement("Transaction", GlobalOutbound.NsIXRetail);
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
 			writer.WriteAttributeString("TrainingModeFlag", "false");

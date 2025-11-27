@@ -54,7 +54,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 		private static void WriteXmlContent(List<StoreShippingModel> items, XmlWriter writer)
 		{
-			writer.WriteStartElement("Transaction");    // Transaction
+			//---------------------
+			// Transaction Section
+			//---------------------
+			writer.WriteStartElement("Transaction", GlobalOutbound.NsIXRetail);
 			writer.WriteAttributeString("CancelFlag", "false");
 			writer.WriteAttributeString("OfflineFlag", "false");
 			writer.WriteAttributeString("TrainingModeFlag", "false");
