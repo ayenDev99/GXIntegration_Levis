@@ -40,21 +40,22 @@ namespace GXIntegration_Levis
 			this.FormBorderStyle = FormBorderStyle.None;
 			this.StartPosition = FormStartPosition.CenterScreen;
 			this.Size = new Size(750, 400);
+			this.BackColor = Color.FromArgb(227, 227, 225);
 
 			topBar = new Panel
 			{
 				Dock = DockStyle.Top,
 				Height = 40,
-				BackColor = Color.FromArgb(51, 0, 102)
+				BackColor = Color.FromArgb(60, 60, 60)
 			};
 			this.Controls.Add(topBar);
 
-			// Top bar "Activity Logs" label 
+			// Top bar "Activity Log" label 
 			Label titleLabel = new Label
 			{
-				Text = "Activity Logs",
+				Text = "Activity Log",
 				ForeColor = Color.White,
-				Font = new Font("Segoe UI", 10, FontStyle.Bold),
+				Font = new Font("Segoe UI", 10),
 				AutoSize = true,
 				Location = new Point(10, 10)
 			};
@@ -65,13 +66,13 @@ namespace GXIntegration_Levis
 			// Close button
 			closeButton = new Button
 			{
-				Text = "X",
-				Font = new Font("Segoe UI", 8, FontStyle.Bold),
+				Text = "x",
+				Font = new Font("Segoe UI", 10, FontStyle.Bold),
 				ForeColor = Color.White,
 				BackColor = Color.Transparent,
 				FlatStyle = FlatStyle.Flat,
-				Size = new Size(40, 30),
-				Location = new Point(this.Width - 40, 0),
+				Size = new Size(40, 50),
+				Location = new Point(this.Width - 40, -5),
 				Anchor = AnchorStyles.Top | AnchorStyles.Right
 			};
 			closeButton.FlatAppearance.BorderSize = 0;
@@ -96,11 +97,12 @@ namespace GXIntegration_Levis
 			// Progress bar inside the panel
 			progressBar = new GunaProgressBar
 			{
-				Dock = DockStyle.Fill,
+				Dock = DockStyle.Top,
 				Maximum = 100,
 				Value = 0,
-				ForeColor = Color.Blue
+				IdleColor = Color.LightGray
 			};
+			progressBar.Paint += ProgressBar_Paint;
 			progressPanel.Controls.Add(progressBar);
 
 			// Container panel for RichTextBox to add spacing
@@ -186,6 +188,24 @@ namespace GXIntegration_Levis
 			path.AddArc(0, this.Height - radius, radius, radius, 90, 90); // bottom-left
 			path.CloseFigure();
 			this.Region = new Region(path);
+		}
+
+		private void ProgressBar_Paint(object sender, PaintEventArgs e)
+		{
+			GunaProgressBar pb = sender as GunaProgressBar;
+
+			// Draw background (idle)
+			using (SolidBrush bgBrush = new SolidBrush(pb.IdleColor))
+			{
+				e.Graphics.FillRectangle(bgBrush, 0, 0, pb.Width, pb.Height);
+			}
+
+			// Draw filled portion (green)
+			int fillWidth = (int)((pb.Value / (float)pb.Maximum) * pb.Width);
+			using (SolidBrush fillBrush = new SolidBrush(Color.Green))
+			{
+				e.Graphics.FillRectangle(fillBrush, 0, 0, fillWidth, pb.Height);
+			}
 		}
 
 	}
