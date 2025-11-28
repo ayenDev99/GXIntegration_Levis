@@ -174,7 +174,7 @@ namespace GXIntegration_Levis.Views
 		public async Task ManualSendXmlFilesToApi()
 		{
 			bool isAuto = false;
-			Logger.LogOutbound("[MANUAL - API] Start Manual Process...", isAuto);
+			Logger.LogOutbound("[API] Start Manual Process...", isAuto);
 
 			guna1DataGridView1.EndEdit();
 
@@ -201,7 +201,7 @@ namespace GXIntegration_Levis.Views
 								.Where(s => !string.IsNullOrEmpty(s))
 								.ToHashSet();
 
-			Logger.LogOutbound("[MANUAL - API]		Selected Transaction Types: " + string.Join(",", selectedRows), isAuto);
+			Logger.LogOutbound("[API]		Selected Transaction Types: " + string.Join(",", selectedRows), isAuto);
 
 			if (!selectedRows.Any())
 			{
@@ -212,12 +212,16 @@ namespace GXIntegration_Levis.Views
 			btnSendXml.Enabled = false;
 			Cursor.Current = Cursors.WaitCursor;
 
+			ProgressForm progressForm = new ProgressForm();
+			progressForm.Show();
+			progressForm.UpdateProgress(0, 100);
+
 			try
 			{
 				var fromDate = datePickerFrom.Value;
 				var toDate = datePickerTo.Value;
 
-				Logger.LogOutbound($"[MANUAL - API] Process DateRange From: {fromDate}, To: {toDate}", isAuto);
+				Logger.LogOutbound($"[API] Process DateRange From: {fromDate}, To: {toDate}", isAuto);
 
 				var prismStores = await _repositories.PrismRepository.GetRpsStore("ACTIVE", "1");
 				foreach (var store in prismStores)
@@ -225,7 +229,7 @@ namespace GXIntegration_Levis.Views
 					var storeCode = ((IDictionary<string, object>)store)
 						.TryGetValue("ADDRESS4", out var addr) ? addr?.ToString() : "N/A";
 
-					Logger.LogOutbound($"[MANUAL - API]		StoreCode: {storeCode}", isAuto);
+					Logger.LogOutbound($"[API] Start sending API for StoreCode: {storeCode}...", isAuto);
 
 					var (storeSaleItems
 						, storeReturnItems
@@ -255,7 +259,7 @@ namespace GXIntegration_Levis.Views
 						var itemsList = cfg.Items.ToList();
 						if (!itemsList.Any())
 						{
-							Logger.LogOutbound($"[MANUAL - API]			No records for {cfg.DocType} in store {storeCode}", isAuto);
+							Logger.LogOutbound($"[API]	[0] {cfg.DocType} record/s found.", isAuto);
 							continue;
 						}
 
@@ -276,6 +280,13 @@ namespace GXIntegration_Levis.Views
 						}
 					}
 				}
+
+				progressForm.AppendLog("Process Completed!");
+				progressForm.EnableClose();
+
+				// complete progress bar
+				progressForm.UpdateProgress(100, 100);
+
 			}
 			finally
 			{
@@ -283,7 +294,7 @@ namespace GXIntegration_Levis.Views
 				btnSendXml.Enabled = true;
 			}
 
-			MessageBox.Show($"API processed successfully. Full API responses saved to AppData folder ProcessedPrismTransactions.db.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			//MessageBox.Show($"API processed successfully. Full API responses saved to AppData folder ProcessedPrismTransactions.db.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 
 		public async Task AutoSendXmlFilesToApi(int reprocessTime)

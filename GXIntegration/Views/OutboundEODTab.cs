@@ -223,12 +223,6 @@ namespace GXIntegration_Levis.Views
 
 		private async Task ManualProcess()
 		{
-			ProgressForm progressForm = new ProgressForm();
-			progressForm.Show();
-
-			progressForm.UpdateProgress(0, 100);
-			bool isAuto = false;
-
 			guna1DataGridView1.EndEdit();
 
 			var selectedDocTypes = guna1DataGridView1.Rows
@@ -251,6 +245,12 @@ namespace GXIntegration_Levis.Views
 				MessageBox.Show("Please select at least one transaction.");
 				return;
 			}
+
+			ProgressForm progressForm = new ProgressForm();
+			progressForm.Show();
+			progressForm.UpdateProgress(0, 100);
+
+			bool isAuto = false;
 
 			var fromDate = datePickerFrom.Value.Date;
 			var toDate = datePickerTo.Value.Date;
@@ -405,7 +405,7 @@ namespace GXIntegration_Levis.Views
 							}
 							else
 							{
-								Logger.LogOutbound($"[EOD]		[0] {xmlType} record found.");
+								Logger.LogOutbound($"[EOD]		[0] {xmlType} record/s found.");
 							}
 						}
 
