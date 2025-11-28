@@ -51,15 +51,15 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 					string fileName = $"AMA_PH_{storeCode}_PSSTKR_{sequenceStr}_{timestamp}.txt";
 					string filePath = Path.Combine(outboundDir, fileName);
-
-					Logger.LogOutbound($"[EOD] InventorySnapshots downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count()} | File Name: {fileName}", isAuto);
-
 					string output = Format(items, config.Delimiter ?? "|");
 
 					// Logger.LogOutbound($"Output Preview for {storeCode}:\n{output.Substring(0, Math.Min(500, output.Length))}");
 
 					Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 					File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
+
+					Logger.LogOutbound($"[EOD] [InventorySnapshots] File Name: {fileName} | Item Count: {items.Count} | StoreCode: {storeCode}", isAuto);
+					await GlobalOutbound.UploadToSftpAsync();
 				}
 			}
 			catch (Exception ex)

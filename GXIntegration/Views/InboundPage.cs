@@ -50,7 +50,7 @@ namespace GXIntegration_Levis.Views
 		}
 
 		// ***************************************************
-		// Initialization
+		// Initialization Methods
 		// ***************************************************
 		private void InitializeGrid()
 		{
@@ -200,6 +200,9 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(btnSaveToPrism);
 		}
 
+		// ***************************************************
+		// Process Methods
+		// ***************************************************
 		public async Task TriggerSFTPAsync(int reprocessTime, string session)
 		{
 			await DownloadFromSftpAsync();
@@ -319,7 +322,7 @@ namespace GXIntegration_Levis.Views
 				var (fromDate, toDate) = GlobalHelper.GetSystemTimeRange(reprocessTime);
 				Logger.LogInbound($"-----------------------------------", isAuto);
 				Logger.LogInbound($"[AUTO - SFTP] Process Time : {fromDate}", isAuto);
-				
+
 				// Block async so BackgroundWorker waits
 				string session = globalInbound.AuthenticateFromConfigAsync()
 												.GetAwaiter()
@@ -381,9 +384,6 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		// ***************************************************
-		// Methods
-		// ***************************************************
 		private async Task DownloadFromSftpAsync()
 		{
 			var sftpConfig = GlobalHelper.LoadSftpConnection();
@@ -554,6 +554,9 @@ namespace GXIntegration_Levis.Views
 			});
 		}
 
+		// ***************************************************
+		// Handlers/Helpers
+		// ***************************************************
 		/// <summary>
 		/// Creates the inbound_db.db database if it doesn't exist, with a temporary table.
 		/// </summary>
@@ -616,9 +619,6 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		// ***************************************************
-		// Handlers/Helpers
-		// ***************************************************
 		private void CellMouseMove(object sender, DataGridViewCellMouseEventArgs e)
 		{
 			GlobalHelper.HandleCellMouseMove(guna1DataGridView1, e);
@@ -628,5 +628,6 @@ namespace GXIntegration_Levis.Views
 		{
 			GlobalHelper.HandleCellMouseLeave(guna1DataGridView1);
 		}
+	
 	}
 }

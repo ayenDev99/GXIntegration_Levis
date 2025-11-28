@@ -24,14 +24,16 @@ namespace GXIntegration_Levis
 		private GunaProgressBar progressBar;
 		private RichTextBox rtbLog;
 
+		private bool _canClose = false;
+
 		public ProgressForm()
 		{
 			InitializeComponent();
 			InitializeTopBar();
 			InitializeControls();
 
+			closeButton.Enabled = false;
 			Logger.OnLogMessage += AppendLog;
-
 			this.Load += (s, e) => SetRoundedRegion(20);
 		}
 
@@ -206,6 +208,60 @@ namespace GXIntegration_Levis
 			{
 				e.Graphics.FillRectangle(fillBrush, 0, 0, fillWidth, pb.Height);
 			}
+		}
+
+		public void SafeAppendLog(string message)
+		{
+			if (this.IsDisposed || !this.IsHandleCreated) return;
+
+			if (InvokeRequired)
+			{
+				try { BeginInvoke((MethodInvoker)(() => SafeAppendLog(message))); }
+				catch { }
+				return;
+			}
+
+			if (rtbLog.IsDisposed) return;
+
+			rtbLog.AppendText(message + Environment.NewLine);
+		}
+
+		public void SafeUpdateProgress(int value, int max)
+		{
+			if (this.IsDisposed || !this.IsHandleCreated) return;
+
+			if (InvokeRequired)
+			{
+				try { BeginInvoke((MethodInvoker)(() => SafeUpdateProgress(value, max))); }
+				catch { }
+				return;
+			}
+
+			progressBar.Value = value;
+			progressBar.Maximum = max;
+		}
+
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			if (!_canClose)
+			{
+				e.Cancel = true;
+				return;
+			}
+
+			base.OnFormClosing(e);
+		}
+
+		public void EnableClose()
+		{
+			if (InvokeRequired)
+			{
+				Invoke((MethodInvoker)(() => EnableClose()));
+				return;
+			}
+
+			_canClose = true;
+			closeButton.Enabled = true;
 		}
 
 	}

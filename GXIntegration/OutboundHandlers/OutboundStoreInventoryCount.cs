@@ -42,9 +42,10 @@ namespace GXIntegration_Levis.OutboundHandlers
 				string fileName = $"AMA_{countryCode}_{storeCode}_INVENTORYCOUNT_{sequenceStr}_{timestamp}.xml";
 				string filePath = Path.Combine(outboundDir, fileName);
 
-				Logger.LogOutbound($"[EOD] StoreInventoryCount downloaded successfully | StoreCode: {storeCode} | Items Count: {items.Count} | File Name: {fileName}", isAuto);
-
 				GenerateXml(items, filePath, generate_type);
+
+				Logger.LogOutbound($"[EOD] File Name: {fileName} | Item Count: {items.Count}", isAuto);
+				await GlobalOutbound.UploadToSftpAsync();
 			}
 			catch (Exception ex)
 			{

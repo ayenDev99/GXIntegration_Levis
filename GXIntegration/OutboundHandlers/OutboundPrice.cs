@@ -45,13 +45,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				string fileName = $"AMA_PH_PRICING_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
-
-				Logger.LogOutbound($"[EOD] Price downloaded successfully | Items Count: {items.Count} | File Name: {fileName}", isAuto);
-
 				string output = Format(items, ",");
 
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
+
+				Logger.LogOutbound($"[EOD] [Price] File Name: {fileName} | Item Count: {items.Count}", isAuto);
+				await GlobalOutbound.UploadToSftpAsync();
 
 				return;
 			}

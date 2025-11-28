@@ -46,13 +46,13 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 				string fileName = $"AMA_{countryCode}_INTRANSIT_{sequenceStr}_{timestamp}.txt";
 				string filePath = Path.Combine(outboundDir, fileName);
-
-				Logger.LogOutbound($"[EOD] InTransit downloaded successfully | Items Count: {items.Count} | File Name: {fileName}", isAuto);
-
 				string output = Format(items, "|");
 
 				Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 				File.WriteAllText(filePath, output, Encoding.GetEncoding(1252));
+
+				Logger.LogOutbound($"[EOD] [InTransit] File Name: {fileName} | Item Count: {items.Count}", isAuto);
+				await GlobalOutbound.UploadToSftpAsync();
 			}
 			catch (Exception ex)
 			{
