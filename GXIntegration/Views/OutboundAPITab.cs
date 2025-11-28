@@ -263,6 +263,8 @@ namespace GXIntegration_Levis.Views
 							continue;
 						}
 
+						int totalCount = itemsList.Count;
+						int step = 0;
 						foreach (var item in itemsList)
 						{
 							await SendOutboundDataAsync(
@@ -277,6 +279,10 @@ namespace GXIntegration_Levis.Views
 								password,
 								isAuto
 							);
+
+							step++;
+							int pct = (step * 80 / totalCount);
+							progressForm.UpdateProgress(pct, 100);
 						}
 					}
 				}
@@ -286,7 +292,6 @@ namespace GXIntegration_Levis.Views
 
 				// complete progress bar
 				progressForm.UpdateProgress(100, 100);
-
 			}
 			finally
 			{
