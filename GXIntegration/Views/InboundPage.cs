@@ -305,7 +305,12 @@ namespace GXIntegration_Levis.Views
 
 			worker.RunWorkerCompleted += (s, e) =>
 			{
+				//progressForm.AppendLog("Process Completed!");
 				progressForm.AppendLog("Process Completed!");
+				progressForm.EnableClose();
+
+				// complete progress bar
+				progressForm.UpdateProgress(100, 100);
 			};
 
 			worker.RunWorkerAsync();
