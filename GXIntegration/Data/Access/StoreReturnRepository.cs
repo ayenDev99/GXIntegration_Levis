@@ -87,9 +87,13 @@ namespace GXIntegration_Levis.Data.Access
                                 , ''                                                    AS TaxLocationID
                                 , '1'                                                   AS TaxGroupID
 
-                                , STORE.ADDRESS4                                        AS TransLinkRetailStoreID
+                                , (SELECT ADDRESS4 FROM RPS.STORE 
+								    WHERE SID = 
+                                    (SELECT STORE_SID FROM RPS.DOCUMENT 
+                                        WHERE SID = DOC.REF_SALE_SID))                  AS TransLinkRetailStoreID
                                 , DOC.WORKSTATION_NO                                    AS TransLinkWorkstationID
-                                , DOC.DOC_NO                                            AS TransLinkSequenceNumber
+                                , (SELECT DOC_NO FROM RPS.DOCUMENT 
+								    WHERE SID = DOC.REF_SALE_SID)                       AS TransLinkSequenceNumber
                                 , DOC_ITEM.ITEM_POS                                     AS TransLinkLineItemSequenceNo
                                 , DOC_ITEM.CREATED_DATETIME                             AS TransLinkBusinessDayDate
 
