@@ -32,7 +32,7 @@ namespace GXIntegration_Levis.Data.Access
 					}
 					else if (processType == "API")
 					{
-						dateCondition = "VOU.CREATED_DATETIME BETWEEN :FromDate AND :ToDate";
+						dateCondition = "VOU.POST_DATE BETWEEN :FromDate AND :ToDate";
 					}
 					else
 					{

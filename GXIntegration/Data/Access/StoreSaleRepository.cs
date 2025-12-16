@@ -37,7 +37,7 @@ namespace GXIntegration_Levis.Data.Access
 					}
 					else
 					{
-						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+						dateCondition = "TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
 
 					string sql = $@"

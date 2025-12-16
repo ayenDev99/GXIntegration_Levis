@@ -36,7 +36,7 @@ namespace GXIntegration_Levis.Data.Access
 					}
 					else
 					{
-						dateCondition = "TRUNC(ADJ.POST_DATE) BETWEEN :FromDate AND :ToDate";
+						dateCondition = "TRUNC(DOC.INVC_POST_DATE) BETWEEN :FromDate AND :ToDate";
 					}
 
 					string sql = $@"
@@ -59,7 +59,10 @@ namespace GXIntegration_Levis.Data.Access
                                 , STORE.ADDRESS4			                            AS AlternateStoreID    
                                 , DOC.DOC_NO                                            AS TransactionCode
                                 , DOC_ITEM.SCAN_UPC                                     AS Barcode
-                                , STORE.ADDRESS4                                        AS ReturnOriginalAltStoreID
+                                , (SELECT ADDRESS4 FROM RPS.STORE 
+								    WHERE SID = 
+                                    (SELECT STORE_SID FROM RPS.DOCUMENT 
+                                        WHERE SID = DOC.REF_SALE_SID))                  AS ReturnOriginalAltStoreID
 
                                 , ROUND(TO_NUMBER(TENDER.AMOUNT))                       AS TransactionGrandAmount
                                 , '0.00'                                                AS RoundedTotal
@@ -99,7 +102,10 @@ namespace GXIntegration_Levis.Data.Access
 
                                 , 'yes'                                                 AS DealItemPercentOff
                                 , ''                                                    AS LineItemOriginalTlogSequence
-                                , STORE.ADDRESS4                                        AS LineItemReturnOrgAltStoreID
+                                , (SELECT ADDRESS4 FROM RPS.STORE 
+								    WHERE SID = 
+                                    (SELECT STORE_SID FROM RPS.DOCUMENT 
+                                        WHERE SID = DOC.REF_SALE_SID))                  AS LineItemReturnOrgAltStoreID
                                 , DOC_ITEM.ITEM_POS                                     AS LineItemNum
                                 , ISI.ITEM_SIZE						                    AS PTDIM1
                                 , ISI.ATTRIBUTE						                    AS PTDIM2
