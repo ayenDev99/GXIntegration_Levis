@@ -50,15 +50,14 @@ namespace GXIntegration_Levis.Views
 		{
 			guna1DataGridView1 = new Guna2DataGridView
 			{
-				Location = new Point(20, 50),
-				Size = new Size(520, 140),
+				Location = new Point(30, 50),
+				Size = new Size(530, 140),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			headerCheckBox = new CheckBox
@@ -94,9 +93,9 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.Columns.Add("GenerateBy", "Generate by");
 			guna1DataGridView1.Columns.Add("Type", "Type");
 
-			guna1DataGridView1.Columns["ID"].Width = 20;
-			guna1DataGridView1.Columns["Name"].Width = 170;
-			guna1DataGridView1.Columns["FileNameFormat"].Width = 600;
+			guna1DataGridView1.Columns["ID"].Width = 30;
+			guna1DataGridView1.Columns["Name"].Width = 140;
+			guna1DataGridView1.Columns["FileNameFormat"].Width = 540;
 			guna1DataGridView1.Columns["GenerateBy"].Width = 80;
 			guna1DataGridView1.Columns["Type"].Width = 50;
 
@@ -124,13 +123,13 @@ namespace GXIntegration_Levis.Views
 			lblFrom = new Label
 			{
 				Text = "From:",
-				Location = new Point(20, 24),
+				Location = new Point(30, 24),
 				AutoSize = true
 			};
 
 			datePickerFrom = new DateTimePicker
 			{
-				Location = new Point(70, 20),
+				Location = new Point(80, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd",
 				Width = 160,
@@ -141,13 +140,13 @@ namespace GXIntegration_Levis.Views
 			lblTo = new Label
 			{
 				Text = "To:",
-				Location = new Point(250, 24),
+				Location = new Point(260, 24),
 				AutoSize = true
 			};
 
 			datePickerTo = new DateTimePicker
 			{
-				Location = new Point(290, 20),
+				Location = new Point(300, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd",
 				Width = 160,

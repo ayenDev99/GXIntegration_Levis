@@ -15,7 +15,10 @@ namespace GXIntegration_Levis.Views
 		public HomePage()
 		{
 			InitializeComponent();
-		}
+
+            this.Dock = DockStyle.Fill;
+            this.Margin = Padding.Empty;
+        }
 
 		private void pictureBox1_Click(object sender, EventArgs e)
 		{
@@ -26,7 +29,17 @@ namespace GXIntegration_Levis.Views
 		{
 
 		}
-	}
+
+        private void HomePage_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
 
 
 }

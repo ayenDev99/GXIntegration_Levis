@@ -73,9 +73,49 @@ namespace GXIntegration_Levis.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap icon_config {
+            get {
+                object obj = ResourceManager.GetObject("icon_config", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon_download {
             get {
                 object obj = ResourceManager.GetObject("icon_download", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_home_ {
+            get {
+                object obj = ResourceManager.GetObject("icon_home ", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_inbound {
+            get {
+                object obj = ResourceManager.GetObject("icon_inbound", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap icon_outbound {
+            get {
+                object obj = ResourceManager.GetObject("icon_outbound", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -106,6 +146,16 @@ namespace GXIntegration_Levis.Properties {
         internal static System.Drawing.Bitmap loading_spinner {
             get {
                 object obj = ResourceManager.GetObject("loading_spinner", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap logo_geniex {
+            get {
+                object obj = ResourceManager.GetObject("logo_geniex", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

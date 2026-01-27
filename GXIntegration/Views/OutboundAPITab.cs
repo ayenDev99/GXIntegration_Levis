@@ -44,8 +44,8 @@ namespace GXIntegration_Levis.Views
 		{
 			guna1DataGridView1 = new Guna2DataGridView
 			{
-				Location = new Point(20, 50),
-				Size = new Size(615, 180),
+				Location = new Point(30, 50),
+				Size = new Size(530, 160),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -77,7 +77,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.Columns["ID"].Width = 20;
 			guna1DataGridView1.Columns["Name"].Width = 200;
 			guna1DataGridView1.Columns["FileNameFormat"].Width = 310;
-			guna1DataGridView1.Columns["Type"].Width = 45;
+			guna1DataGridView1.Columns["Type"].Width = 48;
 
 			guna1DataGridView1.CellMouseMove += CellMouseMove;
 			guna1DataGridView1.CellMouseLeave += CellMouseLeave;
@@ -113,13 +113,13 @@ namespace GXIntegration_Levis.Views
 			lblFrom = new Label
 			{
 				Text = "From:",
-				Location = new Point(20, 24),
+				Location = new Point(30, 24),
 				AutoSize = true
 			};
 
 			datePickerFrom = new DateTimePicker
 			{
-				Location = new Point(70, 20),
+				Location = new Point(80, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
 				Width = 160,
@@ -130,13 +130,13 @@ namespace GXIntegration_Levis.Views
 			lblTo = new Label
 			{
 				Text = "To:",
-				Location = new Point(250,24),
+				Location = new Point(260,24),
 				AutoSize = true
 			};
 
 			datePickerTo = new DateTimePicker
 			{
-				Location = new Point(290, 20),
+				Location = new Point(300, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
 				Width = 160,

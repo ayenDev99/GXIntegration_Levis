@@ -57,7 +57,7 @@ namespace GXIntegration_Levis.Views
 		{
 			guna1DataGridView1 = new Guna2DataGridView
 			{
-				Location = new Point(250, 90),
+				Location = new Point(240, 90),
 				Size = new Size(620, 180),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
@@ -65,7 +65,6 @@ namespace GXIntegration_Levis.Views
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
@@ -150,14 +149,14 @@ namespace GXIntegration_Levis.Views
 			lblFrom = new Label
 			{
 				Text = "From:",
-				Location = new Point(250, 54),
-				AutoSize = true
+                Location = new Point(240, 64),
+                AutoSize = true
 			};
 
 			datePickerFrom = new DateTimePicker
 			{
-				Location = new Point(300, 50),
-				Format = DateTimePickerFormat.Custom,
+                Location = new Point(290, 60),
+                Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
 				Width = 160,
 				ShowUpDown = false,
@@ -167,14 +166,14 @@ namespace GXIntegration_Levis.Views
 			lblTo = new Label
 			{
 				Text = "To:",
-				Location = new Point(480, 54),
-				AutoSize = true
+                Location = new Point(470, 64),
+                AutoSize = true
 			};
 
 			datePickerTo = new DateTimePicker
 			{
-				Location = new Point(520, 50),
-				Format = DateTimePickerFormat.Custom,
+                Location = new Point(510, 60),
+                Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
 				Width = 160,
 				ShowUpDown = false,

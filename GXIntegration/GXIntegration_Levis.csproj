@@ -342,6 +342,11 @@
     <None Include="Resources\geniex_logo-removebg-preview.png" />
     <None Include="Resources\geniexlogo.PNG" />
     <None Include="Resources\geniexlogo1.PNG" />
+    <Content Include="Images\Icons\icon_config.png" />
+    <Content Include="Images\Icons\icon_home .png" />
+    <Content Include="Images\Icons\icon_inbound.png" />
+    <Content Include="Images\Icons\icon_outbound.png" />
+    <Content Include="Images\Logos\logo_geniex.png" />
     <Content Include="levis_logo.png" />
     <Content Include="Properties\levis_logo.png" />
     <Content Include="Properties\retailpro_logo.png" />

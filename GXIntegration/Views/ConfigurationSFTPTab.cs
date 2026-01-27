@@ -35,28 +35,36 @@ namespace GXIntegration_Levis.Views
 		private void SetupSftpTab()
 		{
 			AutoScroll = true;
-			int labelX = 20;
 			int inputX = 150;
 			int currentY = 20;
 			int spacingY = 40;
+            int labelStartX = 20;
 
-			// === Fields ===
-			Controls.Add(GlobalHelper.CreateLabel("Hostname", labelX, currentY));
+            // === Local Helper Methods ===
+            Label CreateLabel(string text, int y) => new Label
+            {
+                Text = text,
+                Location = new Point(labelStartX, y),
+                Width = 120
+            };
+
+            // === Fields ===
+            Controls.Add(CreateLabel("Hostname", currentY));
 			txtHost = GlobalHelper.CreateTextBox(inputX, currentY);
 			Controls.Add(txtHost);
 			currentY += spacingY;
 
-			Controls.Add(GlobalHelper.CreateLabel("Port", labelX, currentY));
+			Controls.Add(CreateLabel("Port", currentY));
 			txtPort = GlobalHelper.CreateTextBox(inputX, currentY); // Blank by default
 			Controls.Add(txtPort);
 			currentY += spacingY;
 
-			Controls.Add(GlobalHelper.CreateLabel("Username", labelX, currentY));
+			Controls.Add(CreateLabel("Username", currentY));
 			txtUser = GlobalHelper.CreateTextBox(inputX, currentY);
 			Controls.Add(txtUser);
 			currentY += spacingY;
 
-			Controls.Add(GlobalHelper.CreateLabel("Password", labelX, currentY));
+			Controls.Add(CreateLabel("Password", currentY));
 			txtPassword = GlobalHelper.CreateTextBox(inputX, currentY, "", true);
 			Controls.Add(txtPassword);
 			currentY += spacingY;

@@ -28,30 +28,19 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.testInventorySnapshot = new System.Windows.Forms.Button();
-			this.SuspendLayout();
-			// 
-			// testInventorySnapshot
-			// 
-			this.testInventorySnapshot.Location = new System.Drawing.Point(0, 0);
-			this.testInventorySnapshot.Name = "testInventorySnapshot";
-			this.testInventorySnapshot.Size = new System.Drawing.Size(75, 23);
-			this.testInventorySnapshot.TabIndex = 1;
-			// 
-			// OutboundPage
-			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Controls.Add(this.testInventorySnapshot);
-			this.Name = "OutboundPage";
-			this.Size = new System.Drawing.Size(900, 494);
-			this.Load += new System.EventHandler(this.OutboundPage_Load);
-			this.ResumeLayout(false);
+            this.SuspendLayout();
+            // 
+            // OutboundPage
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Name = "OutboundPage";
+            this.Size = new System.Drawing.Size(900, 494);
+            this.Load += new System.EventHandler(this.OutboundPage_Load);
+            this.ResumeLayout(false);
 
 		}
 
 		#endregion
-
-		private System.Windows.Forms.Button testInventorySnapshot;
 	}
 }

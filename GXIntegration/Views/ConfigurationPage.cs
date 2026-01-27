@@ -27,9 +27,11 @@ namespace GXIntegration_Levis.Views
 		{
 			tabControl = new TabControl
 			{
-				Location = new Point(225, 10),
-				Size = new Size(660, 450),
-				Font = new Font("Segoe UI", 9)
+                Location = new Point(200, 30),
+                Size = new Size(900, 570),
+
+                //Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9)
 			};
 
 			tabPrism = new TabPage("Prism Connection");

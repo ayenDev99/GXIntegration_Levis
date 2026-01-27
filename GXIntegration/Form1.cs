@@ -4,6 +4,7 @@ using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Views;
 using System;
 using System.Data.SQLite;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -44,6 +45,9 @@ namespace GXIntegration
         {
             InitializeComponent();
 
+            pnlMainContent.Dock = DockStyle.Fill;
+            pnlMainContent.AutoScroll = false;
+
             string configPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 
@@ -55,18 +59,23 @@ namespace GXIntegration
             var repositories = InitializeRepositories(config.MainDbConnection);
 
             InitialInboundPriceDatabase();
-
-            InitializeTopBar();
-
-            dateTimeTimer = new Timer { Interval = 1000 };
-            dateTimeTimer.Tick += (s, e) =>
-            {
-                if (dateTimeLabel != null)
-                    dateTimeLabel.Text = DateTime.Now.ToString(
-                        "dddd, MMMM dd yyyy hh:mm:ss tt");
-            };
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            timerDateTime.Start();
+            Home_Button.Checked = true;
+
+            pnlSideBar.BringToFront();
+            lblDateTime.BringToFront();
+
+            LoadPage(new HomePage());
+        }
+
+        private void timerDateTime_Tick(object sender, EventArgs e)
+        {
+            lblDateTime.Text = DateTime.Now.ToString("dddd, MMM dd yyyy\nhh:mm:ss tt");
+        }
 
         private OutboundRepositories InitializeRepositories(string connectionString)
 		{
@@ -86,93 +95,6 @@ namespace GXIntegration
 			);
 		}
 
-		private void InitializeTopBar()
-		{
-			topBar = new Panel();
-			topBar.Height = 30;
-			topBar.Dock = DockStyle.Top;
-			topBar.BackColor = Color.FromArgb(51, 0, 102);
-			this.Controls.Add(topBar);
-
-			EnableDrag(topBar);
-			dateTimeLabel = new Label();
-			dateTimeLabel.ForeColor = Color.White;
-			dateTimeLabel.Font = new Font("Segoe UI", 9, FontStyle.Regular);
-			dateTimeLabel.AutoSize = true;
-			dateTimeLabel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-			dateTimeLabel.Location = new Point(this.Width - 310, 7); // tweak as needed
-			topBar.Controls.Add(dateTimeLabel);
-
-			InitializeCustomButtons();
-		}
-
-		private void EnableDrag(Control control)
-		{
-			control.MouseDown += (s, e) =>
-			{
-				if (e.Button == MouseButtons.Left)
-				{
-					ReleaseCapture();
-					SendMessage(this.Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-				}
-			};
-		}
-
-		private void InitializeCustomButtons()
-		{
-			// Close button
-			closeButton = new System.Windows.Forms.Button();
-			closeButton.Text = "x";
-			closeButton.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-			closeButton.ForeColor = Color.White;
-			closeButton.BackColor = Color.Transparent;
-			closeButton.FlatStyle = FlatStyle.Flat;
-			closeButton.FlatAppearance.BorderSize = 0;
-			closeButton.Size = new Size(40, 40);
-			closeButton.Location = new Point(this.Width - 40, -5);
-			closeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-			closeButton.Click += (s, e) => this.Close();
-
-			// Hover effects
-			closeButton.MouseEnter += (s, e) =>
-			{
-				closeButton.BackColor = Color.FromArgb(60, 60, 60);
-				closeButton.ForeColor = Color.White;
-			};
-			closeButton.MouseLeave += (s, e) =>
-			{
-				closeButton.BackColor = Color.Transparent;
-				closeButton.ForeColor = Color.White;
-			};
-
-			// Minimize button
-			minimizeButton = new System.Windows.Forms.Button();
-			minimizeButton.Text = "–"; // en dash looks like a minus
-			minimizeButton.Font = new Font("Segoe UI", 10, FontStyle.Bold);
-			minimizeButton.ForeColor = Color.White;
-			minimizeButton.BackColor = Color.Transparent;
-			minimizeButton.FlatStyle = FlatStyle.Flat;
-			minimizeButton.FlatAppearance.BorderSize = 0;
-			minimizeButton.Size = new Size(40, 40);
-			minimizeButton.Location = new Point(this.Width - 75, -5);
-			minimizeButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-			minimizeButton.Click += (s, e) => this.WindowState = FormWindowState.Minimized;
-
-			// Hover effects
-			minimizeButton.MouseEnter += (s, e) =>
-			{
-				minimizeButton.BackColor = Color.FromArgb(60, 60, 60);
-				minimizeButton.ForeColor = Color.White;
-			};
-			minimizeButton.MouseLeave += (s, e) =>
-			{
-				minimizeButton.BackColor = Color.Transparent;
-				minimizeButton.ForeColor = Color.White;
-			};
-
-			topBar.Controls.Add(closeButton);
-			topBar.Controls.Add(minimizeButton);
-		}
 
 		private void Form1_MouseDown(object sender, MouseEventArgs e)
 		{
@@ -184,70 +106,12 @@ namespace GXIntegration
 			}
 		}
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            dateTimeTimer.Start();
-
-            EnableDrag(this);
-            //EnableDrag(SideBar);
-
-            SetActiveSidebarButton(Home_Button);
-            LoadPage(new HomePage());
-        }
-
-        private void gunaPanel1_Paint(object sender, PaintEventArgs e)
-		{
-
-		}
-
-		private void Close_Button_Click(object sender, EventArgs e)
-		{
-			this.Close();
-		}
-
-		private void Timer_Sidebar_Menu_Tick(object sender, EventArgs e)
-		{
-			if (sideBar_Expand)
-			{
-				SideBar.Width -= 10;
-				if (SideBar.Width == SideBar.MinimumSize.Width)
-				{
-					sideBar_Expand = false;
-					Timer_Sidebar_Menu.Stop();
-				}
-			}
-			else
-			{
-				SideBar.Width += 10;
-				if (SideBar.Width == SideBar.MaximumSize.Width)
-				{
-					sideBar_Expand = true;
-					Timer_Sidebar_Menu.Stop();
-				}
-			}
-		}
-
-		private void Menu_Button_Click(object sender, EventArgs e)
-		{
-			Timer_Sidebar_Menu.Start();
-		}
-
-		private void gunaImageButton1_Click(object sender, EventArgs e)
-		{
-
-		}
-
-		private void Link_Github_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-		{
-
-		}
 
 		// *********************************************************
 		// Sidebar Buttons
 		// *********************************************************
 		private void Home_Button_Click(object sender, EventArgs e)
 		{
-			SetActiveSidebarButton((Guna.UI2.WinForms.Guna2Button)sender);
 			LoadPage(new HomePage());
 		}
 
@@ -257,12 +121,10 @@ namespace GXIntegration
 				_configurationPage = new ConfigurationPage();
 
 			LoadPage(_configurationPage);
-			SetActiveSidebarButton(Configuration_Button);
 		}
 		private void Inbound_Button_Click(object sender, EventArgs e)
 		{
 			LoadPage(new InboundPage());
-			SetActiveSidebarButton(Inbound_Button);
 		}
 
 		private void Outbound_Button_Click(object sender, EventArgs e)
@@ -270,42 +132,17 @@ namespace GXIntegration
 			var repositories = InitializeRepositories(config.MainDbConnection);
 
 			LoadPage(new OutboundPage(repositories));
-			SetActiveSidebarButton((Guna.UI2.WinForms.Guna2Button)sender);
 		}
 
 		// *********************************************************
 		// Helpers
 		// *********************************************************
-		private void SetActiveSidebarButton(Guna.UI2.WinForms.Guna2Button button)
-		{
-			// Reset previous active button
-			if (_activeButton != null)
-			{
-				//_activeButton.BaseColor = Color.Transparent;
-				//_activeButton.ForeColor = Color.White;
-				//_activeButton.OnHoverBaseColor = Color.FromArgb(40, 40, 100);
-				//_activeButton.OnHoverForeColor = Color.White;
-			}
-
-			// Set new active button
-			//_activeButton = button;
-			//_activeButton.BaseColor = Color.FromArgb(60, 60, 120); // Static active color
-			//_activeButton.ForeColor = Color.White;
-			//_activeButton.OnHoverBaseColor = _activeButton.BaseColor; // Lock hover color
-			//_activeButton.OnHoverForeColor = _activeButton.ForeColor;
-		}
-
-		private void LoadPage(UserControl page)
-		{
-			MainContentPanel.Controls.Clear();
-			page.Dock = DockStyle.Fill;
-			MainContentPanel.Controls.Add(page);
-		}
-
-		private void MainContentPanel_Paint(object sender, PaintEventArgs e)
-		{
-
-		}
+        private void LoadPage(UserControl page)
+        {
+            pnlMainContent.Controls.Clear();
+            page.Dock = DockStyle.Fill;
+            pnlMainContent.Controls.Add(page);
+        }
 
 
 		// ***************************************************
@@ -428,13 +265,6 @@ namespace GXIntegration
 			}
 		}
 
-		private void label1_Click(object sender, EventArgs e)
-		{
-		}
 
-		private void gunaPanel2_Paint(object sender, PaintEventArgs e)
-		{
-			EnableDrag(this);
-		}
-	}
+    }
 }
