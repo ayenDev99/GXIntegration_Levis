@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration_Levis.Helpers;
 using System;
 using System.Drawing;
@@ -21,7 +21,7 @@ namespace GXIntegration_Levis
 		private Panel topBar;
 		private Button closeButton;
 
-		private GunaProgressBar progressBar;
+		private Guna2ProgressBar progressBar;
 		private RichTextBox rtbLog;
 
 		private bool _canClose = false;
@@ -97,12 +97,12 @@ namespace GXIntegration_Levis
 			this.Controls.Add(progressPanel);
 
 			// Progress bar inside the panel
-			progressBar = new GunaProgressBar
+			progressBar = new Guna2ProgressBar
 			{
 				Dock = DockStyle.Top,
 				Maximum = 100,
 				Value = 0,
-				IdleColor = Color.LightGray
+				//IdleColor = Color.LightGray
 			};
 			progressBar.Paint += ProgressBar_Paint;
 			progressPanel.Controls.Add(progressBar);
@@ -194,13 +194,13 @@ namespace GXIntegration_Levis
 
 		private void ProgressBar_Paint(object sender, PaintEventArgs e)
 		{
-			GunaProgressBar pb = sender as GunaProgressBar;
+			Guna2ProgressBar pb = sender as Guna2ProgressBar;
 
-			// Draw background (idle)
-			using (SolidBrush bgBrush = new SolidBrush(pb.IdleColor))
-			{
-				e.Graphics.FillRectangle(bgBrush, 0, 0, pb.Width, pb.Height);
-			}
+			//// Draw background (idle)
+			//using (SolidBrush bgBrush = new SolidBrush(pb.IdleColor))
+			//{
+			//	e.Graphics.FillRectangle(bgBrush, 0, 0, pb.Width, pb.Height);
+			//}
 
 			// Draw filled portion (green)
 			int fillWidth = (int)((pb.Value / (float)pb.Maximum) * pb.Width);

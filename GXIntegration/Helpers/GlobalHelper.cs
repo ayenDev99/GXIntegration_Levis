@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using System;
 using System.Collections.Generic;
@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
+
 
 namespace GXIntegration_Levis.Helpers
 {
@@ -82,15 +83,15 @@ namespace GXIntegration_Levis.Helpers
 			dataGridView.Cursor = Cursors.Default;
 		}
 
-		public static GunaButton CreateButton(string text, Point location, Func<Task> clickAction, int fixedHeight = 40, int paddingWidth = 30, int minWidth = 150)
+		public static Guna2Button CreateButton(string text, Point location, Func<Task> clickAction, int fixedHeight = 40, int paddingWidth = 30, int minWidth = 150)
 		{
-			var button = new GunaButton
+			var button = new Guna2Button
 			{
 				Text = text,
 				Location = location,
 				ForeColor = Color.White,
-				BaseColor = Color.FromArgb(100, 88, 255),
-				OnHoverBaseColor = Color.FromArgb(72, 61, 255),
+				//BaseColor = Color.FromArgb(100, 88, 255),
+				//OnHoverBaseColor = Color.FromArgb(72, 61, 255),
 				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
 				Cursor = Cursors.Hand,
 				Height = fixedHeight
@@ -189,26 +190,26 @@ namespace GXIntegration_Levis.Helpers
 		// ***************************************************
 		// Buttons Methods
 		// ***************************************************
-		public static void StyleGunaButton(GunaButton button, Color baseColor)
+		public static void StyleGuna2Button(Guna2Button button, Color baseColor)
 		{
 			// Derived colors
 			Color hoverColor = Color.FromArgb(200, baseColor);   // More transparent
 			Color pressedColor = ControlPaint.Dark(baseColor);   // Slightly darker
 			Color borderColor = baseColor;
 
-			button.BaseColor = baseColor;
+			//button.BaseColor = baseColor;
 			button.ForeColor = Color.White;
 			button.BorderColor = borderColor;
-			button.BorderSize = 1;
-			button.Radius = 1;
+			//button.BorderSize = 1;
+			//button.Radius = 1;
 			button.Font = new Font("Segoe UI", 10, FontStyle.Regular);
 			button.TextAlign = HorizontalAlignment.Center;
 			button.Image = null;
 
-			button.OnHoverBaseColor = hoverColor;
-			button.OnHoverForeColor = Color.White;
-			button.OnHoverBorderColor = borderColor;
-			button.OnPressedColor = pressedColor;
+			//button.OnHoverBaseColor = hoverColor;
+			//button.OnHoverForeColor = Color.White;
+			//button.OnHoverBorderColor = borderColor;
+			//button.OnPressedColor = pressedColor;
 
 			button.MouseEnter += (s, e) => { button.Cursor = Cursors.Hand; };
 			button.MouseLeave += (s, e) => { button.Cursor = Cursors.Default; };
@@ -222,23 +223,28 @@ namespace GXIntegration_Levis.Helpers
 			}
 		}
 
-		public static GunaLabel CreateLabel(string text, int x, int y, int width = 120)
-		{
-			return new GunaLabel
-			{
-				Text = text,
-				Location = new Point(x, y),
-				Width = width
-			};
-		}
+        public static Label CreateLabel(string text, int x, int y, int width = 120)
+        {
+            return new Label
+            {
+                Text = text,
+                Location = new Point(10, y),
+                Width = 150,
+                AutoSize = true,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular)
+            };
+        }
 
-		public static GunaTextBox CreateTextBox(int x, int y, string defaultText = "", bool isPassword = false)
+
+
+        public static Guna2TextBox CreateTextBox(int x, int y, string defaultText = "", bool isPassword = false)
 		{
-			return new GunaTextBox
+			return new Guna2TextBox
 			{
 				Location = new Point(x, y),
 				Width = 200,
-				BaseColor = Color.White,
+				//BaseColor = Color.White,
 				ForeColor = Color.Black,
 				Text = defaultText,
 				PasswordChar = isPassword ? '*' : '\0'

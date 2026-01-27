@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using System;
@@ -14,9 +14,9 @@ namespace GXIntegration_Levis.Views
 	{
 		private GXConfig config;
 
-		private GunaTextBox txtUsername, txtPassword, txtSaleApiUrl, txtInventoryApiUrl;
-		private GunaButton btnEdit, btnSave, btnTestApi;
-		private GunaLabel lblStatus;
+		private Guna2TextBox txtUsername, txtPassword, txtSaleApiUrl, txtInventoryApiUrl;
+		private Guna2Button btnEdit, btnSave, btnTestApi;
+		private Label lblStatus;
 
 		public ConfigurationAPITab(GXConfig config)
 		{
@@ -43,18 +43,18 @@ namespace GXIntegration_Levis.Views
 			int spacingY = 40;
 
 			// Local helpers
-			GunaLabel CreateLabel(string text, int y) => new GunaLabel
+			Label CreateLabel(string text, int y) => new Label
 			{
 				Text = text,
 				Location = new Point(labelStartX, y),
 				Width = 150
 			};
 
-			GunaTextBox CreateTextBox(int y, bool isPassword = false) => new GunaTextBox
+			Guna2TextBox CreateTextBox(int y, bool isPassword = false) => new Guna2TextBox
 			{
 				Location = new Point(inputStartX, y),
 				Width = 500,
-				BaseColor = Color.White,
+				//BaseColor = Color.White,
 				ForeColor = Color.Black,
 				PasswordChar = isPassword ? '*' : '\0'
 			};
@@ -81,7 +81,7 @@ namespace GXIntegration_Levis.Views
 			currentY += spacingY;
 
 			// Status
-			lblStatus = new GunaLabel
+			lblStatus = new Label
 			{
 				Location = new Point(labelStartX, currentY),
 				Width = 600,
@@ -92,34 +92,34 @@ namespace GXIntegration_Levis.Views
 			currentY += spacingY;
 
 			// Buttons
-			btnEdit = new GunaButton
+			btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(720, 20),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnEdit, Color.FromArgb(33, 150, 243));
+			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
 
-			btnSave = new GunaButton
+			btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(720, 60),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnSave, Color.FromArgb(76, 175, 80));
+			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
 
-			btnTestApi = new GunaButton
+			btnTestApi = new Guna2Button
 			{
 				Text = "Test API",
 				Location = new Point(inputStartX, currentY),
 				Size = new Size(150, 25),
 				Enabled = true
 			};
-			GlobalHelper.StyleGunaButton(btnTestApi, Color.FromArgb(138, 43, 226));
+			GlobalHelper.StyleGuna2Button(btnTestApi, Color.FromArgb(138, 43, 226));
 			btnTestApi.Click += async (s, e) => await BtnTestApi_Click();
 
 			Controls.AddRange(new Control[] { btnEdit, btnSave, btnTestApi });

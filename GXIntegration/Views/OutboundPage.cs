@@ -21,10 +21,12 @@ namespace GXIntegration_Levis.Views
 
 		public OutboundPage(OutboundRepositories repositories)
 		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+            InitializeComponent();
+
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
-			InitializeComponent();
+			
 			InitializeTabs(repositories);
 		}
 

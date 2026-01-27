@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using GXIntegration_Levis.Model;
@@ -20,13 +20,13 @@ namespace GXIntegration_Levis.Views
 	public partial class OutboundAPITab : UserControl
 	{
 		private OutboundRepositories _repositories;
-		private GunaDataGridView guna1DataGridView1;
+		private Guna2DataGridView guna1DataGridView1;
 
 		private DateTimePicker datePickerFrom;
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private GunaButton btnSendXml;
+		private Guna2Button btnSendXml;
 
 		public OutboundAPITab(GXConfig config, OutboundRepositories repositories)
 		{
@@ -42,7 +42,7 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private void InitializeGrid()
 		{
-			guna1DataGridView1 = new GunaDataGridView
+			guna1DataGridView1 = new Guna2DataGridView
 			{
 				Location = new Point(20, 50),
 				Size = new Size(615, 180),
@@ -52,7 +52,7 @@ namespace GXIntegration_Levis.Views
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				Theme = GunaDataGridViewPresetThemes.Guna
+				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);

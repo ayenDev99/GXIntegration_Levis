@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using Oracle.ManagedDataAccess.Client;
@@ -15,10 +15,10 @@ namespace GXIntegration_Levis.Views
 	{
 		private GXConfig config;
 
-		private GunaButton btnEdit, btnSave, btnTestConnection;
-		private GunaTextBox txtDbName, txtUser, txtPassword, txtHost, txtPort, txtDbType;
+		private Guna2Button btnEdit, btnSave, btnTestConnection;
+		private Guna2TextBox txtDbName, txtUser, txtPassword, txtHost, txtPort, txtDbType;
 		//private GunaComboBox cmbDbType;
-		private GunaLabel lblDbStatus;
+		private Label lblDbStatus;
 
 		public ConfigurationDBTab(GXConfig config)
 		{
@@ -62,18 +62,18 @@ namespace GXIntegration_Levis.Views
 			int spacingY = 40;
 
 			// === Local Helper Methods ===
-			GunaLabel CreateLabel(string text, int y) => new GunaLabel
+			Label CreateLabel(string text, int y) => new Label
 			{
 				Text = text,
 				Location = new Point(labelStartX, y),
 				Width = 120
 			};
 
-			GunaTextBox CreateTextBox(int y, bool isPassword = false) => new GunaTextBox
+			Guna2TextBox CreateTextBox(int y, bool isPassword = false) => new Guna2TextBox
 			{
 				Location = new Point(inputStartX, y),
 				Width = 200,
-				BaseColor = Color.White,
+				//BaseColor = Color.White,
 				ForeColor = Color.Black,
 				PasswordChar = isPassword ? '*' : '\0'
 			};
@@ -110,7 +110,7 @@ namespace GXIntegration_Levis.Views
 			currentY += spacingY;
 
 			// === Status Label ===
-			lblDbStatus = new GunaLabel
+			lblDbStatus = new Label
 			{
 				Location = new Point(labelStartX, currentY),
 				Width = 500,
@@ -121,34 +121,34 @@ namespace GXIntegration_Levis.Views
 			currentY += spacingY;
 
 			// === Buttons ===
-			btnEdit = new GunaButton
+			btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnEdit, Color.FromArgb(33, 150, 243));
+			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
 
-			btnSave = new GunaButton
+			btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(370, 60),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnSave, Color.FromArgb(76, 175, 80));
+			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
 
-			btnTestConnection = new GunaButton
+			btnTestConnection = new Guna2Button
 			{
 				Text = "Test Connection",
 				Location = new Point(inputStartX, currentY),
 				Size = new Size(150, 25),
 				Enabled = true
 			};
-			GlobalHelper.StyleGunaButton(btnTestConnection, Color.FromArgb(138, 43, 226));
+			GlobalHelper.StyleGuna2Button(btnTestConnection, Color.FromArgb(138, 43, 226));
 			btnTestConnection.Click += BtnTestConnection_Click;
 
 			Controls.Add(btnEdit);

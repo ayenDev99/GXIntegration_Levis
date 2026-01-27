@@ -25,7 +25,9 @@ class Program
 		// Start WinForms UI
 		Thread formThread = new Thread(() =>
 		{
-			form = new GXIntegration.Form1();
+            var _ = typeof(Guna.UI2.WinForms.Guna2Panel);
+
+            form = new GXIntegration.Form1();
 
 			Logger.LogOutbound($"---- APPLICATION STARTED", true);
 			Logger.LogInbound($"---- APPLICATION STARTED", true);
@@ -60,8 +62,21 @@ class Program
 	// ------------------------------
 	static async Task RunAutoOutboundAPIAsync(CancellationToken token)
 	{
-		int iteration = 0;
+        if (form == null)
+        {
+            throw new Exception("Form is null!");
+        }
+
+        if (form.OutboundAPITab == null)
+        {
+            throw new Exception("OutboundAPITab is null!");
+        }
 		int processInterval = config.OutApiAutoProcessTime; // in minutes
+
+        // Safe to call
+        await form.OutboundAPITab.TriggerAPIAsync(processInterval);
+
+        int iteration = 0;
 		var is_auto = true;
 
 		Logger.LogOutbound($"[AUTO - API] Interval = {processInterval} minute(s)", is_auto);
@@ -145,6 +160,7 @@ class Program
 	// ------------------------------
 	static async Task RunAutoInboundDownloadSFTPAsync(CancellationToken token)
 	{
+
 		int iteration = 0;
 		int processInterval = config.InAutoDownloadProcessTime;
 		bool isAuto = true;
@@ -157,7 +173,17 @@ class Program
 										.GetAwaiter()
 										.GetResult();
 
-		while (!token.IsCancellationRequested)
+        if (form == null)
+            throw new Exception("Form instance is null!");
+
+        if (form.InboundPage == null)
+            throw new Exception("InboundPage is null!");
+
+        if (session == null)
+            throw new Exception("Session object is null!");
+
+
+        while (!token.IsCancellationRequested)
 		{
 			iteration++;
 			try

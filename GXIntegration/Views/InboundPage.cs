@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
@@ -19,13 +19,13 @@ namespace GXIntegration_Levis.Views
 	public partial class InboundPage : UserControl
 	{
 		static GXConfig config;
-		private GunaDataGridView guna1DataGridView1;
+		private Guna2DataGridView guna1DataGridView1;
 
 		private DateTimePicker datePickerFrom;
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private GunaButton btnSaveToPrism;
+		private Guna2Button btnSaveToPrism;
 
 		private PrismRepository _prismRepository;
 
@@ -38,13 +38,14 @@ namespace GXIntegration_Levis.Views
 		private string configPath;
 		public InboundPage()
 		{
-			GlobalInbound.Initialize();
+            InitializeComponent();
+
+            GlobalInbound.Initialize();
 			configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
 			_prismRepository = new PrismRepository(config.MainDbConnection);
 
-			InitializeComponent();
 			InitializeGrid();
 			InitializeControls();
 		}
@@ -54,7 +55,7 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private void InitializeGrid()
 		{
-			guna1DataGridView1 = new GunaDataGridView
+			guna1DataGridView1 = new Guna2DataGridView
 			{
 				Location = new Point(250, 90),
 				Size = new Size(620, 180),
@@ -64,7 +65,7 @@ namespace GXIntegration_Levis.Views
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				Theme = GunaDataGridViewPresetThemes.Guna
+				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);

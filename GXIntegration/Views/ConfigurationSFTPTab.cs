@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Helpers;
 using System;
@@ -7,15 +7,17 @@ using System.IO;
 using System.Windows.Forms;
 using System.Xml;
 
+
+
 namespace GXIntegration_Levis.Views
 {
 	public partial class ConfigurationSFTPTab : UserControl
 	{
 		private GXConfig config;
 
-		private GunaTextBox txtHost, txtPort, txtUser, txtPassword;
-		private GunaButton btnEdit, btnSave, btnTestSftp;
-		private GunaLabel lblSftpStatus;
+		private Guna2TextBox txtHost, txtPort, txtUser, txtPassword;
+		private Guna2Button btnEdit, btnSave, btnTestSftp;
+		private Label lblSftpStatus;
 
 		private Control[] SftpInputControls => new Control[]
 		{
@@ -59,45 +61,46 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(txtPassword);
 			currentY += spacingY;
 
-			// === Status Label ===
-			lblSftpStatus = new GunaLabel
-			{
-				Location = new Point(labelX, currentY),
-				Width = 500,
-				ForeColor = Color.Gray,
-				Text = "Ready"
-			};
-			Controls.Add(lblSftpStatus);
-			currentY += spacingY;
+            // === Status Label ===
+            lblSftpStatus = new Label
+            {
+                Location = new Point(20, 200),
+                Width = 500,
+                ForeColor = Color.Gray,
+                Text = "Ready",
+                AutoSize = true
+            };
+            Controls.Add(lblSftpStatus);
+            currentY += spacingY;
 
 			// === Buttons ===
-			btnEdit = new GunaButton
+			btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnEdit, Color.FromArgb(33, 150, 243));
+			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
 
-			btnSave = new GunaButton
+			btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(370, 60),
 				Size = new Size(80, 25),
 				Enabled = false
 			};
-			GlobalHelper.StyleGunaButton(btnSave, Color.FromArgb(76, 175, 80));
+			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
 
-			btnTestSftp = new GunaButton
+			btnTestSftp = new Guna2Button
 			{
 				Text = "Test SFTP Connection",
 				Location = new Point(inputX, currentY),
 				Size = new Size(160, 25)
 			};
-			GlobalHelper.StyleGunaButton(btnTestSftp, Color.FromArgb(138, 43, 226));
+			GlobalHelper.StyleGuna2Button(btnTestSftp, Color.FromArgb(138, 43, 226));
 			btnTestSftp.Click += BtnTestSftp_Click;
 
 			Controls.Add(btnEdit);

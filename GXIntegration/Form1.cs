@@ -27,7 +27,7 @@ namespace GXIntegration
 		static GXConfig config;
 		private ConfigurationPage _configurationPage;
 		bool sideBar_Expand = true;
-		private Guna.UI.WinForms.GunaButton _activeButton = null;
+		private Guna.UI2.WinForms.Guna2Button _activeButton = null;
 
 		private Panel topBar;
 		private System.Windows.Forms.Button closeButton;
@@ -40,36 +40,35 @@ namespace GXIntegration
 		public OutboundAPITab OutboundAPITab { get; private set; }
 		public InboundPage InboundPage { get; private set; }
 
-		public Form1()
-		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
-			config = GXConfig.Load(configPath);
+        public Form1()
+        {
+            InitializeComponent();
 
-			var repositories = InitializeRepositories(config.MainDbConnection);
+            string configPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 
-			InitializeComponent();
-			InitialInboundPriceDatabase();
-			EnableDrag(SideBar);
-			InitializeTopBar();
+            config = GXConfig.Load(configPath);
 
-			// ✅ Real-time Date and Time
-			dateTimeTimer = new Timer();
-			dateTimeTimer.Interval = 1000; // 1 second
-			dateTimeTimer.Tick += (s, e) =>
-			{
-				dateTimeLabel.Text = DateTime.Now.ToString("dddd, MMMM dd yyyy hh:mm:ss tt");
-			};
-			dateTimeTimer.Start();
+            if (config == null || string.IsNullOrEmpty(config.MainDbConnection))
+                throw new Exception("Invalid config.xml");
 
-			MainContentPanel.Dock = DockStyle.Fill;
+            var repositories = InitializeRepositories(config.MainDbConnection);
 
-			OutboundAPITab = new OutboundAPITab(config, repositories);
-			OutboundEODTab = new OutboundEODTab(config, repositories);
-			InboundPage = new InboundPage();
-		}
+            InitialInboundPriceDatabase();
+
+            InitializeTopBar();
+
+            dateTimeTimer = new Timer { Interval = 1000 };
+            dateTimeTimer.Tick += (s, e) =>
+            {
+                if (dateTimeLabel != null)
+                    dateTimeLabel.Text = DateTime.Now.ToString(
+                        "dddd, MMMM dd yyyy hh:mm:ss tt");
+            };
+        }
 
 
-		private OutboundRepositories InitializeRepositories(string connectionString)
+        private OutboundRepositories InitializeRepositories(string connectionString)
 		{
 			return new OutboundRepositories(
 				new PrismRepository(connectionString),
@@ -185,20 +184,18 @@ namespace GXIntegration
 			}
 		}
 
-		private void Form1_Load(object sender, EventArgs e)
-		{
-			this.WindowState = FormWindowState.Normal;
-			this.StartPosition = FormStartPosition.CenterScreen;
-			this.ShowInTaskbar = true;
-			this.Show();
-			this.BringToFront();
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            dateTimeTimer.Start();
 
-			SetActiveSidebarButton(Home_Button);
-			LoadPage(new HomePage());
-			EnableDrag(this);
-		}
+            EnableDrag(this);
+            //EnableDrag(SideBar);
 
-		private void gunaPanel1_Paint(object sender, PaintEventArgs e)
+            SetActiveSidebarButton(Home_Button);
+            LoadPage(new HomePage());
+        }
+
+        private void gunaPanel1_Paint(object sender, PaintEventArgs e)
 		{
 
 		}
@@ -250,7 +247,7 @@ namespace GXIntegration
 		// *********************************************************
 		private void Home_Button_Click(object sender, EventArgs e)
 		{
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			SetActiveSidebarButton((Guna.UI2.WinForms.Guna2Button)sender);
 			LoadPage(new HomePage());
 		}
 
@@ -273,29 +270,29 @@ namespace GXIntegration
 			var repositories = InitializeRepositories(config.MainDbConnection);
 
 			LoadPage(new OutboundPage(repositories));
-			SetActiveSidebarButton((Guna.UI.WinForms.GunaButton)sender);
+			SetActiveSidebarButton((Guna.UI2.WinForms.Guna2Button)sender);
 		}
 
 		// *********************************************************
 		// Helpers
 		// *********************************************************
-		private void SetActiveSidebarButton(Guna.UI.WinForms.GunaButton button)
+		private void SetActiveSidebarButton(Guna.UI2.WinForms.Guna2Button button)
 		{
 			// Reset previous active button
 			if (_activeButton != null)
 			{
-				_activeButton.BaseColor = Color.Transparent;
-				_activeButton.ForeColor = Color.White;
-				_activeButton.OnHoverBaseColor = Color.FromArgb(40, 40, 100);
-				_activeButton.OnHoverForeColor = Color.White;
+				//_activeButton.BaseColor = Color.Transparent;
+				//_activeButton.ForeColor = Color.White;
+				//_activeButton.OnHoverBaseColor = Color.FromArgb(40, 40, 100);
+				//_activeButton.OnHoverForeColor = Color.White;
 			}
 
 			// Set new active button
-			_activeButton = button;
-			_activeButton.BaseColor = Color.FromArgb(60, 60, 120); // Static active color
-			_activeButton.ForeColor = Color.White;
-			_activeButton.OnHoverBaseColor = _activeButton.BaseColor; // Lock hover color
-			_activeButton.OnHoverForeColor = _activeButton.ForeColor;
+			//_activeButton = button;
+			//_activeButton.BaseColor = Color.FromArgb(60, 60, 120); // Static active color
+			//_activeButton.ForeColor = Color.White;
+			//_activeButton.OnHoverBaseColor = _activeButton.BaseColor; // Lock hover color
+			//_activeButton.OnHoverForeColor = _activeButton.ForeColor;
 		}
 
 		private void LoadPage(UserControl page)

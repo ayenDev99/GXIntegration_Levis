@@ -1,4 +1,4 @@
-﻿using Guna.UI.WinForms;
+﻿using Guna.UI2.WinForms;
 using GXIntegration.Properties;
 using GXIntegration_Levis.Data.Access;
 using GXIntegration_Levis.Helpers;
@@ -20,7 +20,7 @@ namespace GXIntegration_Levis.Views
 {
 	public partial class OutboundEODTab : UserControl
 	{
-		private GunaDataGridView guna1DataGridView1;
+		private Guna2DataGridView guna1DataGridView1;
 		private Dictionary<string, Func<Task>> downloadActions;
 		private GXConfig config;
 		private readonly OutboundRepositories repositories;
@@ -29,7 +29,7 @@ namespace GXIntegration_Levis.Views
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private GunaButton btnSendXml;
+		private Guna2Button btnSendXml;
 		private CheckBox headerCheckBox;
 
 
@@ -48,7 +48,7 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		private void InitializeGrid()
 		{
-			guna1DataGridView1 = new GunaDataGridView
+			guna1DataGridView1 = new Guna2DataGridView
 			{
 				Location = new Point(20, 50),
 				Size = new Size(520, 140),
@@ -58,7 +58,7 @@ namespace GXIntegration_Levis.Views
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				Theme = GunaDataGridViewPresetThemes.Guna
+				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			headerCheckBox = new CheckBox
@@ -307,7 +307,7 @@ namespace GXIntegration_Levis.Views
 			{
 				btnSendXml.Enabled = true;
 				btnSendXml.Text = "Download All and Send to SFTP";
-				btnSendXml.BaseColor = Color.FromArgb(100, 88, 255);
+				//btnSendXml.BaseColor = Color.FromArgb(100, 88, 255);
 			}
 		}
 

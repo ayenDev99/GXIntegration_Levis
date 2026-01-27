@@ -15,10 +15,11 @@ namespace GXIntegration_Levis.Views
 
 		public ConfigurationPage()
 		{
-			string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
+            InitializeComponent();
+
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.xml");
 			config = GXConfig.Load(configPath);
 
-			InitializeComponent();
 			InitializeTabs();
 		}
 
