@@ -309,6 +309,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CHANGELOG.md" />
     <None Include="Resources\undraw_data_reports_706v.png" />
   </ItemGroup>
   <ItemGroup>
