@@ -25,7 +25,7 @@ namespace GXIntegration_Levis.Views
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private Guna2Button btnSaveToPrism;
+		private Guna2Button btnManualProcess;
 
 		private PrismRepository _prismRepository;
 
@@ -191,13 +191,13 @@ namespace GXIntegration_Levis.Views
 			// --------------------
 			// Send Button
 			// --------------------
-			btnSaveToPrism = GlobalHelper.CreateButton(
+			btnManualProcess = GlobalHelper.CreateButton(
 				text: "Start Manual Process",
                 location: new Point(710, 280),
+                fillColor: Color.MediumPurple,
                 clickAction: async () => await ManualProcessAsync()
 			);
-
-			this.Controls.Add(btnSaveToPrism);
+			this.Controls.Add(btnManualProcess);
 		}
 
 		// ***************************************************
@@ -213,10 +213,23 @@ namespace GXIntegration_Levis.Views
 
 		public async Task ManualProcessAsync()
 		{
-			ProgressForm progressForm = new ProgressForm();
+            var isAuto = false;
+
+            var selectedRows = guna1DataGridView1.Rows
+				.Cast<DataGridViewRow>()
+				.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
+				.Select(r => r.Cells["Name"].Value.ToString())
+				.ToList();
+
+            if (!selectedRows.Any())
+            {
+                MessageBox.Show("Please select at least one transaction.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ProgressForm progressForm = new ProgressForm();
 			progressForm.Show();
 
-			var isAuto = false;
 
 			BackgroundWorker worker = new BackgroundWorker
 			{
@@ -238,22 +251,10 @@ namespace GXIntegration_Levis.Views
 					if (session == null)
 						return;
 
-					var selectedModules = guna1DataGridView1.Rows
-						.Cast<DataGridViewRow>()
-						.Where(r => Convert.ToBoolean(r.Cells["Select"].Value) == true)
-						.Select(r => r.Cells["Name"].Value.ToString())
-						.ToList();
-
-					if (!selectedModules.Any())
-					{
-						Logger.LogInbound("[INBOUND] No module selected.", isAuto);
-						return;
-					}
-
-					int totalSteps = selectedModules.Count;
+					int totalSteps = selectedRows.Count;
 					int currentStep = 0;
 
-					foreach (var moduleName in selectedModules)
+					foreach (var moduleName in selectedRows)
 					{
 						currentStep++;
 

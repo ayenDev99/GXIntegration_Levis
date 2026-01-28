@@ -26,7 +26,7 @@ namespace GXIntegration_Levis.Views
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private Guna2Button btnSendXml;
+		private Guna2Button btnManualProcess;
 
 		public OutboundAPITab(GXConfig config, OutboundRepositories repositories)
 		{
@@ -152,14 +152,15 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(datePickerTo);
 
 			// --------------------
-			// Send Button
+			// Button
 			// --------------------
-			btnSendXml = GlobalHelper.CreateButton(
+			btnManualProcess = GlobalHelper.CreateButton(
 				text: "Start Manual Process",
-				location: new Point(410, 250),
-				clickAction: async () => await ManualSendXmlFilesToApi()
+				location: new Point(400, 250),
+                fillColor: Color.MediumPurple,
+                clickAction: async () => await ManualProcessAsync()
 			);
-			this.Controls.Add(btnSendXml);
+			this.Controls.Add(btnManualProcess);
 		}
 		
 		public async Task TriggerAPIAsync(int reprocessTime)
@@ -170,7 +171,7 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		// Process Methods
 		// ***************************************************
-		public async Task ManualSendXmlFilesToApi()
+		public async Task ManualProcessAsync()
 		{
 			bool isAuto = false;
 			Logger.LogOutbound("[API] Start Manual Process...", isAuto);
@@ -208,7 +209,7 @@ namespace GXIntegration_Levis.Views
 				return;
 			}
 
-			btnSendXml.Enabled = false;
+			btnManualProcess.Enabled = false;
 			Cursor.Current = Cursors.WaitCursor;
 
 			ProgressForm progressForm = new ProgressForm();
@@ -295,7 +296,7 @@ namespace GXIntegration_Levis.Views
 			finally
 			{
 				Cursor.Current = Cursors.Default;
-				btnSendXml.Enabled = true;
+				btnManualProcess.Enabled = true;
 			}
 
 			//MessageBox.Show($"API processed successfully. Full API responses saved to AppData folder ProcessedPrismTransactions.db.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);

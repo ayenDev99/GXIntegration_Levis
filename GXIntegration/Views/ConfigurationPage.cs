@@ -27,10 +27,8 @@ namespace GXIntegration_Levis.Views
 		{
 			tabControl = new TabControl
 			{
-                Location = new Point(200, 30),
-                Size = new Size(900, 570),
-
-                //Dock = DockStyle.Fill,
+                Location = new Point(210, 30),
+                Size = new Size(675, 460),
                 Font = new Font("Segoe UI", 9)
 			};
 

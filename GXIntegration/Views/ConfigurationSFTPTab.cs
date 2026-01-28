@@ -86,33 +86,28 @@ namespace GXIntegration_Levis.Views
             // Buttons
             // --------------------
             // Edit Button
-            btnEdit = new Guna2Button
-			{
-				Text = "Edit",
-				Location = new Point(370, 20),
-				Size = new Size(80, 25),
-				Enabled = false
-			};
-			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
-			btnEdit.Click += BtnEdit_Click;
-            Controls.Add(btnEdit);
+            btnEdit = GlobalHelper.CreateButton(
+                text: "Edit ",
+                Location = new Point(370, 20),
+                fillColor: Color.SteelBlue,
+                clickAction: async () => await BtnEdit_Click()
+            );
+            this.Controls.Add(btnEdit);
 
             // Save Button
-            btnSave = new Guna2Button
-			{
-				Text = "Save",
-				Location = new Point(370, 60),
-				Size = new Size(80, 25),
-				Enabled = false
-			};
-			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
-			btnSave.Click += BtnSave_Click;
-            Controls.Add(btnSave);
+            btnSave = GlobalHelper.CreateButton(
+                text: "Save",
+                Location = new Point(370, 60),
+                fillColor: Color.MediumSeaGreen,
+                clickAction: async () => await BtnSave_Click()
+            );
+            this.Controls.Add(btnSave);
 
             // Test Connection Button
             btnTestConn = GlobalHelper.CreateButton(
                 text: "Test Connection",
                 location: new Point(inputStartX, currentY),
+                fillColor: Color.MediumPurple,
                 clickAction: async () => await BtnTestConn_Click()
             );
             this.Controls.Add(btnTestConn);
@@ -262,7 +257,7 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private void BtnEdit_Click(object sender, EventArgs e)
+		private async Task BtnEdit_Click()
 		{
 			GlobalHelper.SetControlsEnabled(true, SftpInputControls);
 			btnEdit.Enabled = false;
@@ -272,7 +267,7 @@ namespace GXIntegration_Levis.Views
 			lblSftpStatus.ForeColor = Color.Blue;
 		}
 
-		private void BtnSave_Click(object sender, EventArgs e)
+		private async Task BtnSave_Click()
 		{
 			if (!ValidateSftpInputs()) return;
 

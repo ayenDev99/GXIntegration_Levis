@@ -29,7 +29,7 @@ namespace GXIntegration_Levis.Views
 		private DateTimePicker datePickerTo;
 		private Label lblFrom;
 		private Label lblTo;
-		private Guna2Button btnSendXml;
+		private Guna2Button btnManualProcess;
 		private CheckBox headerCheckBox;
 
 
@@ -163,15 +163,15 @@ namespace GXIntegration_Levis.Views
 			this.Controls.Add(datePickerTo);
 
 			// --------------------
-			// Send Button
+			// Button
 			// --------------------
-			btnSendXml = GlobalHelper.CreateButton(
+			btnManualProcess = GlobalHelper.CreateButton(
 				text: "Start Manual Process",
-                location: new Point(410, 250),
-                clickAction: async () => await ManualProcess()
+                location: new Point(400, 250),
+                fillColor: Color.MediumPurple,
+                clickAction: async () => await ManualProcessAsync()
 			);
-
-			this.Controls.Add(btnSendXml);
+			this.Controls.Add(btnManualProcess);
 		}
 
 		// ***************************************************
@@ -220,11 +220,11 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task ManualProcess()
+		private async Task ManualProcessAsync()
 		{
 			guna1DataGridView1.EndEdit();
 
-			var selectedDocTypes = guna1DataGridView1.Rows
+			var selectedRows = guna1DataGridView1.Rows
 				.Cast<DataGridViewRow>()
 				.Where(r => r.Cells["Select"].Value is bool b && b)
 				.Select(r =>
@@ -239,11 +239,11 @@ namespace GXIntegration_Levis.Views
 				.Where(ss => !string.IsNullOrEmpty(ss))
 				.ToHashSet();
 
-			if (!selectedDocTypes.Any())
-			{
-				MessageBox.Show("Please select at least one transaction.");
-				return;
-			}
+            if (!selectedRows.Any())
+            {
+                MessageBox.Show("Please select at least one transaction.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
 			ProgressForm progressForm = new ProgressForm();
 			progressForm.Show();
@@ -254,7 +254,7 @@ namespace GXIntegration_Levis.Views
 			var fromDate = datePickerFrom.Value.Date;
 			var toDate = datePickerTo.Value.Date;
 
-			btnSendXml.Enabled = false;
+			btnManualProcess.Enabled = false;
 
 			try
 			{
@@ -269,7 +269,7 @@ namespace GXIntegration_Levis.Views
 					["POSLOG"] = async date => await ExecuteAllAndSaveToSingleXmlAsync(prismStores, date, date),
 				};
 
-				int totalDocs = selectedDocTypes.Count;
+				int totalDocs = selectedRows.Count;
 				int dayCount = 0;
 
 				for (var date = fromDate; date <= toDate; date = date.AddDays(1))
@@ -279,7 +279,7 @@ namespace GXIntegration_Levis.Views
 					Logger.LogOutbound($"Processing Date : {date:yyyy-MM-dd}");
 
 					int step = 0;
-					foreach (var docType in selectedDocTypes)
+					foreach (var docType in selectedRows)
 					{
 						if (processActions.TryGetValue(docType, out var action))
 						{
@@ -304,9 +304,9 @@ namespace GXIntegration_Levis.Views
 			}
 			finally
 			{
-				btnSendXml.Enabled = true;
-				btnSendXml.Text = "Start Manual Process";
-				//btnSendXml.BaseColor = Color.FromArgb(100, 88, 255);
+				btnManualProcess.Enabled = true;
+				btnManualProcess.Text = "Start Manual Process";
+				//btnManualProcess.BaseColor = Color.FromArgb(100, 88, 255);
 			}
 		}
 

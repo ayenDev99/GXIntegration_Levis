@@ -84,56 +84,69 @@ namespace GXIntegration_Levis.Helpers
 		}
 
         public static Guna2Button CreateButton(
-           string text,
-           Point location,
-           Func<Task> clickAction,
-           Size? size = null
-		)
+    string text,
+    Point location,
+    Color fillColor,
+    Func<Task> clickAction
+)
         {
+            var font = new Font("Segoe UI", 9F);
+
+            // Measure text size
+            Size textSize = TextRenderer.MeasureText(text, font);
+
+            int padding = 20;
+            int buttonWidth = textSize.Width + (padding * 2);
+            int buttonHeight = 35;
+
             var btn = new Guna2Button
             {
                 Text = text,
                 Location = location,
-                Size = size ?? new Size(150, 35),
+                Size = new Size(buttonWidth, buttonHeight),
 
-                Font = new Font("Segoe UI Semibold", 9F),
+                Font = font,
                 ForeColor = Color.White,
 
-                BorderRadius = 8,
-                FillColor = Color.FromArgb(59, 130, 246), // Blue-500 vibe
-                HoverState =
-        {
-            FillColor = Color.FromArgb(37, 99, 235) // Blue-600
-        },
-                PressedColor = Color.FromArgb(30, 64, 175),
+                FillColor = fillColor,
+                BorderRadius = 6,
 
                 Animated = true,
                 Cursor = Cursors.Hand,
 
-                ShadowDecoration =
-        {
-            Enabled = true,
-            Depth = 5,
-            Color = Color.Black
-        }
+                HoverState =
+				{
+					FillColor = DarkenColor(fillColor)
+				}
             };
 
             btn.Click += async (s, e) =>
             {
-                btn.Enabled = false;
-                btn.Text = "Processing...";
                 try
                 {
+                    btn.Enabled = false;
+                    string originalText = btn.Text;
+                    btn.Text = "Processing...";
                     await clickAction();
+                    btn.Text = originalText;
                 }
                 finally
                 {
-                    btn.Text = text;
                     btn.Enabled = true;
                 }
             };
 
             return btn;
+        }
+
+        private static Color DarkenColor(Color color, int amount = 20)
+        {
+            return Color.FromArgb(
+                color.A,
+                Math.Max(color.R - amount, 0),
+                Math.Max(color.G - amount, 0),
+                Math.Max(color.B - amount, 0)
+            );
         }
 
         // ***************************************************
