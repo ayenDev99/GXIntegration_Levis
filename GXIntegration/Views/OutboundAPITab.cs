@@ -52,7 +52,6 @@ namespace GXIntegration_Levis.Views
 				BackgroundColor = Color.White,
 				BorderStyle = BorderStyle.None,
 				GridColor = Color.LightGray,
-				//Theme = Guna2DataGridViewPresetThemes.Guna
 			};
 
 			guna1DataGridView1.ThemeStyle.HeaderStyle.BackColor = Color.FromArgb(100, 88, 255);
@@ -122,7 +121,7 @@ namespace GXIntegration_Levis.Views
 				Location = new Point(80, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
-				Width = 160,
+				Width = 140,
 				ShowUpDown = false,
 				Value = DateTime.Today
 			};
@@ -130,16 +129,16 @@ namespace GXIntegration_Levis.Views
 			lblTo = new Label
 			{
 				Text = "To:",
-				Location = new Point(260,24),
+				Location = new Point(240,24),
 				AutoSize = true
 			};
 
 			datePickerTo = new DateTimePicker
 			{
-				Location = new Point(300, 20),
+				Location = new Point(290, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd hh:mm tt",
-				Width = 160,
+				Width = 140,
 				ShowUpDown = false,
 				Value = DateTime.Today.AddDays(1).AddSeconds(-1)
 			};
@@ -156,8 +155,8 @@ namespace GXIntegration_Levis.Views
 			// Send Button
 			// --------------------
 			btnSendXml = GlobalHelper.CreateButton(
-				text: "Send XML to API",
-				location: new Point(20, 240),
+				text: "Start Manual Process",
+				location: new Point(410, 250),
 				clickAction: async () => await ManualSendXmlFilesToApi()
 			);
 			this.Controls.Add(btnSendXml);
@@ -758,5 +757,5 @@ namespace GXIntegration_Levis.Views
 			GlobalHelper.HandleCellMouseLeave(guna1DataGridView1);
 		}
 
-	}
+    }
 }

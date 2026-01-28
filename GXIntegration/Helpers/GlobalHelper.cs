@@ -83,41 +83,63 @@ namespace GXIntegration_Levis.Helpers
 			dataGridView.Cursor = Cursors.Default;
 		}
 
-		public static Guna2Button CreateButton(string text, Point location, Func<Task> clickAction, int fixedHeight = 40, int paddingWidth = 30, int minWidth = 150)
-		{
-			var button = new Guna2Button
-			{
-				Text = text,
-				Location = location,
-				ForeColor = Color.White,
-				//BaseColor = Color.FromArgb(100, 88, 255),
-				//OnHoverBaseColor = Color.FromArgb(72, 61, 255),
-				Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-				Cursor = Cursors.Hand,
-				Height = fixedHeight
-			};
+        public static Guna2Button CreateButton(
+           string text,
+           Point location,
+           Func<Task> clickAction,
+           Size? size = null
+		)
+        {
+            var btn = new Guna2Button
+            {
+                Text = text,
+                Location = location,
+                Size = size ?? new Size(150, 35),
 
-			using (var graphics = button.CreateGraphics())
-			{
-				SizeF textSize = graphics.MeasureString(text, button.Font);
-				int calculatedWidth = (int)textSize.Width + paddingWidth;
+                Font = new Font("Segoe UI Semibold", 9F),
+                ForeColor = Color.White,
 
-				button.Width = Math.Max(calculatedWidth, minWidth);
-			}
+                BorderRadius = 8,
+                FillColor = Color.FromArgb(59, 130, 246), // Blue-500 vibe
+                HoverState =
+        {
+            FillColor = Color.FromArgb(37, 99, 235) // Blue-600
+        },
+                PressedColor = Color.FromArgb(30, 64, 175),
 
-			button.Click += async (s, e) =>
-			{
-				if (clickAction != null)
-					await clickAction();
-			};
+                Animated = true,
+                Cursor = Cursors.Hand,
 
-			return button;
-		}
+                ShadowDecoration =
+        {
+            Enabled = true,
+            Depth = 5,
+            Color = Color.Black
+        }
+            };
 
-		// ***************************************************
-		// Dates Methods
-		// ***************************************************
-		public static string FormatDateToIso8601(string inputDate)
+            btn.Click += async (s, e) =>
+            {
+                btn.Enabled = false;
+                btn.Text = "Processing...";
+                try
+                {
+                    await clickAction();
+                }
+                finally
+                {
+                    btn.Text = text;
+                    btn.Enabled = true;
+                }
+            };
+
+            return btn;
+        }
+
+        // ***************************************************
+        // Dates Methods
+        // ***************************************************
+        public static string FormatDateToIso8601(string inputDate)
 		{
 			if (DateTime.TryParseExact(inputDate, "yyyyMMdd", null, System.Globalization.DateTimeStyles.AssumeUniversal, out DateTime datePart))
 			{

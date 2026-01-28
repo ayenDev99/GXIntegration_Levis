@@ -4,6 +4,7 @@ using GXIntegration_Levis.Helpers;
 using System;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -16,7 +17,7 @@ namespace GXIntegration_Levis.Views
 		private GXConfig config;
 
 		private Guna2TextBox txtHost, txtPort, txtUser, txtPassword;
-		private Guna2Button btnEdit, btnSave, btnTestSftp;
+		private Guna2Button btnEdit, btnSave, btnTestConn;
 		private Label lblSftpStatus;
 
 		private Control[] SftpInputControls => new Control[]
@@ -35,7 +36,7 @@ namespace GXIntegration_Levis.Views
 		private void SetupSftpTab()
 		{
 			AutoScroll = true;
-			int inputX = 150;
+			int inputStartX = 150;
 			int currentY = 20;
 			int spacingY = 40;
             int labelStartX = 20;
@@ -50,22 +51,22 @@ namespace GXIntegration_Levis.Views
 
             // === Fields ===
             Controls.Add(CreateLabel("Hostname", currentY));
-			txtHost = GlobalHelper.CreateTextBox(inputX, currentY);
+			txtHost = GlobalHelper.CreateTextBox(inputStartX, currentY);
 			Controls.Add(txtHost);
 			currentY += spacingY;
 
 			Controls.Add(CreateLabel("Port", currentY));
-			txtPort = GlobalHelper.CreateTextBox(inputX, currentY); // Blank by default
+			txtPort = GlobalHelper.CreateTextBox(inputStartX, currentY); // Blank by default
 			Controls.Add(txtPort);
 			currentY += spacingY;
 
 			Controls.Add(CreateLabel("Username", currentY));
-			txtUser = GlobalHelper.CreateTextBox(inputX, currentY);
+			txtUser = GlobalHelper.CreateTextBox(inputStartX, currentY);
 			Controls.Add(txtUser);
 			currentY += spacingY;
 
 			Controls.Add(CreateLabel("Password", currentY));
-			txtPassword = GlobalHelper.CreateTextBox(inputX, currentY, "", true);
+			txtPassword = GlobalHelper.CreateTextBox(inputStartX, currentY, "", true);
 			Controls.Add(txtPassword);
 			currentY += spacingY;
 
@@ -81,8 +82,11 @@ namespace GXIntegration_Levis.Views
             Controls.Add(lblSftpStatus);
             currentY += spacingY;
 
-			// === Buttons ===
-			btnEdit = new Guna2Button
+            // --------------------
+            // Buttons
+            // --------------------
+            // Edit Button
+            btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
@@ -91,8 +95,10 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
+            Controls.Add(btnEdit);
 
-			btnSave = new Guna2Button
+            // Save Button
+            btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(370, 60),
@@ -101,19 +107,15 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
+            Controls.Add(btnSave);
 
-			btnTestSftp = new Guna2Button
-			{
-				Text = "Test SFTP Connection",
-				Location = new Point(inputX, currentY),
-				Size = new Size(160, 25)
-			};
-			GlobalHelper.StyleGuna2Button(btnTestSftp, Color.FromArgb(138, 43, 226));
-			btnTestSftp.Click += BtnTestSftp_Click;
-
-			Controls.Add(btnEdit);
-			Controls.Add(btnSave);
-			Controls.Add(btnTestSftp);
+            // Test Connection Button
+            btnTestConn = GlobalHelper.CreateButton(
+                text: "Test Connection",
+                location: new Point(inputStartX, currentY),
+                clickAction: async () => await BtnTestConn_Click()
+            );
+            this.Controls.Add(btnTestConn);
 
 			// === Change Events to Disable Save ===
 			txtHost.TextChanged += DisableSaveOnEdit;
@@ -220,9 +222,9 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private void BtnTestSftp_Click(object sender, EventArgs e)
-		{
-			if (!ValidateSftpInputs()) return;
+        private async Task BtnTestConn_Click()
+        {
+            if (!ValidateSftpInputs()) return;
 
 			string host = txtHost.Text.Trim();
 			int port = int.Parse(txtPort.Text.Trim());

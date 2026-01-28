@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.Views
 	public partial class ConfigurationPrismTab : UserControl
 	{
 		private Guna2TextBox txtAddress, txtUsername, txtPassword, txtWorkstationName;
-		private Guna2Button btnEdit, btnSave, btnTestAuth;
+		private Guna2Button btnEdit, btnSave, btnTestConn;
 		private Label lblStatus;
 
 		public ConfigurationPrismTab(GXConfig config)
@@ -90,8 +90,11 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(lblStatus);
 			currentY += spacingY;
 
-			// Buttons
-			btnEdit = new Guna2Button
+            // --------------------
+            // Buttons
+            // --------------------
+            // Edit Button
+            btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(420, 20),
@@ -100,8 +103,10 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
+            Controls.Add(btnEdit);
 
-			btnSave = new Guna2Button
+            // Save Button
+            btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(420, 60),
@@ -110,18 +115,15 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
+            Controls.Add(btnSave);
 
-			btnTestAuth = new Guna2Button
-			{
-				Text = "Test Authentication",
-				Location = new Point(inputStartX, currentY),
-				Size = new Size(180, 25),
-				Enabled = true
-			};
-			GlobalHelper.StyleGuna2Button(btnTestAuth, Color.FromArgb(138, 43, 226));
-			btnTestAuth.Click += async (s, e) => await BtnTestAuth_Click();
-
-			Controls.AddRange(new Control[] { btnEdit, btnSave, btnTestAuth });
+            // Test Connection Button
+            btnTestConn = GlobalHelper.CreateButton(
+                text: "Test Connection",
+                location: new Point(inputStartX, currentY),
+                clickAction: async () => await BtnTestConn_Click()
+            );
+            this.Controls.Add(btnTestConn);
 
 			// Events
 			txtAddress.TextChanged += DisableSaveOnEdit;
@@ -167,7 +169,7 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task BtnTestAuth_Click()
+		private async Task BtnTestConn_Click()
 		{
 			try
 			{

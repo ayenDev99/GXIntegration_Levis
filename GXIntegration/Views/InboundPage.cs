@@ -58,7 +58,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1 = new Guna2DataGridView
 			{
 				Location = new Point(240, 90),
-				Size = new Size(620, 180),
+				Size = new Size(620, 150),
 				AllowUserToAddRows = false,
 				ScrollBars = ScrollBars.Both,
 				AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
@@ -192,9 +192,9 @@ namespace GXIntegration_Levis.Views
 			// Send Button
 			// --------------------
 			btnSaveToPrism = GlobalHelper.CreateButton(
-				text: "Save Data to Prism",
-				location: new Point(250, 270),
-				clickAction: async () => await ManualProcessAsync()
+				text: "Start Manual Process",
+                location: new Point(710, 280),
+                clickAction: async () => await ManualProcessAsync()
 			);
 
 			this.Controls.Add(btnSaveToPrism);

@@ -15,7 +15,7 @@ namespace GXIntegration_Levis.Views
 		private GXConfig config;
 
 		private Guna2TextBox txtUsername, txtPassword, txtSaleApiUrl, txtInventoryApiUrl;
-		private Guna2Button btnEdit, btnSave, btnTestApi;
+		private Guna2Button btnEdit, btnSave, btnTestConn;
 		private Label lblStatus;
 
 		public ConfigurationAPITab(GXConfig config)
@@ -91,8 +91,10 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(lblStatus);
 			currentY += spacingY;
 
-			// Buttons
-			btnEdit = new Guna2Button
+            // --------------------
+            // Buttons
+            // --------------------
+            btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(720, 20),
@@ -101,8 +103,10 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
+            Controls.Add(btnEdit);
 
-			btnSave = new Guna2Button
+            // Save Button
+            btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(720, 60),
@@ -111,18 +115,15 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
+            Controls.Add(btnSave);
 
-			btnTestApi = new Guna2Button
-			{
-				Text = "Test API",
-				Location = new Point(inputStartX, currentY),
-				Size = new Size(150, 25),
-				Enabled = true
-			};
-			GlobalHelper.StyleGuna2Button(btnTestApi, Color.FromArgb(138, 43, 226));
-			btnTestApi.Click += async (s, e) => await BtnTestApi_Click();
-
-			Controls.AddRange(new Control[] { btnEdit, btnSave, btnTestApi });
+            // Test Connection Button
+            btnTestConn = GlobalHelper.CreateButton(
+                text: "Test Connection",
+                location: new Point(inputStartX, currentY),
+                clickAction: async () => await BtnTestConn_Click()
+            );
+            this.Controls.Add(btnTestConn);
 
 			// Events
 			txtUsername.TextChanged += DisableSaveOnEdit;
@@ -168,7 +169,7 @@ namespace GXIntegration_Levis.Views
 			}
 		}
 
-		private async Task BtnTestApi_Click()
+		private async Task BtnTestConn_Click()
 		{
 			try
 			{

@@ -6,6 +6,7 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -17,7 +18,6 @@ namespace GXIntegration_Levis.Views
 
 		private Guna2Button btnEdit, btnSave, btnTestConnection;
 		private Guna2TextBox txtDbName, txtUser, txtPassword, txtHost, txtPort, txtDbType;
-		//private GunaComboBox cmbDbType;
 		private Label lblDbStatus;
 
 		public ConfigurationDBTab(GXConfig config)
@@ -120,8 +120,11 @@ namespace GXIntegration_Levis.Views
 			Controls.Add(lblDbStatus);
 			currentY += spacingY;
 
-			// === Buttons ===
-			btnEdit = new Guna2Button
+            // --------------------
+            // Buttons
+            // --------------------
+            // Edit Button
+            btnEdit = new Guna2Button
 			{
 				Text = "Edit",
 				Location = new Point(370, 20),
@@ -130,8 +133,10 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnEdit, Color.FromArgb(33, 150, 243));
 			btnEdit.Click += BtnEdit_Click;
+            Controls.Add(btnEdit);
 
-			btnSave = new Guna2Button
+            // Save Button
+            btnSave = new Guna2Button
 			{
 				Text = "Save",
 				Location = new Point(370, 60),
@@ -140,20 +145,15 @@ namespace GXIntegration_Levis.Views
 			};
 			GlobalHelper.StyleGuna2Button(btnSave, Color.FromArgb(76, 175, 80));
 			btnSave.Click += BtnSave_Click;
+            Controls.Add(btnSave);
 
-			btnTestConnection = new Guna2Button
-			{
-				Text = "Test Connection",
-				Location = new Point(inputStartX, currentY),
-				Size = new Size(150, 25),
-				Enabled = true
-			};
-			GlobalHelper.StyleGuna2Button(btnTestConnection, Color.FromArgb(138, 43, 226));
-			btnTestConnection.Click += BtnTestConnection_Click;
-
-			Controls.Add(btnEdit);
-			Controls.Add(btnSave);
-			Controls.Add(btnTestConnection);
+            // Test Connection Button
+            btnTestConnection = GlobalHelper.CreateButton(
+                text: "Test Connection",
+                location: new Point(inputStartX, currentY),
+                clickAction: async () => await BtnTestConnection_Click()
+            );
+            this.Controls.Add(btnTestConnection);
 
 			// === Events to Disable Save Button ===
 			txtDbName.TextChanged += DisableSaveOnEdit;
@@ -270,7 +270,7 @@ namespace GXIntegration_Levis.Views
 		// ***************************************************
 		// BUtton Methods
 		// ***************************************************
-		private async void BtnTestConnection_Click(object sender, EventArgs e)
+		private async Task BtnTestConnection_Click()
 		{
 			try
 			{

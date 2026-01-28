@@ -132,7 +132,7 @@ namespace GXIntegration_Levis.Views
 				Location = new Point(80, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd",
-				Width = 160,
+				Width = 100,
 				ShowUpDown = false,
 				Value = DateTime.Today
 			};
@@ -140,16 +140,16 @@ namespace GXIntegration_Levis.Views
 			lblTo = new Label
 			{
 				Text = "To:",
-				Location = new Point(260, 24),
+				Location = new Point(200, 24),
 				AutoSize = true
 			};
 
 			datePickerTo = new DateTimePicker
 			{
-				Location = new Point(300, 20),
+				Location = new Point(240, 20),
 				Format = DateTimePickerFormat.Custom,
 				CustomFormat = "yyyy-MM-dd",
-				Width = 160,
+				Width = 100,
 				ShowUpDown = false,
 				Value = DateTime.Today.AddDays(1).AddSeconds(-1)
 			};
@@ -166,9 +166,9 @@ namespace GXIntegration_Levis.Views
 			// Send Button
 			// --------------------
 			btnSendXml = GlobalHelper.CreateButton(
-				text: "Download All and Send to SFTP",
-				location: new Point(20, 250),
-				clickAction: async () => await ManualProcess()
+				text: "Start Manual Process",
+                location: new Point(410, 250),
+                clickAction: async () => await ManualProcess()
 			);
 
 			this.Controls.Add(btnSendXml);
@@ -305,7 +305,7 @@ namespace GXIntegration_Levis.Views
 			finally
 			{
 				btnSendXml.Enabled = true;
-				btnSendXml.Text = "Download All and Send to SFTP";
+				btnSendXml.Text = "Start Manual Process";
 				//btnSendXml.BaseColor = Color.FromArgb(100, 88, 255);
 			}
 		}
@@ -595,6 +595,7 @@ namespace GXIntegration_Levis.Views
 			guna1DataGridView1.RefreshEdit();
 		}
 
-	}
+
+    }
 
 }
