@@ -20,6 +20,7 @@
 # 											        - Update all buttons design.
 #                                                   - Update Navigation bar design.
 #                                                   - Update Topbar design.
+# 2.0.1   | PATCH  | 2026-03-05 | Karen Ancheta   | Switch value for <RegularSalesUnitPrice> and <ActualSalesUnitPrice>
 #
 #
 #
