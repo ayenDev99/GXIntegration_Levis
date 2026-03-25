@@ -95,3 +95,25 @@
     <Password>X67zZkTTAkIC</Password>
   </SftpConnection>
 </config>
+
+
+<!-- ======================================= -->
+<!--            Mulesoft API - Dev           -->
+<!-- ======================================= -->
+<!--  <APIConnection>  -->
+<!--  	<Username>1d75a7f3-1b67-4c6e-9c6e-d0f6ba114417</Username> -->
+<!--  	<Password>3~E8Q~CKgCliOmXmKjSVXJtrffHYED4_cKDPhax4</Password> -->
+<!--  	<SaleApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/sale</SaleApiUrl> -->
+<!--  	<InventoryApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-dev1/retail-pos-ph-rpp-exp-api/v1/inventory</InventoryApiUrl>  -->
+<!--  </APIConnection>  -->
+
+<!-- ======================================= -->
+<!--         Mulesoft API - Test             -->
+<!-- ======================================= -->
+
+<!-- <APIConnection>  -->
+<!-- 	<Username>fdcf7e34-d33e-45e5-936c-a1a25fe73c58</Username>  -->
+<!-- 	<Password>zfv8Q~FwHVboYFTivFmgf33uJoHJE8LQdAS4Vb4q</Password> -->
+<!-- 	<SaleApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-test1/retail-pos-ph-rpp-exp-api/v1/sale</SaleApiUrl> -->
+<!-- 	<InventoryApiUrl>https://mule-rtf-test.levi.com/retail-pos-ph-rpp-exp-api-test1/retail-pos-ph-rpp-exp-api/v1/inventory</InventoryApiUrl> -->
+<!-- </APIConnection> -->

@@ -130,7 +130,7 @@ namespace GXIntegration_Levis.OutboundHandlers
 
 						// indentify in item is non-merchandise or stock
 						if (itm.NonInvnFlag1 == 1 || itm.NonInvnFlag2 == 7) {
-							writer.WriteAttributeString("ItemType", "dtv:NonMerchandise");
+							writer.WriteAttributeString("ItemType", "dtv:GiftCertificate");
 						} else {
 							writer.WriteAttributeString("ItemType", "Stock");
 						}
@@ -178,20 +178,23 @@ namespace GXIntegration_Levis.OutboundHandlers
 						//---------------------
 						// Tax Section
 						//---------------------
-						writer.WriteStartElement("Tax");
-						writer.WriteAttributeString("TaxType", "dtv:VAT");
-						writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
+						if (itm.NonInvnFlag1 != 1 || itm.NonInvnFlag2 != 7)
+						{
+                            writer.WriteStartElement("Tax");
+                            writer.WriteAttributeString("TaxType", "dtv:VAT");
+                            writer.WriteAttributeString("dtv", "VoidFlag", GlobalOutbound.NsDtv, "false");
 
-						GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", itm.TaxAuthority ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", itm.TaxableAmount ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "Amount", itm.Amount ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "Percent", itm.Percent ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, itm.RawTaxPercentage ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, itm.TaxLocationID ?? "");
-						GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, itm.TaxGroupID ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "TaxAuthority", itm.TaxAuthority ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "TaxableAmount", itm.TaxableAmount ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "Amount", itm.Amount ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "Percent", itm.Percent ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "dtv", "RawTaxPercentage", GlobalOutbound.NsDtv, itm.RawTaxPercentage ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxLocationId", GlobalOutbound.NsDtv, itm.TaxLocationID ?? "");
+                            GlobalOutbound.WriteCDataElement(writer, "dtv", "TaxGroupId", GlobalOutbound.NsDtv, itm.TaxGroupID ?? "");
 
-						writer.WriteEndElement(); // </Tax>
-
+                            writer.WriteEndElement(); // </Tax>
+                        }
+                           
 						GlobalOutbound.WriteLineItemProperty(writer, "DIM1", "STRING", itm.PTDIM1);
 						GlobalOutbound.WriteLineItemProperty(writer, "DIM2", "STRING", itm.PTDIM2);
 						GlobalOutbound.WriteLineItemProperty(writer, "STYLE", "STRING", itm.PTStyle);

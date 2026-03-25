@@ -86,8 +86,8 @@ namespace GXIntegration_Levis.Data.Access
                             , 'PH_' || DOC_ITEM.TAX_AREA_NAME                   AS TaxAuthority
                             , ROUND(DOC_ITEM.DIP_PRICE, 2)                      AS TaxableAmount
                             , ROUND(DOC_ITEM.DIP_TAX_AMT * DOC_ITEM.QTY , 2)    AS Amount
-                            , DOC.TAX_AREA_PERC / 100                           AS Percent
-                            , DOC.TAX_AREA_PERC / 100                           AS RawTaxPercentage
+                            , DOC_ITEM.TAX_PERC / 100                           AS Percent
+                            , DOC_ITEM.TAX_PERC / 100                           AS RawTaxPercentage
                             , ''                                                AS TaxLocationID
                             , '1'                                               AS TaxGroupID
 
