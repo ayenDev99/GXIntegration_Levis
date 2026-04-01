@@ -220,7 +220,7 @@ namespace GXIntegration
             this.guna2HtmlLabel2.Name = "guna2HtmlLabel2";
             this.guna2HtmlLabel2.Size = new System.Drawing.Size(33, 15);
             this.guna2HtmlLabel2.TabIndex = 1;
-            this.guna2HtmlLabel2.Text = "v2.0.0";
+            this.guna2HtmlLabel2.Text = "v2.0.2";
             // 
             // guna2PictureBox1
             // 
