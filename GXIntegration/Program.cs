@@ -64,11 +64,13 @@ class Program
 	{
         if (form == null)
         {
+            Logger.LogInbound($" Form is null!");
             throw new Exception("Form is null!");
         }
 
         if (form.OutboundAPITab == null)
         {
+            Logger.LogInbound($"OutboundAPITab is null!");
             throw new Exception("OutboundAPITab is null!");
         }
 		int processInterval = config.OutApiAutoProcessTime; // in minutes
@@ -174,30 +176,38 @@ class Program
 										.GetResult();
 
         if (form == null)
+		{
+            Logger.LogInbound($"Form instance is null!");
             throw new Exception("Form instance is null!");
-
+        }
+            
         if (form.InboundPage == null)
+		{
+            Logger.LogInbound($"InboundPage is null!");
             throw new Exception("InboundPage is null!");
+        }	
 
         if (session == null)
+		{
+            Logger.LogInbound($"Session object is null!");
             throw new Exception("Session object is null!");
-
-
+        }
+            
         while (!token.IsCancellationRequested)
 		{
-			iteration++;
+            iteration++;
 			try
 			{
-				await form.InboundPage.TriggerSFTPAsync(processInterval, session);
+                await form.InboundPage.TriggerSFTPAsync(processInterval, session);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError("ERROR (SFTP): " + ex);
+                Logger.LogError("ERROR (SFTP): " + ex);
 			}
 
 			try
 			{
-				await Task.Delay(TimeSpan.FromMinutes(processInterval), token);
+                await Task.Delay(TimeSpan.FromMinutes(processInterval), token);
 			}
 			catch (TaskCanceledException)
 			{

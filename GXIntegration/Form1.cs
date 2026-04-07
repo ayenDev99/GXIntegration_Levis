@@ -58,6 +58,16 @@ namespace GXIntegration
 
             var repositories = InitializeRepositories(config.MainDbConnection);
 
+			// Initialize Pages
+            InboundPage = new InboundPage();
+            this.Controls.Add(InboundPage);
+
+            OutboundEODTab = new OutboundEODTab(config, repositories);
+            this.Controls.Add(OutboundEODTab);
+
+            OutboundAPITab = new OutboundAPITab(config, repositories);
+            this.Controls.Add(OutboundAPITab);
+
             InitialInboundPriceDatabase();
         }
 

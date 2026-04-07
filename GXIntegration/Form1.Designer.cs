@@ -36,6 +36,9 @@ namespace GXIntegration
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.Elipse_Form = new Guna.UI2.WinForms.Guna2Elipse(this.components);
             this.DragControl_Form = new Guna.UI2.WinForms.Guna2DragControl(this.components);
+            this.pnlTopBar = new Guna.UI2.WinForms.Guna2Panel();
+            this.btnMini = new Guna.UI2.WinForms.Guna2ControlBox();
+            this.btnClose = new Guna.UI2.WinForms.Guna2ControlBox();
             this.Timer_Sidebar_Menu = new System.Windows.Forms.Timer(this.components);
             this.pnlSideBar = new Guna.UI2.WinForms.Guna2Panel();
             this.guna2GradientPanel1 = new Guna.UI2.WinForms.Guna2GradientPanel();
@@ -49,17 +52,14 @@ namespace GXIntegration
             this.lblDateTime = new Guna.UI2.WinForms.Guna2HtmlLabel();
             this.pnlContainer = new Guna.UI2.WinForms.Guna2Panel();
             this.pnlMainContent = new Guna.UI2.WinForms.Guna2Panel();
-            this.pnlTopBar = new Guna.UI2.WinForms.Guna2Panel();
-            this.btnMini = new Guna.UI2.WinForms.Guna2ControlBox();
-            this.btnClose = new Guna.UI2.WinForms.Guna2ControlBox();
             this.timerDateTime = new System.Windows.Forms.Timer(this.components);
             this.guna2DragControl1 = new Guna.UI2.WinForms.Guna2DragControl(this.components);
+            this.pnlTopBar.SuspendLayout();
             this.pnlSideBar.SuspendLayout();
             this.guna2GradientPanel1.SuspendLayout();
             this.pnlLogo.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.guna2PictureBox1)).BeginInit();
             this.pnlContainer.SuspendLayout();
-            this.pnlTopBar.SuspendLayout();
             this.SuspendLayout();
             // 
             // Elipse_Form
@@ -71,6 +71,51 @@ namespace GXIntegration
             this.DragControl_Form.DockIndicatorTransparencyValue = 0.6D;
             this.DragControl_Form.TargetControl = this.pnlTopBar;
             this.DragControl_Form.UseTransparentDrag = true;
+            // 
+            // pnlTopBar
+            // 
+            this.pnlTopBar.BackColor = System.Drawing.Color.Transparent;
+            this.pnlTopBar.Controls.Add(this.btnMini);
+            this.pnlTopBar.Controls.Add(this.btnClose);
+            this.pnlTopBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlTopBar.FillColor = System.Drawing.SystemColors.Control;
+            this.pnlTopBar.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.pnlTopBar.Location = new System.Drawing.Point(0, 0);
+            this.pnlTopBar.Name = "pnlTopBar";
+            this.pnlTopBar.Size = new System.Drawing.Size(700, 31);
+            this.pnlTopBar.TabIndex = 2;
+            this.pnlTopBar.UseTransparentBackground = true;
+            // 
+            // btnMini
+            // 
+            this.btnMini.BackColor = System.Drawing.Color.Transparent;
+            this.btnMini.BorderColor = System.Drawing.Color.Transparent;
+            this.btnMini.ControlBoxType = Guna.UI2.WinForms.Enums.ControlBoxType.MinimizeBox;
+            this.btnMini.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnMini.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnMini.FillColor = System.Drawing.Color.Transparent;
+            this.btnMini.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnMini.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnMini.IconColor = System.Drawing.Color.Black;
+            this.btnMini.Location = new System.Drawing.Point(610, 0);
+            this.btnMini.Name = "btnMini";
+            this.btnMini.Size = new System.Drawing.Size(45, 31);
+            this.btnMini.TabIndex = 1;
+            // 
+            // btnClose
+            // 
+            this.btnClose.BackColor = System.Drawing.Color.Transparent;
+            this.btnClose.BorderColor = System.Drawing.Color.Transparent;
+            this.btnClose.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnClose.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnClose.FillColor = System.Drawing.Color.Transparent;
+            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnClose.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.btnClose.IconColor = System.Drawing.Color.Black;
+            this.btnClose.Location = new System.Drawing.Point(655, 0);
+            this.btnClose.Name = "btnClose";
+            this.btnClose.Size = new System.Drawing.Size(45, 31);
+            this.btnClose.TabIndex = 0;
             // 
             // pnlSideBar
             // 
@@ -220,7 +265,7 @@ namespace GXIntegration
             this.guna2HtmlLabel2.Name = "guna2HtmlLabel2";
             this.guna2HtmlLabel2.Size = new System.Drawing.Size(33, 15);
             this.guna2HtmlLabel2.TabIndex = 1;
-            this.guna2HtmlLabel2.Text = "v2.0.2";
+            this.guna2HtmlLabel2.Text = "v2.0.3";
             // 
             // guna2PictureBox1
             // 
@@ -267,56 +312,10 @@ namespace GXIntegration
             this.pnlMainContent.Size = new System.Drawing.Size(700, 494);
             this.pnlMainContent.TabIndex = 0;
             // 
-            // pnlTopBar
-            // 
-            this.pnlTopBar.BackColor = System.Drawing.Color.Transparent;
-            this.pnlTopBar.Controls.Add(this.btnMini);
-            this.pnlTopBar.Controls.Add(this.btnClose);
-            this.pnlTopBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlTopBar.FillColor = System.Drawing.SystemColors.Control;
-            this.pnlTopBar.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.pnlTopBar.Location = new System.Drawing.Point(0, 0);
-            this.pnlTopBar.Name = "pnlTopBar";
-            this.pnlTopBar.Size = new System.Drawing.Size(700, 31);
-            this.pnlTopBar.TabIndex = 2;
-            this.pnlTopBar.UseTransparentBackground = true;
-            // 
-            // btnMini
-            // 
-            this.btnMini.BackColor = System.Drawing.Color.Transparent;
-            this.btnMini.BorderColor = System.Drawing.Color.Transparent;
-            this.btnMini.ControlBoxType = Guna.UI2.WinForms.Enums.ControlBoxType.MinimizeBox;
-            this.btnMini.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnMini.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnMini.FillColor = System.Drawing.Color.Transparent;
-            this.btnMini.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnMini.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.btnMini.IconColor = System.Drawing.Color.Black;
-            this.btnMini.Location = new System.Drawing.Point(610, 0);
-            this.btnMini.Name = "btnMini";
-            this.btnMini.Size = new System.Drawing.Size(45, 31);
-            this.btnMini.TabIndex = 1;
-            // 
-            // btnClose
-            // 
-            this.btnClose.BackColor = System.Drawing.Color.Transparent;
-            this.btnClose.BorderColor = System.Drawing.Color.Transparent;
-            this.btnClose.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnClose.Dock = System.Windows.Forms.DockStyle.Right;
-            this.btnClose.FillColor = System.Drawing.Color.Transparent;
-            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnClose.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.btnClose.IconColor = System.Drawing.Color.Black;
-            this.btnClose.Location = new System.Drawing.Point(655, 0);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(45, 31);
-            this.btnClose.TabIndex = 0;
-            // 
             // timerDateTime
             // 
             this.timerDateTime.Enabled = true;
             this.timerDateTime.Interval = 1000;
-            timerDateTime.Tick += timerDateTime_Tick;
             // 
             // guna2DragControl1
             // 
@@ -338,12 +337,12 @@ namespace GXIntegration
             this.Text = "k.//";
             this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.pnlTopBar.ResumeLayout(false);
             this.pnlSideBar.ResumeLayout(false);
             this.guna2GradientPanel1.ResumeLayout(false);
             this.pnlLogo.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.guna2PictureBox1)).EndInit();
             this.pnlContainer.ResumeLayout(false);
-            this.pnlTopBar.ResumeLayout(false);
             this.ResumeLayout(false);
 
 		}

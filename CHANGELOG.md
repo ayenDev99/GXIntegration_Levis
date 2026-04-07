@@ -20,11 +20,12 @@
 # 											        - Update all buttons design.
 #                                                   - Update Navigation bar design.
 #                                                   - Update Topbar design.
-# 2.0.1   | PATCH  | 2026-03-05 | Karen Ancheta   | do
+# 2.0.1   | PATCH  | 2026-03-05 | Karen Ancheta   | Update : Switch value for <RegularSalesUnitPrice> and <ActualSalesUnitPrice>
 # 2.0.2   | PATCH  | 2026-03-23 | Karen Ancheta   | LEVIS Requested Adjustment For Gift Certificate (For StoreSale and StoreReturn).
 # 											        - Change <Sale ItemType="dtv:NonMerchandise"> to <Sale ItemType="dtv:GiftCertificate">.
 #                                                   - Remove the Tax Section for Gift Certificate transactions.
 #                                                   - Bugfix on Sales <Percent> and <dtv:RawTaxPercentage> mapping.
+# 2.0.3   | PATCH  | 2026-04-07 | Karen Ancheta   | Fix bug encountered on Auto processing.
 #
 #
 #
